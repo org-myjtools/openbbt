@@ -1,0 +1,29 @@
+organization: My Org
+project: My Project
+
+test-suites:
+  suiteA: A or Aa
+  suiteB: B
+
+plugin-configuration:
+  rest:
+    enabled: true
+    httpErrorThreshold: 500
+    rest-prop: $propertyC
+
+
+configuration:
+  propertyA: A
+  propertyB: B
+
+configuration-profiles:
+  profileA:
+      propertyC: profileA-propertyC
+
+
+al crear el plan, si hay varios profiles, se le debe indicar que profile usar
+si hay varias suites, se puede indicar solo una suite, o todas
+
+
+
+
