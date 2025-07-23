@@ -5,6 +5,7 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/openbbt-api/pom.xml" />
+        <option value="$PROJECT_DIR$/gherkin-openbbt-plugin/pom.xml" />
       </list>
     </option>
   </component>
