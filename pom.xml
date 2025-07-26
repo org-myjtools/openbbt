@@ -27,7 +27,8 @@
     </licenses>
 
     <modules>
-        <module>openbbt-api</module>
+        <module>openbbt-core</module>
+        <module>gherkin-openbbt-plugin</module>
     </modules>
 
 

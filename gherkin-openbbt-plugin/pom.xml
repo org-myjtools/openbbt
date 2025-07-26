@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>org.myjtools.openbbt</groupId>
-            <artifactId>openbbt-api</artifactId>
+            <artifactId>openbbt-core</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
@@ -59,7 +59,7 @@
                 </executions>
                 <configuration>
                     <application>org.myjtools.openbbt</application>
-                    <hostModule>org.myjtools.openbbt.api</hostModule>
+                    <hostModule>org.myjtools.openbbt.core</hostModule>
                     <hostArtifact>org.myjtools.openbbt:openbbt-api</hostArtifact>
                 </configuration>
             </plugin>
