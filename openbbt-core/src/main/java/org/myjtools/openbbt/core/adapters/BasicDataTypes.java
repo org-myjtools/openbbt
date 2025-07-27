@@ -9,6 +9,7 @@ import org.myjtools.openbbt.core.contributors.DataTypeProvider;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -86,6 +87,8 @@ public class BasicDataTypes implements DataTypeProvider {
             "date-time", LocalDateTime.class, true, true, LocalDateTime::from
     );
 
+    public static final DataType DURATION = new DurationDataTypeAdapter("duration");
+    public static final DataType PERIOD = new PeriodDataTypeAdapter("period");
 
     @Override
     public Stream<DataType> dataTypes() {
@@ -100,7 +103,9 @@ public class BasicDataTypes implements DataTypeProvider {
             DECIMAL,
             DATE,
             TIME,
-            DATE_TIME
+            DATE_TIME,
+            DURATION,
+            PERIOD
         );
     }
 

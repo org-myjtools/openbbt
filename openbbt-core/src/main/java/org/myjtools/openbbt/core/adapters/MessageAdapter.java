@@ -16,6 +16,7 @@ import java.util.Properties;
 public abstract class MessageAdapter implements MessageProvider {
 
 
+
     protected static class ResourceMessages implements Messages {
 
         private final Properties properties;
@@ -36,13 +37,20 @@ public abstract class MessageAdapter implements MessageProvider {
     }
 
 
+
+    private final String resourceName;
+
     private final LoadingCache<Locale, Messages> messages = Caffeine.newBuilder()
         .maximumSize(10) // max number of messages to cache
         .build(this::createMessages);
 
+    protected MessageAdapter(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
 
     private Messages createMessages(Locale locale) {
-        return new ResourceMessages(resourceName(), locale, getClass().getModule());
+        return new ResourceMessages(resourceName, locale, getClass().getModule());
     }
 
 
@@ -52,12 +60,5 @@ public abstract class MessageAdapter implements MessageProvider {
     }
 
 
-    /**
-     * Returns the name of the resource file without the locale suffix.
-     * For example, if the resource file is "messages_en.properties", this method should return "messages".
-     *
-     * @return the base name of the resource file
-     */
-    protected abstract String resourceName();
 
 }

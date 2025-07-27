@@ -7,6 +7,7 @@ module org.myjtools.openbbt.core {
     requires java.sql;
     requires com.h2database;
     requires com.github.f4b6a3.ulid;
+    requires org.hamcrest;
     exports org.myjtools.openbbt.core;
     exports org.myjtools.openbbt.core.util;
     exports org.myjtools.openbbt.core.plan;
