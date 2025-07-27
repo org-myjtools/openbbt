@@ -18,14 +18,17 @@ import java.util.regex.Pattern;
 public class PeriodDataTypeAdapter extends DataTypeAdapter<Period>
 implements DataType {
 
-    private static final Pattern PATTERN = Patterns.of("((\\d+)y)?\\s*((\\d+)m)?\\s*((\\d+)d)?");
+    private static final Pattern PATTERN = Patterns.of(
+        "(?=.*\\d+(?:y|m|d))(?:(\\d+)y)?\\s*(?:(\\d+)m)?\\s*(?:(\\d+)d)?"
+    );
+    public static final String HINT = "<years>y <months>m <days>d";
 
     public PeriodDataTypeAdapter(String name) {
         super(
             name,
             Period.class,
             PATTERN.pattern(),
-            "99y 99m 99d", // Example hint for period format
+            HINT, // Example hint for period format
             periodParser()
         );
     }
@@ -35,18 +38,18 @@ implements DataType {
             Period period = Period.ZERO;
             var matcher = PATTERN.matcher(source);
             if (matcher.matches()) {
-                   if (matcher.group(2) != null) {
-                       period = period.plusYears(Integer.parseInt(matcher.group(2)));
+                   if (matcher.group(1) != null) {
+                       period = period.plusYears(Integer.parseInt(matcher.group(1)));
                 }
-                if (matcher.group(4) != null) {
-                    period = period.plusMonths(Integer.parseInt(matcher.group(4)));
+                if (matcher.group(2) != null) {
+                    period = period.plusMonths(Integer.parseInt(matcher.group(2)));
                 }
-                if (matcher.group(6) != null) {
-                    period = period.plusDays(Integer.parseInt(matcher.group(6)));
+                if (matcher.group(3) != null) {
+                    period = period.plusDays(Integer.parseInt(matcher.group(3)));
                 }
                 return period;
             }
-            throw new OpenBBTException("Invalid period format: {} , expected: {}", source, PATTERN.pattern());
+            throw new OpenBBTException("Invalid period format: {} , expected: {}", source, HINT);
         };
     }
 

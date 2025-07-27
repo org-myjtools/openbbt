@@ -14,8 +14,7 @@ import java.time.Period;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.myjtools.openbbt.core.adapters.BasicDataTypes.*;
 
 class TestDurationType {
@@ -43,6 +42,11 @@ class TestDurationType {
         assertEquals(DURATION.parse(value), actual);
     }
 
+    @Test
+    void testEmptyDuration() {
+        assertFalse(DURATION.matcher("").matches());
+    }
+
 
     public static Stream<Arguments> periods() {
         return Stream.of(
@@ -63,7 +67,10 @@ class TestDurationType {
         assertEquals(((Period)PERIOD.parse(value)).getDays(), actual.getDays());
     }
 
-
+    @Test
+    void testEmptyPeriod() {
+        assertFalse(PERIOD.matcher("").matches());
+    }
 
 
 }
