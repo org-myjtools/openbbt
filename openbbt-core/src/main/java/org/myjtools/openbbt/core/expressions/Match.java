@@ -1,5 +1,7 @@
 package org.myjtools.openbbt.core.expressions;
 
+import org.myjtools.openbbt.core.Assertion;
+
 import java.util.Map;
 
 public record Match (boolean matched, Map<String,ArgumentValue> argument) {
@@ -13,4 +15,7 @@ public record Match (boolean matched, Map<String,ArgumentValue> argument) {
     }
 
 
+    public Assertion assertion(String name) {
+        return null;
+    }
 }

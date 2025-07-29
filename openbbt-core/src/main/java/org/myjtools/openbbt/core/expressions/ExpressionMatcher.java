@@ -1,9 +1,6 @@
 package org.myjtools.openbbt.core.expressions;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ExpressionMatcher {
@@ -28,13 +25,13 @@ public class ExpressionMatcher {
         return fragments;
     }
 
-    public Match matches(String value) {
+    public Match matches(String value, Locale locale) {
         String remaining = value;
         boolean matching = false;
 
         Map<String,ArgumentValue> arguments = new HashMap<>();
         for (FragmentMatcher fragmentMatcher : fragments) {
-            var result = fragmentMatcher.matches(remaining);
+            var result = fragmentMatcher.matches(remaining, locale);
             if (result.startMatched()) {
                 matching = true;
                 remaining = remaining.substring(result.consumed());

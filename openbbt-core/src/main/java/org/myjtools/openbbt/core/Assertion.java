@@ -1,5 +1,8 @@
 package org.myjtools.openbbt.core;
 
+import java.util.List;
+import java.util.Locale;
+
 /**
  * The {@code Assertion} interface defines a contract for creating assertions on a given value.
  * Assertions include a test method for evaluating the condition and methods for providing a
@@ -31,12 +34,6 @@ public interface Assertion<T> {
      */
     boolean test(Object actualValue);
 
-    /**
-     * Provides a description of the assertion.
-     *
-     * @return A string describing the assertion.
-     */
-    String description();
 
 
     String name();
@@ -49,4 +46,7 @@ public interface Assertion<T> {
      * @return A string describing the failure of the assertion.
      */
     String describeFailure(Object actualValue);
+
+
+
 }

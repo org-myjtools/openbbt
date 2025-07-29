@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.myjtools.openbbt.core.Assertions;
+import org.myjtools.openbbt.core.AssertionFactories;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.expressions.ExpressionMatcherBuilder;
 import org.myjtools.openbbt.core.expressions.PatternFragmentMatcher;
@@ -19,7 +19,7 @@ class TestExpressionMatcherBuilder {
 
     static ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(
         DataTypes.of(),
-        Assertions.of()
+        AssertionFactories.of()
     );
 
 

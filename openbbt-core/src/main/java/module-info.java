@@ -16,5 +16,6 @@ module org.myjtools.openbbt.core {
     exports org.myjtools.openbbt.core.persistence;
     exports org.myjtools.openbbt.core.persistence.h2;
     exports org.myjtools.openbbt.core.adapters;
+    exports org.myjtools.openbbt.core.messages;
 
 }

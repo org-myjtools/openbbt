@@ -1,6 +1,6 @@
 package org.myjtools.openbbt.core.expressions;
 
-import org.myjtools.openbbt.core.Assertions;
+import org.myjtools.openbbt.core.AssertionFactories;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.util.Patterns;
 
@@ -21,10 +21,10 @@ public class ExpressionMatcherBuilder {
 
 
     private final DataTypes dataTypes;
-    private final Assertions assertions;
+    private final AssertionFactories assertions;
 
 
-    public ExpressionMatcherBuilder(DataTypes dataTypes, Assertions assertions) {
+    public ExpressionMatcherBuilder(DataTypes dataTypes, AssertionFactories assertions) {
         this.dataTypes = dataTypes;
         this.assertions = assertions;
     }
@@ -104,7 +104,7 @@ public class ExpressionMatcherBuilder {
                 return new ArgumentFragmentMatcher(valueParts[0],dataTypes.byName(valueParts[1]));
             }
         } else if (tree.type == ExpressionASTNode.Type.ASSERTION) {
-            return new AssertionFragmentMatcher(assertions.byName(tree.value));
+            return new AssertionFactoryFragmentMatcher(assertions.byName(tree.value));
         }
         throw new ExpressionException("cannot build a single fragment for {}", tree);
     }

@@ -1,59 +1,60 @@
 package org.myjtools.openbbt.core.test.expressions;
 
 import org.junit.jupiter.api.Test;
-import org.myjtools.openbbt.core.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.myjtools.openbbt.core.Assertion;
+import org.myjtools.openbbt.core.AssertionFactories;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.adapters.BasicDataTypes;
+import org.myjtools.openbbt.core.adapters.Messages;
+import org.myjtools.openbbt.core.adapters.NumberAssertionFactory;
 import org.myjtools.openbbt.core.expressions.ExpressionMatcherBuilder;
 import org.myjtools.openbbt.core.expressions.LiteralValue;
 import org.myjtools.openbbt.core.expressions.Match;
-import org.myjtools.openbbt.core.expressions.VariableValue;
+import org.myjtools.openbbt.core.messages.AssertionMessageProvider;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 class TestAssertionExpressionMatcher {
 
-
+    static Messages assertionMessages = new Messages(List.of(new AssertionMessageProvider()));
     static DataTypes dataTypes = DataTypes.of(new BasicDataTypes().dataTypes().toList());
-    static ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(
-        dataTypes,
-        Assertions.of()
+    static final AssertionFactories assertionFactories = AssertionFactories.of(
+            new NumberAssertionFactory("number-assertion", assertionMessages)
     );
 
+    static ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(dataTypes, assertionFactories);
 
-    @Test
-    void testUnnamedArgumentExpression() {
-        var expression = "this is a unnamed number: {number}";
-        var matcher = builder.buildExpressionMatcher(expression);
-        Match match = matcher.matches("this is a unnamed number: 42");
-        assertThat(match.matched()).isTrue();
-        assertThat(match.argument("number")).isInstanceOf(LiteralValue.class);
-        assertThat(((LiteralValue) match.argument("number")).value()).isEqualTo(42);
+
+
+    static List<Object[]> numberAssertionTestData() {
+        return List.of(
+            new Object[]{"the number 5 is greater than 3", true},
+            new Object[]{"the number 2 is less than 4", true},
+            new Object[]{"the number 10 is equal to 10", true},
+            new Object[]{"the number 7 is not equal to 8", true},
+            new Object[]{"the number 3 is greater than or equal to 3", true},
+            new Object[]{"the number 6 is less than or equal to 5", false}
+        );
     }
 
-    @Test
-    void testNamedArgumentsExpression() {
-        var expression = "this is a named number: {number1:number} and another: {number2:number}";
+    @ParameterizedTest
+    @MethodSource("numberAssertionTestData")
+    void testNumberAssertionExpression(String input, Boolean assertResult) {
+        var expression = "the number {number} {{number-assertion}}";
         var matcher = builder.buildExpressionMatcher(expression);
-        Match match = matcher.matches("this is a named number: 42 and another: 84");
+        Match match = matcher.matches(input, Locale.ENGLISH);
+        Integer number = (Integer) ((LiteralValue) match.argument("number")).value();
+        Assertion assertion = match.assertion("number-assertion");
+        boolean result = assertion.test(number);
         assertThat(match.matched()).isTrue();
-        assertThat(match.argument("number1")).isInstanceOf(LiteralValue.class);
-        assertThat(((LiteralValue) match.argument("number1")).value()).isEqualTo(42);
-        assertThat(match.argument("number2")).isInstanceOf(LiteralValue.class);
-        assertThat(((LiteralValue) match.argument("number2")).value()).isEqualTo(84);
-    }
-
-
-    @Test
-    void testVariableArgumentExpression() {
-        var expression = "this is a unnamed number: {number}";
-        var matcher = builder.buildExpressionMatcher(expression);
-        Match match = matcher.matches("this is a unnamed number: ${varnumber}");
-        assertThat(match.matched()).isTrue();
-        assertThat(match.argument("number")).isInstanceOf(VariableValue.class);
-        assertThat(((VariableValue) match.argument("number")).variable()).isEqualTo("varnumber");
-        assertThat(match.argument("number").type().name()).isEqualTo("number");
+        assertThat(result).isEqualTo(assertResult);
     }
 
 

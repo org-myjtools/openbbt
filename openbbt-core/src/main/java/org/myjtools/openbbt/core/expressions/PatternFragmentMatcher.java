@@ -1,6 +1,8 @@
 package org.myjtools.openbbt.core.expressions;
 
 import org.myjtools.openbbt.core.util.Patterns;
+
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class PatternFragmentMatcher implements FragmentMatcher {
@@ -14,7 +16,7 @@ public class PatternFragmentMatcher implements FragmentMatcher {
     }
 
     @Override
-    public MatchResult matches(String input) {
+    public MatchResult matches(String input, Locale locale) {
         var matcher = pattern.matcher(input);
         if (matcher.find()) {
             return new MatchResult(true, matcher.end());

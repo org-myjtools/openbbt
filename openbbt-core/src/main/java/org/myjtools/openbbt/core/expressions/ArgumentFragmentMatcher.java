@@ -3,6 +3,7 @@ package org.myjtools.openbbt.core.expressions;
 import org.myjtools.openbbt.core.DataType;
 import org.myjtools.openbbt.core.util.Patterns;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class ArgumentFragmentMatcher implements FragmentMatcher {
@@ -22,7 +23,7 @@ public class ArgumentFragmentMatcher implements FragmentMatcher {
     }
 
     @Override
-    public MatchResult matches(String input) {
+    public MatchResult matches(String input, Locale locale) {
         var dataTypePattern = dataType.pattern().matcher(input);
         if (dataTypePattern.find()) {
             return new MatchResult(
