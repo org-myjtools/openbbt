@@ -1,6 +1,4 @@
-package org.myjtools.openbbt.core.adapters;
-
-import org.myjtools.openbbt.core.Assertion;
+package org.myjtools.openbbt.core;
 
 import java.util.Objects;
 import java.util.function.Function;

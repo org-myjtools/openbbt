@@ -1,7 +1,5 @@
 package org.myjtools.openbbt.core;
 
-import org.myjtools.openbbt.core.adapters.AssertionFactory;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

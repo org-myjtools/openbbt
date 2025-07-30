@@ -2,6 +2,8 @@ package org.myjtools.openbbt.core.adapters;
 
 import static org.hamcrest.Matchers.*;
 import org.myjtools.openbbt.core.Assertion;
+import org.myjtools.openbbt.core.AssertionFactory;
+import org.myjtools.openbbt.core.AssertionPattern;
 import org.myjtools.openbbt.core.DataType;
 import org.myjtools.openbbt.core.util.Patterns;
 
@@ -26,16 +28,12 @@ public class ComparableAssertionFactory<T extends Comparable<T>> implements Asse
     public static final String ASSERTION_GENERIC_NOT_NULL = "assertion.generic.not.null";
 
 
-    private final Map<String, Function<T, Assertion>> suppliers = new HashMap<>();
-
-
-
-    private final Messages messages;
-    private final Map<Locale, List<AssertionPattern<T>>> patternsByKey = new HashMap<>();
-
-    private final String name;
-    private final Function<String,T> parser;
-    private final DataType type;
+    protected final Map<String, Function<T, Assertion>> suppliers = new HashMap<>();
+    protected final Messages messages;
+    protected final Map<Locale, List<AssertionPattern<T>>> patternsByKey = new HashMap<>();
+    protected final String name;
+    protected final Function<String,T> parser;
+    protected final DataType type;
 
 
     public ComparableAssertionFactory(String name, Function<String,T> parser, DataType type, Messages messages) {
@@ -47,7 +45,7 @@ public class ComparableAssertionFactory<T extends Comparable<T>> implements Asse
     }
 
 
-    private void fillSuppliers() {
+    protected void fillSuppliers() {
         suppliers.put(
                 ASSERTION_NUMBER_EQUALS,
                 it -> new AssertionAdapter(name, comparesEqualTo(it)));

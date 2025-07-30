@@ -1,8 +1,8 @@
 package org.myjtools.openbbt.core.expressions;
 
 import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.adapters.AssertionFactory;
-import org.myjtools.openbbt.core.adapters.AssertionPattern;
+import org.myjtools.openbbt.core.AssertionFactory;
+import org.myjtools.openbbt.core.AssertionPattern;
 
 import java.util.Locale;
 
