@@ -27,8 +27,8 @@ public class CoreAssertionFactories implements AssertionFactoryProvider {
     @Override
     public Stream<AssertionFactory<?>> assertionFactories() {
         return Stream.of(
-            new ComparableAssertionFactory<>("number-assertion", Integer::valueOf, "(?<param>\\\\d+)", messages),
-            new ComparableAssertionFactory<>("decimal-assertion", BigDecimal::new, "(?<param>\\\\d+(\\\\.\\\\d+)?)", messages)
+            new ComparableAssertionFactory<>("number-assertion", Integer::valueOf, CoreDataTypes.NUMBER, messages),
+            new ComparableAssertionFactory<>("decimal-assertion", BigDecimal::new, CoreDataTypes.DECIMAL, messages)
         );
     }
 

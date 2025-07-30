@@ -64,7 +64,7 @@ class TestAssertionExpressionMatcher {
                 new Object[]{"the decimal 5.2 is greater than 3.4", true},
                 new Object[]{"the decimal 2.1 is less than 4.22", true},
                 new Object[]{"the decimal 10.5 is equal to 10.5", true},
-                new Object[]{"the decimal 7.7 is not equal to 8", true},
+                new Object[]{"the decimal 7.7 is not equal to 8.0", true},
                 new Object[]{"the decimal 3.1 is greater than or equal to 3.0", true},
                 new Object[]{"the decimal 6.3 is less than or equal to 5.8", false},
                 new Object[]{"the decimal 3.4 is not null", true}

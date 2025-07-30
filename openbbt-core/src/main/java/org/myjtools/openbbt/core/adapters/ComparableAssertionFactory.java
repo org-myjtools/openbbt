@@ -2,6 +2,7 @@ package org.myjtools.openbbt.core.adapters;
 
 import static org.hamcrest.Matchers.*;
 import org.myjtools.openbbt.core.Assertion;
+import org.myjtools.openbbt.core.DataType;
 import org.myjtools.openbbt.core.util.Patterns;
 
 import java.util.*;
@@ -34,14 +35,14 @@ public class ComparableAssertionFactory<T extends Comparable<T>> implements Asse
 
     private final String name;
     private final Function<String,T> parser;
-    private final String replacement;
+    private final DataType type;
 
 
-    public ComparableAssertionFactory(String name, Function<String,T> parser, String replacement, Messages messages) {
+    public ComparableAssertionFactory(String name, Function<String,T> parser, DataType type, Messages messages) {
         this.name = name;
         this.parser = parser;
         this.messages = messages;
-        this.replacement = replacement;
+        this.type = type;
         fillSuppliers();
     }
 
@@ -128,11 +129,12 @@ public class ComparableAssertionFactory<T extends Comparable<T>> implements Asse
     private ArrayList<AssertionPattern<T>> createPatternsForLocale(Locale locale) {
         var localeMessages = messages.forLocale(locale);
         var patterns = new ArrayList<AssertionPattern<T>>();
+        String parameterPattern = "(?<param>"+type.pattern().pattern()+")";
         for (String key : suppliers.keySet()) {
             String expression = localeMessages.get(key);
-            expression = "\\s*" + expression + "\\s*";
-            expression = expression.replaceAll("\\)", ")?");
-            expression = expression.replaceAll("_", replacement);
+            expression = "\\s*" + expression + "\\s*"; // accept blanks before and after
+            expression = expression.replaceAll("\\)", ")?"); // make () optionals
+            expression = expression.replace("_", parameterPattern);
             patterns.add(new AssertionPattern<>(key,Patterns.of(expression),suppliers.get(key)));
         }
         return patterns;
