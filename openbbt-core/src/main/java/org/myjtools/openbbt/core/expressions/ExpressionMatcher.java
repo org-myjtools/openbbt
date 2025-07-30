@@ -1,5 +1,7 @@
 package org.myjtools.openbbt.core.expressions;
 
+import org.myjtools.openbbt.core.Assertion;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,8 @@ public class ExpressionMatcher {
         boolean matching = false;
 
         Map<String,ArgumentValue> arguments = new HashMap<>();
+        Map<String, Assertion> assertions = new HashMap<>();
+
         for (FragmentMatcher fragmentMatcher : fragments) {
             var result = fragmentMatcher.matches(remaining, locale);
             if (result.startMatched()) {
@@ -38,11 +42,14 @@ public class ExpressionMatcher {
                 if (result.argument() != null) {
                     arguments.put(result.argument().name(), result.argument());
                 }
+                if (result.assertion() != null) {
+                    assertions.put(result.assertion().name(),result.assertion());
+                }
             } else {
                 return new Match(false);
             }
         }
-        return new Match(true, arguments);
+        return new Match(true, arguments, assertions);
     }
 
 

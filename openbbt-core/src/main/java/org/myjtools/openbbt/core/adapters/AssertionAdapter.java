@@ -6,12 +6,12 @@ import org.myjtools.openbbt.core.Assertion;
 
 
 
-public class AssertionAdapter<T> implements Assertion<T> {
+public class AssertionAdapter implements Assertion {
 
+    private final Matcher<?> matcher;
     private final String name;
-    private final Matcher<T> matcher;
 
-    public AssertionAdapter(String name, Matcher<T> matcher) {
+    public AssertionAdapter(String name, Matcher<?> matcher) {
         this.name = name;
         this.matcher = matcher;
     }
@@ -22,10 +22,6 @@ public class AssertionAdapter<T> implements Assertion<T> {
     }
 
 
-    @Override
-    public String name() {
-        return name;
-    }
 
     @Override
     public String describeFailure(Object actualValue) {
@@ -34,6 +30,11 @@ public class AssertionAdapter<T> implements Assertion<T> {
         return description.toString();
     }
 
+
+    @Override
+    public String name() {
+        return name;
+    }
 
 
 }

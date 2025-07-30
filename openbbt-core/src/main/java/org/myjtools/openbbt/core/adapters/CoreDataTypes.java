@@ -9,14 +9,13 @@ import org.myjtools.openbbt.core.contributors.DataTypeProvider;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.stream.Stream;
 
 @Extension(scope = Scope.SINGLETON)
-public class BasicDataTypes implements DataTypeProvider {
+public class CoreDataTypes implements DataTypeProvider {
 
 
     public static final DataType WORD = new RegexDataTypeAdapter<>(

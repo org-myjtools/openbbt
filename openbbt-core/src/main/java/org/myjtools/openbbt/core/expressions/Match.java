@@ -4,10 +4,14 @@ import org.myjtools.openbbt.core.Assertion;
 
 import java.util.Map;
 
-public record Match (boolean matched, Map<String,ArgumentValue> argument) {
+public record Match (
+        boolean matched,
+        Map<String,ArgumentValue> argument,
+        Map<String,Assertion> assertions
+) {
 
     public Match(boolean matched) {
-        this(matched, Map.of());
+        this(matched, Map.of(), Map.of());
     }
 
     public ArgumentValue argument(String name) {
@@ -16,6 +20,7 @@ public record Match (boolean matched, Map<String,ArgumentValue> argument) {
 
 
     public Assertion assertion(String name) {
-        return null;
+        return assertions.get(name);
     }
+
 }

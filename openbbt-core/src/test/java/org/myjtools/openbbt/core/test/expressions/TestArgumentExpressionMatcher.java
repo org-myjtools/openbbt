@@ -3,7 +3,7 @@ package org.myjtools.openbbt.core.test.expressions;
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.AssertionFactories;
 import org.myjtools.openbbt.core.DataTypes;
-import org.myjtools.openbbt.core.adapters.BasicDataTypes;
+import org.myjtools.openbbt.core.adapters.CoreDataTypes;
 import org.myjtools.openbbt.core.expressions.*;
 
 import java.util.Locale;
@@ -16,7 +16,7 @@ class TestArgumentExpressionMatcher {
 
     public static final Locale LOCALE = Locale.getDefault();
 
-    static DataTypes dataTypes = DataTypes.of(new BasicDataTypes().dataTypes().toList());
+    static DataTypes dataTypes = DataTypes.of(new CoreDataTypes().dataTypes().toList());
     static ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(
         dataTypes,
         AssertionFactories.of()

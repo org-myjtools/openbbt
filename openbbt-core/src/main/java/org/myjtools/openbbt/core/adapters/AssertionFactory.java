@@ -1,22 +1,17 @@
 package org.myjtools.openbbt.core.adapters;
 
+import org.myjtools.openbbt.core.Assertion;
+
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
-public class AssertionFactory {
+public interface AssertionFactory<T> {
 
-    private final String name;
 
-    public AssertionFactory(String name) {
-        this.name = name;
-    }
+    String name();
 
-    public String name() {
-        return name;
-    }
+    List<AssertionPattern<T>> patterns(Locale locale);
 
-    public List<Pattern> patterns(Locale locale) {
-        return List.of();
-    }
+    Assertion assertion(AssertionPattern<T> pattern, String input);
+
 }

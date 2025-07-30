@@ -8,7 +8,7 @@ package org.myjtools.openbbt.core.test.contributors;
 import java.time.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.myjtools.openbbt.core.adapters.BasicDataTypes.*;
+import static org.myjtools.openbbt.core.adapters.CoreDataTypes.*;
 
 import org.junit.jupiter.api.Test;
 

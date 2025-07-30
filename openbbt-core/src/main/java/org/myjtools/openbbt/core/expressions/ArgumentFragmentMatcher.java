@@ -40,7 +40,7 @@ public class ArgumentFragmentMatcher implements FragmentMatcher {
                     new VariableValue(name, variableMatcher.group(1), dataType)
                 );
             }
-            return new MatchResult(false, 0);
+            return new MatchResult(false);
         }
     }
 

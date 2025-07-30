@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.*;
 import org.myjtools.openbbt.core.OpenBBTException;
 
-import static org.myjtools.openbbt.core.adapters.BasicDataTypes.DECIMAL;
-import static org.myjtools.openbbt.core.adapters.BasicDataTypes.NUMBER;
+import static org.myjtools.openbbt.core.adapters.CoreDataTypes.DECIMAL;
+import static org.myjtools.openbbt.core.adapters.CoreDataTypes.NUMBER;
 
 
 class TestNumberType {

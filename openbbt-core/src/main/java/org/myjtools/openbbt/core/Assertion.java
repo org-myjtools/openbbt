@@ -8,9 +8,8 @@ import java.util.Locale;
  * Assertions include a test method for evaluating the condition and methods for providing a
  * description and describing a failure when the assertion is not satisfied.
  *
- * @param <T> The type of value to which the assertion applies.
  */
-public interface Assertion<T> {
+public interface Assertion {
 
     /**
      * Static utility method for asserting a condition on a given value.
@@ -18,9 +17,8 @@ public interface Assertion<T> {
      *
      * @param actualValue The value to test against the assertion.
      * @param assertion   The assertion condition to apply.
-     * @param <T>         The type parameter for the value and assertion.
      */
-    static <T> void assertThat(T actualValue, Assertion<T> assertion) {
+    static void assertThat(Object actualValue, Assertion assertion) {
         if (!assertion.test(actualValue)) {
             throw new AssertionError(assertion.describeFailure(actualValue));
         }
@@ -36,9 +34,6 @@ public interface Assertion<T> {
 
 
 
-    String name();
-
-
     /**
      * Describes the failure when the assertion is not satisfied.
      *
@@ -48,5 +43,6 @@ public interface Assertion<T> {
     String describeFailure(Object actualValue);
 
 
+    String name();
 
 }
