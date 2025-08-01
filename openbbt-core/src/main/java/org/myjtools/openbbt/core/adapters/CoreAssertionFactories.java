@@ -35,7 +35,8 @@ public class CoreAssertionFactories implements AssertionFactoryProvider {
             new ComparableAssertionFactory<>("decimal-assertion", BigDecimal::new, CoreDataTypes.DECIMAL, messages),
             new TemporalAssertionFactory<>("date-assertion", LocalDate::parse, CoreDataTypes.DATE, messages),
             new TemporalAssertionFactory<>("time-assertion", LocalTime::parse, CoreDataTypes.TIME, messages),
-            new TemporalAssertionFactory<>("datetime-assertion", LocalDateTime::parse, CoreDataTypes.DATE_TIME, messages)
+            new TemporalAssertionFactory<>("datetime-assertion", LocalDateTime::parse, CoreDataTypes.DATE_TIME, messages),
+            new StringAssertionFactory("text-assertion", CoreDataTypes.TEXT, messages)
         );
     }
 

@@ -46,7 +46,7 @@ public class CoreDataTypes implements DataTypeProvider {
             "text",
             "\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
             String.class,
-            x -> x,
+            x -> x.substring(1, x.length()-1),
             "'text'"
     );
 

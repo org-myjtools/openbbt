@@ -135,4 +135,39 @@ class TestAssertionExpressionMatcher {
             boolean result = assertion.test(date);
             assertThat(result).isEqualTo(assertResult);
         }
+
+
+        static List<Object[]> stringAssertionTestData() {
+            return List.of(
+                new Object[]{"the string 'hello' is equal to 'hello'", true},
+                new Object[]{"the string 'world' is not equal to 'hello'", true},
+                new Object[]{"the string 'test' is not null", true},
+                new Object[]{"the string 'hello world' starts with 'hello'", true},
+                new Object[]{"the string 'hello world' does not start with 'goodbye'", true},
+                new Object[]{"the string 'hello world' ends with 'world'", true},
+                new Object[]{"the string 'hello world' does not end with 'hello'", true},
+                new Object[]{"the string 'hello world' contains 'world'", true},
+                new Object[]{"the string 'hello world' does not contain 'goodbye'", true},
+                new Object[]{"the string '' is equal to ''", true},
+                new Object[]{"the string 'abc' is not equal to 'def'", true},
+                new Object[]{"the string 'OpenAI' starts with 'Open'", true},
+                new Object[]{"the string 'OpenAI' ends with 'AI'", true},
+                new Object[]{"the string 'OpenAI' contains 'pen'", true},
+                new Object[]{"the string 'OpenAI' does not contain 'xyz'", true},
+                new Object[]{"the string 'test' is null", false}
+            );
+        }
+
+        @ParameterizedTest
+        @MethodSource("stringAssertionTestData")
+        void testStringAssertionExpression(String input, Boolean assertResult) {
+            var expression = "the string {text} {{text-assertion}}";
+            var matcher = builder.buildExpressionMatcher(expression);
+            Match match = matcher.matches(input, Locale.ENGLISH);
+            assertThat(match.matched()).isTrue();
+            String value = (String) ((LiteralValue) match.argument("text")).value();
+            Assertion assertion = match.assertion("text-assertion");
+            boolean result = assertion.test(value);
+            assertThat(result).isEqualTo(assertResult);
+        }
 }

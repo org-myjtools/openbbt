@@ -62,4 +62,8 @@ public class RegexDataTypeAdapter<T> implements DataType {
     }
 
 
+    @Override
+    public String toString() {
+        return name+"["+javaType.getName()+"]";
+    }
 }

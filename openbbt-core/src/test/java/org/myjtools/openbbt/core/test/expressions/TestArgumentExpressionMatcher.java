@@ -47,6 +47,19 @@ class TestArgumentExpressionMatcher {
 
 
     @Test
+    void testStringArgumentsExpression() {
+        var expression = "this is a text: {text1:text} and this is another: {text2:text}";
+        var matcher = builder.buildExpressionMatcher(expression);
+        Match match = matcher.matches("this is a text: 'hello world' and this is another: \"goodbye\"", LOCALE);
+        assertThat(match.matched()).isTrue();
+        assertThat(match.argument("text1")).isInstanceOf(LiteralValue.class);
+        assertThat(((LiteralValue) match.argument("text1")).value()).isEqualTo("hello world");
+        assertThat(match.argument("text2")).isInstanceOf(LiteralValue.class);
+        assertThat(((LiteralValue) match.argument("text2")).value()).isEqualTo("goodbye");
+    }
+
+
+    @Test
     void testVariableArgumentExpression() {
         var expression = "this is a unnamed number: {number}";
         var matcher = builder.buildExpressionMatcher(expression);
