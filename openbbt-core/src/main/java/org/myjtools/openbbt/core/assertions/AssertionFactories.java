@@ -1,12 +1,20 @@
 package org.myjtools.openbbt.core.assertions;
 
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.core.datatypes.DataTypes;
+import org.myjtools.openbbt.core.messages.AssertionMessageProvider;
+import org.myjtools.openbbt.core.messages.Messages;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AssertionFactories {
+
+    public static AssertionFactories CORE_ENGLISH =  AssertionFactories.of(
+            new CoreAssertionFactories(new Messages(List.of(new AssertionMessageProvider()))).assertionFactories().toList()
+    );
 
 
     public static AssertionFactories of(AssertionFactory<?>... assertionFactories) {

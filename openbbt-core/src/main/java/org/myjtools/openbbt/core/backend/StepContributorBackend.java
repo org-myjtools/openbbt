@@ -1,45 +1,52 @@
 package org.myjtools.openbbt.core.backend;
 
 
+import org.myjtools.openbbt.core.assertions.AssertionFactories;
 import org.myjtools.openbbt.core.datatypes.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.core.expressions.ExpressionMatcher;
+import org.myjtools.openbbt.core.expressions.ExpressionMatcherBuilder;
+import org.myjtools.openbbt.core.expressions.Match;
 import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.step.SetUp;
 import org.myjtools.openbbt.core.step.Step;
 import org.myjtools.openbbt.core.step.StepContributor;
 import org.myjtools.openbbt.core.step.TearDown;
 import org.myjtools.openbbt.core.util.Log;
+import org.myjtools.openbbt.core.util.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 public class StepContributorBackend {
 
     private static final Log log = Log.of("core");
 
-    private DataTypes dataTypes;
-    private Messages messages;
-    private StepContributor stepContributor;
-    private Map<String, RunnableStep> runnableSteps = new LinkedHashMap<>();
-    private List<Method> setupMethods;
-    private List<Method> teardownMethods;
+    private final DataTypes dataTypes;
+    private final AssertionFactories assertionFactories;
+    private final Messages messages;
+    private final StepContributor stepContributor;
+    private final Map<String, RunnableStep> runnableSteps = new LinkedHashMap<>();
+    private final List<Method> setupMethods = new ArrayList<>();
+    private final List<Method> teardownMethods = new ArrayList<>();
+    private final ExpressionMatcherBuilder matcherBuilder;
 
 
-
-    public void StepContributorBackend(
+    public StepContributorBackend(
         StepContributor stepContributor,
         DataTypes dataTypes,
+        AssertionFactories assertionFactories,
         Messages messages
     ) {
 
         this.dataTypes = dataTypes;
+        this.assertionFactories = assertionFactories;
         this.stepContributor = stepContributor;
         this.messages = messages;
+        this.matcherBuilder = new ExpressionMatcherBuilder(dataTypes, assertionFactories);
 
         var methods = stepContributor.getClass().getMethods();
         for (var method : methods) {
@@ -51,15 +58,25 @@ public class StepContributorBackend {
     }
 
 
-
-    private String localizedStepKey(String stepKey, Locale locale) {
-        try {
-            return messages.forLocale(locale).get(stepKey);
-        } catch (Exception e) {
-            log.error("Error while getting localized step key for '{}': {}", stepKey, e.getMessage());
-            return stepKey;
+    public Optional<Pair<RunnableStep,Match>> matchingStep(String step, Locale locale) {
+        for (var entry : runnableSteps.entrySet()) {
+            String stepKey = entry.getKey();
+            RunnableStep runnableStep = entry.getValue();
+            String keyExpression = messages.forLocale(locale).get(stepKey);
+            ExpressionMatcher matcher = matcherBuilder.buildExpressionMatcher(keyExpression);
+            Match match = matcher.matches(step, locale);
+            if (match.matched()) {
+                return Optional.of(Pair.of(runnableStep, match));
+            }
         }
+        return Optional.empty();
     }
+
+
+
+
+
+
 
 
 
@@ -68,7 +85,7 @@ public class StepContributorBackend {
             try {
                 checkMethodNotStatic(method);
                 checkMethodPublic(method);
-                runnableSteps.put(step.value(), new RunnableStep(step, method, dataTypes));
+                runnableSteps.put(step.value(), new RunnableStep(stepContributor, method, dataTypes));
             } catch (OpenBBTException e) {
                 log.error(e);
             }
@@ -124,7 +141,7 @@ public class StepContributorBackend {
     }
 
     private void checkMethodNotStatic(Method method) {
-        if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+        if (Modifier.isStatic(method.getModifiers())) {
             throw new OpenBBTException(
                 "Setup method '{}.{}' must be static.",
                 stepContributor.getClass().getSimpleName(),
@@ -142,6 +159,7 @@ public class StepContributorBackend {
             );
         }
     }
+
 
 
 }

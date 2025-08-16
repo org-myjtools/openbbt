@@ -8,7 +8,8 @@ module org.myjtools.openbbt.core {
     requires com.h2database;
     requires com.github.f4b6a3.ulid;
     requires org.hamcrest;
-    requires org.myjtools.openbbt.core;
+
+
     exports org.myjtools.openbbt.core;
     exports org.myjtools.openbbt.core.util;
     exports org.myjtools.openbbt.core.plan;
@@ -21,6 +22,8 @@ module org.myjtools.openbbt.core {
     exports org.myjtools.openbbt.core.datatypes;
     exports org.myjtools.openbbt.core.assertions;
     exports org.myjtools.openbbt.core.resources;
+    exports org.myjtools.openbbt.core.step;
+    exports org.myjtools.openbbt.core.backend;
 
 
 }

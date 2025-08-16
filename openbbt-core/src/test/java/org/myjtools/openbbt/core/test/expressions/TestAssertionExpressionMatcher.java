@@ -22,11 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TestAssertionExpressionMatcher {
 
-    static final Messages assertionMessages = new Messages(List.of(new AssertionMessageProvider()));
-    static final DataTypes dataTypes = DataTypes.of(new CoreDataTypes().dataTypes().toList());
-    static final AssertionFactories assertionFactories = AssertionFactories.of(
-        new CoreAssertionFactories(assertionMessages).assertionFactories().toList()
-    );
+    static final DataTypes dataTypes = DataTypes.CORE;
+    static final AssertionFactories assertionFactories = AssertionFactories.CORE_ENGLISH;
 
     static ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(dataTypes, assertionFactories);
 

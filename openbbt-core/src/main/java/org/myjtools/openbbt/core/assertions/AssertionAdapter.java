@@ -2,6 +2,7 @@ package org.myjtools.openbbt.core.assertions;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.StringDescription;
 
 
 public class AssertionAdapter implements Assertion {
@@ -23,7 +24,7 @@ public class AssertionAdapter implements Assertion {
 
     @Override
     public String describeFailure(Object actualValue) {
-        Description description = Description.NONE;
+        Description description = new StringDescription();
         matcher.describeMismatch(actualValue, description);
         return description.toString();
     }

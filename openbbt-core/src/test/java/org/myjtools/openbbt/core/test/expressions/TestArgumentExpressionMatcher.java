@@ -16,11 +16,8 @@ class TestArgumentExpressionMatcher {
 
     public static final Locale LOCALE = Locale.getDefault();
 
-    static DataTypes dataTypes = DataTypes.of(new CoreDataTypes().dataTypes().toList());
-    static ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(
-        dataTypes,
-        AssertionFactories.of()
-    );
+    static DataTypes dataTypes = DataTypes.CORE;
+    static ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(dataTypes,AssertionFactories.of());
 
 
     @Test

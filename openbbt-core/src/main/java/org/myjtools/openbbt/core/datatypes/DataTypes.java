@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 public class DataTypes {
 
+    public static final DataTypes CORE = DataTypes.of(new CoreDataTypes().dataTypes().toList());
+
     private final Map<String, DataType> dataTypesByName;
     private final Map<Class<?>, DataType> dataTypesByJavaType;
 

@@ -20,4 +20,5 @@ public class Messages {
                 .orElseThrow(() -> new IllegalArgumentException("No messages found for locale: " + locale));
     }
 
+
 }

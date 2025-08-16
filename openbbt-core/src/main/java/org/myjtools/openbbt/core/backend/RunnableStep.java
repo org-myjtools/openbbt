@@ -1,40 +1,99 @@
 package org.myjtools.openbbt.core.backend;
 
+import org.myjtools.openbbt.core.assertions.Assertion;
 import org.myjtools.openbbt.core.datatypes.DataType;
 import org.myjtools.openbbt.core.datatypes.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.core.plan.DataTable;
+import org.myjtools.openbbt.core.plan.Document;
 import org.myjtools.openbbt.core.step.Step;
+import org.myjtools.openbbt.core.step.StepContributor;
 import org.myjtools.openbbt.core.util.Pair;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 public class RunnableStep {
 
-    private Object stepContributor;
+    private StepContributor stepContributor;
     private String stepKey;
     private Method method;
-    private List<Pair<String, DataType>> arguments;
+    private List<Pair<String, DataType>> expectedArguments;
+
+    private enum LastParameterType {
+        REGULAR, ASSERTION, DATA_TABLE, DOCUMENT
+    }
+    private LastParameterType lastParameterType;
 
 
-    public RunnableStep(Object stepContributor, Method method, DataTypes dataTypes) {
+
+    public RunnableStep(StepContributor stepContributor, Method method, DataTypes dataTypes) {
         this.stepContributor = stepContributor;
         var annotation = method.getAnnotation(Step.class);
         this.stepKey = annotation.value();
         this.method = method;
-        this.arguments = Pair.ofMap(checkStepArgs(dataTypes, annotation, method));
+        this.lastParameterType = checkLastParameterType(method);
+        this.expectedArguments = Pair.ofMap(checkStepArgs(dataTypes, annotation, method));
     }
 
 
-    public void run(Object[] args) throws Exception {
-        method.invoke(stepContributor, args);
+    public String stepKey() {
+        return stepKey;
     }
+
+
+    private LastParameterType checkLastParameterType(Method method) {
+        if (method.getParameterCount() == 0) {
+            return LastParameterType.REGULAR;
+        }
+        Class<?> methodLastParameterType = method.getParameterTypes()[method.getParameterCount() - 1];
+        if (methodLastParameterType == Assertion.class) {
+            return LastParameterType.ASSERTION;
+        } else if (methodLastParameterType == DataTable.class) {
+            return LastParameterType.DATA_TABLE;
+        } else if (methodLastParameterType == Document.class) {
+            return LastParameterType.DOCUMENT;
+        }
+        return LastParameterType.REGULAR;
+    }
+
+
+
+
+    public void run(Map<String,Object> arguments, Object additionalData) throws Throwable {
+
+        Object[] args = new Object[method.getParameterCount()];
+        for (int i = 0; i < this.expectedArguments.size(); i++) {
+            Pair<String, DataType> arg = this.expectedArguments.get(i);
+            Object value = arguments.get(arg.left());
+            args[i] = value;
+        }
+        if (lastParameterType != LastParameterType.REGULAR) {
+            args[args.length - 1] = Objects.requireNonNull(
+                additionalData,
+                "Additional data must not be null for last parameter type: " + lastParameterType)
+            ;
+        }
+
+        try {
+            method.invoke(stepContributor, args);
+        } catch (IllegalAccessException e) {
+            throw new OpenBBTException(e);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        }
+    }
+
+
+
+
+
+
 
 
     private LinkedHashMap<String, DataType> checkStepArgs(DataTypes datatypes, Step step, Method method) {
-        var result = new LinkedHashMap<String, DataType>();
-        if (step.args().length == 0) {
+       if (step.args().length == 0) {
             return checkImplicitStepArgs(datatypes, step, method);
         } else {
             return checkExplicitStepArgs(datatypes, step, method, step.args());
@@ -43,8 +102,20 @@ public class RunnableStep {
 
 
     private LinkedHashMap<String, DataType> checkImplicitStepArgs(DataTypes dataTypes, Step step, Method method) {
+
         var result = new LinkedHashMap<String, DataType>();
-        for (int i = 0; i < method.getParameterTypes().length; i++) {
+        if (method.getParameterCount() == 0) {
+            return result;
+        }
+
+        int lastParameterIndex = method.getParameterCount();
+        if (lastParameterType != LastParameterType.REGULAR) {
+            lastParameterIndex--;
+        }
+
+
+        for (int i = 0; i < lastParameterIndex; i++) {
+            Class<?> methodParameterType = method.getParameterTypes()[i];
             DataType type = dataTypes.byJavaType(method.getParameterTypes()[i]);
             if (result.containsKey(type.name())) {
                 throwError(step, method, "Duplicate data type '{}'. Declare arguments explicitly.",type.name());
@@ -61,7 +132,15 @@ public class RunnableStep {
 
         var result = new LinkedHashMap<String, DataType>();
 
-        if (step.args().length != method.getParameterCount()) {
+        int lastParameterIndex = method.getParameterCount();
+        if (lastParameterType == LastParameterType.ASSERTION ||
+                lastParameterType == LastParameterType.DATA_TABLE ||
+                lastParameterType == LastParameterType.DOCUMENT
+        ) {
+            lastParameterIndex--;
+        }
+
+        if (step.args().length != lastParameterIndex) {
             throwError(
                 step,
                 method,
