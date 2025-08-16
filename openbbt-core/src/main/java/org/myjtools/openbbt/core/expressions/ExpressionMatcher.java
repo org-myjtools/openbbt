@@ -1,9 +1,8 @@
 package org.myjtools.openbbt.core.expressions;
 
-import org.myjtools.openbbt.core.Assertion;
+import org.myjtools.openbbt.core.assertions.Assertion;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ExpressionMatcher {
 

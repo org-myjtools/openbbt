@@ -4,7 +4,6 @@ package org.myjtools.openbbt.core.plan;
 import java.util.*;
 
 import lombok.*;
-import org.myjtools.openbbt.core.PlanNodeID;
 
 @Getter @Setter @NoArgsConstructor @EqualsAndHashCode @ToString
 public class PlanNode {

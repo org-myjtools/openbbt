@@ -1,6 +1,6 @@
 package org.myjtools.openbbt.core.persistence;
 
-import org.myjtools.openbbt.core.PlanNodeID;
+import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.OpenBBTException;
 import java.util.*;

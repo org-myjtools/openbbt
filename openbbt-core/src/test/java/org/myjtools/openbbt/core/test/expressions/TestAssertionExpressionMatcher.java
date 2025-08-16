@@ -2,12 +2,12 @@ package org.myjtools.openbbt.core.test.expressions;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.AssertionFactories;
-import org.myjtools.openbbt.core.DataTypes;
-import org.myjtools.openbbt.core.adapters.CoreAssertionFactories;
-import org.myjtools.openbbt.core.adapters.CoreDataTypes;
-import org.myjtools.openbbt.core.adapters.Messages;
+import org.myjtools.openbbt.core.assertions.Assertion;
+import org.myjtools.openbbt.core.assertions.AssertionFactories;
+import org.myjtools.openbbt.core.datatypes.DataTypes;
+import org.myjtools.openbbt.core.assertions.CoreAssertionFactories;
+import org.myjtools.openbbt.core.datatypes.CoreDataTypes;
+import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.expressions.ExpressionMatcherBuilder;
 import org.myjtools.openbbt.core.expressions.LiteralValue;
 import org.myjtools.openbbt.core.expressions.Match;

@@ -1,9 +1,9 @@
 package org.myjtools.openbbt.core.test.expressions;
 
 import org.junit.jupiter.api.Test;
-import org.myjtools.openbbt.core.AssertionFactories;
-import org.myjtools.openbbt.core.DataTypes;
-import org.myjtools.openbbt.core.adapters.CoreDataTypes;
+import org.myjtools.openbbt.core.assertions.AssertionFactories;
+import org.myjtools.openbbt.core.datatypes.DataTypes;
+import org.myjtools.openbbt.core.datatypes.CoreDataTypes;
 import org.myjtools.openbbt.core.expressions.*;
 
 import java.util.Locale;

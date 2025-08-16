@@ -1,6 +1,6 @@
 package org.myjtools.openbbt.core.expressions;
 
-import org.myjtools.openbbt.core.DataType;
+import org.myjtools.openbbt.core.datatypes.DataType;
 import org.myjtools.openbbt.core.util.Patterns;
 
 import java.util.Locale;

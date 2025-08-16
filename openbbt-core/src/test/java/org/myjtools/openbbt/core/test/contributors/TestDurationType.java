@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.myjtools.openbbt.core.adapters.CoreDataTypes.*;
+import static org.myjtools.openbbt.core.datatypes.CoreDataTypes.*;
 
 class TestDurationType {
 

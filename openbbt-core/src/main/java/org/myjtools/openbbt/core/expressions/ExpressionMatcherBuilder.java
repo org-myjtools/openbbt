@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core.expressions;
 
-import org.myjtools.openbbt.core.AssertionFactories;
-import org.myjtools.openbbt.core.DataTypes;
+import org.myjtools.openbbt.core.assertions.AssertionFactories;
+import org.myjtools.openbbt.core.datatypes.DataTypes;
 import org.myjtools.openbbt.core.util.Patterns;
 
 import java.nio.CharBuffer;

@@ -3,7 +3,7 @@ package org.myjtools.openbbt.core.persistence.h2;
 
 import com.github.f4b6a3.ulid.*;
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.PlanNodeID;
+import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
 import org.myjtools.openbbt.core.persistence.Session;
