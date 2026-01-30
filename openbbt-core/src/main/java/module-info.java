@@ -17,13 +17,13 @@ module org.myjtools.openbbt.core {
     exports org.myjtools.openbbt.core.contributors;
     exports org.myjtools.openbbt.core.persistence;
     exports org.myjtools.openbbt.core.persistence.h2;
-    exports org.myjtools.openbbt.core.adapters;
     exports org.myjtools.openbbt.core.messages;
     exports org.myjtools.openbbt.core.datatypes;
     exports org.myjtools.openbbt.core.assertions;
     exports org.myjtools.openbbt.core.resources;
     exports org.myjtools.openbbt.core.step;
     exports org.myjtools.openbbt.core.backend;
+    exports org.myjtools.openbbt.core.config;
 
 
 }

@@ -7,13 +7,13 @@
      <parent>
          <groupId>org.myjtools.openbbt</groupId>
          <artifactId>openbbt</artifactId>
-         <version>1.0.0</version>
+         <version>1.0.0-alpha1</version>
          <relativePath>../pom.xml</relativePath>
      </parent>
 
 
     <artifactId>openbbt-core</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0-alpha1</version>
     <packaging>jar</packaging>
     <name>Open BBT Core</name>
     <description>Core functionality for Open BBT</description>
@@ -42,8 +42,13 @@
         </dependency>
         <dependency>
             <groupId>org.myjtools.jexten</groupId>
-            <artifactId>jexten-plugin</artifactId>
-            <version>1.0.0</version>
+            <artifactId>jexten-core</artifactId>
+            <version>1.0.0-alpha1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.myjtools.jexten</groupId>
+            <artifactId>jexten-plugin-manager</artifactId>
+            <version>1.0.0-alpha1</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -55,6 +60,12 @@
             <artifactId>lombok</artifactId>
             <version>1.18.38</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.myjtools.jexten</groupId>
+            <artifactId>jexten-core</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

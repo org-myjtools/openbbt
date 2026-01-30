@@ -1,23 +1,33 @@
 package org.myjtools.openbbt.core.persistence.h2;
 
-import java.io.*;
-import java.net.*;
-import java.nio.file.*;
-import java.sql.*;
-import java.util.*;
-import java.util.stream.*;
-import javax.sql.DataSource;
 import org.h2.jdbcx.JdbcDataSource;
 import org.h2.tools.Server;
 import org.myjtools.jexten.Version;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.persistence.Session;
 import org.myjtools.openbbt.core.util.Log;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.net.ServerSocket;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class H2Server {
 
-    private static final Log log = Log.of("repository");
+    private static final Log log = Log.of("core.persistence");
 
     private static final String USER = "sa";
     private static final String PWD = "sa";

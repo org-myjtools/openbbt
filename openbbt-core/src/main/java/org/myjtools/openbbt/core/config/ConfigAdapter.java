@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.adapters;
+package org.myjtools.openbbt.core.config;
 
 import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
