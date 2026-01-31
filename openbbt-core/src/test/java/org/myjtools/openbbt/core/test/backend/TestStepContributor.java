@@ -1,6 +1,6 @@
 package org.myjtools.openbbt.core.test.backend;
 
-import org.myjtools.openbbt.core.assertions.Assertion;
+import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.plan.DataTable;
 import org.myjtools.openbbt.core.plan.Document;
 import org.myjtools.openbbt.core.step.SetUp;

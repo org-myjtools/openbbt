@@ -3,7 +3,8 @@ package org.myjtools.openbbt.core.plan;
  * Represents the type of a node in the test plan.
  * Each node type has a unique symbol and a numeric value.
  * The numeric value is used for sorting nodes in the plan.
- */
+
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public enum NodeType {
 
     /** The root node of the test plan. */

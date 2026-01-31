@@ -9,6 +9,9 @@ import java.nio.file.Path;
 import java.util.function.Supplier;
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Resource {
 
 	private final String contentType;

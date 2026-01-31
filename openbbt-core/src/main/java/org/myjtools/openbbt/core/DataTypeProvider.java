@@ -1,0 +1,16 @@
+package org.myjtools.openbbt.core;
+
+
+import org.myjtools.jexten.ExtensionPoint;
+
+import java.util.stream.Stream;
+
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
+@ExtensionPoint
+public interface DataTypeProvider extends Contributor {
+
+	Stream<DataType> dataTypes();
+
+}

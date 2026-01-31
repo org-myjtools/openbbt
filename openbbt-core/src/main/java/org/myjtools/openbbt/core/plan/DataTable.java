@@ -6,6 +6,9 @@ import java.util.stream.Collectors;
 
 import lombok.*;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 @Setter
 @Getter
 @EqualsAndHashCode

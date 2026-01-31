@@ -4,7 +4,8 @@ public enum ExecutionResult {
 
     // in inverted order of severity
 
-    /** The node or all of its children has been executed successfully */
+    /** The node or all of its children has been executed successfully
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
     PASSED,
 
     /** The node was not executed due to previous step did not pass the test */

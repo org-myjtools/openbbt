@@ -8,6 +8,9 @@ import java.util.stream.Stream;
 import org.slf4j.*;
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Log {
 
     private static final Log singleton = new Log("org.myjtools.openbbt");

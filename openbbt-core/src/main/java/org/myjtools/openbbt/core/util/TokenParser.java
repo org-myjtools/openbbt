@@ -5,6 +5,9 @@ import java.util.regex.*;
 import java.util.stream.Collectors;
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class TokenParser {
 
     private final List<Pattern> tokens;

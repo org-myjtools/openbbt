@@ -13,7 +13,8 @@ import org.myjtools.openbbt.core.resources.Resource;
  * Implementations of this interface should provide a method to check if they
  * can handle a given resource and a method to provide a plan for a list of
  * resources.
- */
+
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 @ExtensionPoint
 public interface PlanProvider extends Contributor {
 

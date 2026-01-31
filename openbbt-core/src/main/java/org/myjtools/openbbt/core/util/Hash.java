@@ -26,7 +26,8 @@ public class Hash {
 	 * Creates a new Hash instance from the given string
 	 * @param content the string to hash
 	 * @return a new hash string
-	 */
+	
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 	public static String of(String content) {
 		var bytes = newDigest().digest(content.getBytes(StandardCharsets.UTF_8));
 		return encoder.encodeToString(bytes);

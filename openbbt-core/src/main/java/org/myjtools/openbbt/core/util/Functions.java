@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Functions {
 
     private Functions() { }

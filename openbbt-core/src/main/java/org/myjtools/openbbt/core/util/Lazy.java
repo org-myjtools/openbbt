@@ -4,6 +4,9 @@ import java.util.Optional;
 import java.util.function.*;
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Lazy<T> {
 
     public static <T> Lazy<T> of(Supplier<T> supplier) {

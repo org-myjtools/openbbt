@@ -3,6 +3,9 @@ package org.myjtools.openbbt.core.plan;
 import java.util.function.UnaryOperator;
 import lombok.*;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class H2Server {
 
     private static final Log log = Log.of("core.persistence");

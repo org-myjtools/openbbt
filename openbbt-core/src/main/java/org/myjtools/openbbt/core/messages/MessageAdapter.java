@@ -15,7 +15,8 @@ import java.util.Properties;
  * This class uses a resource file to load messages based on the locale.
  * The resource file should be named in the format "resourceName_language.properties".
  * For example, if the resourceName is "messages" and the locale is "en", the file should be "messages_en.properties".
- */
+
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public abstract class MessageAdapter implements MessageProvider {
 
 

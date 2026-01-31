@@ -5,6 +5,9 @@ import java.util.*;
 
 import lombok.*;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 @Getter @Setter @NoArgsConstructor @EqualsAndHashCode @ToString
 public class PlanNode {
 

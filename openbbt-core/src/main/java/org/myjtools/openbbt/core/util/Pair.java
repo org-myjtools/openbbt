@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Pair<T,U>  {
 
     public static <T,U> Pair<T,U> of(Supplier<T> value, Supplier<U> fallback) {

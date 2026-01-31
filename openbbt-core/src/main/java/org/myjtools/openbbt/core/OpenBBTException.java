@@ -7,7 +7,8 @@ import java.io.Serial;
  * It extends RuntimeException, allowing it to be used as an unchecked exception.
  * This class provides constructors for creating exceptions with a message, a cause,
  * or both, and supports formatted messages.
- */
+
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public class OpenBBTException extends RuntimeException {
 
     @Serial

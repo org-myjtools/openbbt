@@ -8,7 +8,8 @@ import org.myjtools.openbbt.core.util.Lazy;
  * An abstract adapter for providing configuration resources.
  * This class implements the ConfigProvider interface and provides a mechanism
  * to load configuration definitions from a specified resource.
- */
+
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public abstract class ConfigAdapter implements ConfigProvider {
 
     private final Lazy<Config> config = Lazy.of(

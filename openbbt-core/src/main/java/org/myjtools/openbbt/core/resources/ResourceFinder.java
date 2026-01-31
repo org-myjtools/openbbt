@@ -8,6 +8,9 @@ import java.util.List;
 
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class ResourceFinder {
 
 

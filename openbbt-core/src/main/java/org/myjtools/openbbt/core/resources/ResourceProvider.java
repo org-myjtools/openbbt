@@ -10,7 +10,8 @@ import java.util.List;
  *
  * Resource providers are used to provide resources that can be used in the
  * OpenBBT application, such as images, icons, or other files.
- */
+
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 @ExtensionPoint(version = "1.0")
 public interface ResourceProvider {
 

@@ -3,6 +3,9 @@ package org.myjtools.openbbt.core.messages;
 import java.util.List;
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Messages {
 
     private final List<MessageProvider> providers;

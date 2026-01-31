@@ -23,6 +23,9 @@ import java.util.stream.Stream;
 
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 @Extension(scope = Scope.LOCAL)
 public class GherkinPlanProvider implements PlanProvider {
 

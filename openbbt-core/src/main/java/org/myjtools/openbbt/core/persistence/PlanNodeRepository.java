@@ -15,7 +15,8 @@ import java.util.stream.Stream;
  * searching nodes based on criteria, and managing node relationships.
  * Implementations of this interface should handle the underlying storage and retrieval logic,
  * allowing for flexibility in how plan nodes are stored (e.g., in-memory, database, etc.).
- * */
+ *
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public interface PlanNodeRepository  {
 
 

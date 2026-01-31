@@ -17,6 +17,9 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.*;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class H2PlanNodeRepository implements PlanNodeRepository, AutoCloseable {
 
 

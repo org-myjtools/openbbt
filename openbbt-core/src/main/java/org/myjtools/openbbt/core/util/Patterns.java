@@ -6,6 +6,9 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Patterns {
 
     private static final LoadingCache<String, Pattern> patterns = Caffeine.newBuilder()

@@ -4,6 +4,9 @@ package org.myjtools.openbbt.core.util;
 import java.util.Optional;
 import java.util.function.*;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class Either<T,U>  {
 
     public static <T,U> Either<T,U> of(Supplier<T> value, Supplier<U> fallback) {

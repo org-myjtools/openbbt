@@ -105,7 +105,8 @@ public class Session implements AutoCloseable {
     }
 
 
-    /* replace the ?1, ?2, etc. by simple ? and annotate the actual argument index to use */
+    /* replace the ?1, ?2, etc. by simple ? and annotate the actual argument index to use
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com */
     private ParsedSQL parseSql (String sql) {
         List<Integer> argIndexes = new LinkedList<>();
         Matcher paramMatcher = PARAM_REGEX.matcher(sql);

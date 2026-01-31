@@ -4,6 +4,9 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 @Extension(scope = Scope.LOCAL, name = "global")
 public class GlobalConfig extends ConfigAdapter implements ConfigProvider  {
 

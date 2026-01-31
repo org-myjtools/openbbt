@@ -1,5 +1,8 @@
 package org.myjtools.openbbt.plugins.gherkin;
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public class GherkinConstants {
 
     private GherkinConstants() { }

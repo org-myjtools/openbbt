@@ -7,19 +7,16 @@ module org.myjtools.openbbt.core {
     requires java.sql;
     requires com.h2database;
     requires com.github.f4b6a3.ulid;
-    requires org.hamcrest;
+
 
 
     exports org.myjtools.openbbt.core;
     exports org.myjtools.openbbt.core.util;
     exports org.myjtools.openbbt.core.plan;
-    exports org.myjtools.openbbt.core.expressions;
     exports org.myjtools.openbbt.core.contributors;
     exports org.myjtools.openbbt.core.persistence;
     exports org.myjtools.openbbt.core.persistence.h2;
     exports org.myjtools.openbbt.core.messages;
-    exports org.myjtools.openbbt.core.datatypes;
-    exports org.myjtools.openbbt.core.assertions;
     exports org.myjtools.openbbt.core.resources;
     exports org.myjtools.openbbt.core.step;
     exports org.myjtools.openbbt.core.backend;

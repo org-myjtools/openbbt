@@ -6,6 +6,9 @@ import java.util.*;
 
 
 
+/**
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ */
 public sealed interface PlanNodeCriteria {
 
 
