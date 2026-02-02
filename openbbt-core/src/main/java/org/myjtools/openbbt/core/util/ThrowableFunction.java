@@ -6,14 +6,14 @@ package org.myjtools.openbbt.core.util;
 @FunctionalInterface
 public interface ThrowableFunction<T,U> {
 
-    U applyThrowing(T value) throws Exception;
+	U applyThrowing(T value) throws Exception;
 
-    default U apply (T value) {
-        try {
-            return applyThrowing(value);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+	default U apply (T value) {
+		try {
+			return applyThrowing(value);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 }

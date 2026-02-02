@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 public @interface SetUp {
 
-    int order() default 100;
+	int order() default 100;
 
 }

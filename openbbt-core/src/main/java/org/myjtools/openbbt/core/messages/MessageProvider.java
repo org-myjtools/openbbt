@@ -8,13 +8,13 @@ import java.util.Optional;
 @ExtensionPoint
 public interface MessageProvider {
 
-    /**
-     * Returns a Messages instance for the specified locale.
-     *
-     * @param locale the locale for which messages are requested
-     * @return a Messages instance containing localized messages
-    
+	/**
+	 * Returns a Messages instance for the specified locale.
+	 *
+	 * @param locale the locale for which messages are requested
+	 * @return a Messages instance containing localized messages
+	
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
-    Optional<LocaleMessages> messages(Locale locale);
+	Optional<LocaleMessages> messages(Locale locale);
 
 }

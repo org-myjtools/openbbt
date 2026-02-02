@@ -11,22 +11,22 @@ import java.util.Optional;
 
 public class TestMessages extends Messages {
 
-    public TestMessages (Map<Locale, Map<String,String>> messages) {
-        super(List.of(createMessageProvider(messages)));
-    }
+	public TestMessages (Map<Locale, Map<String,String>> messages) {
+		super(List.of(createMessageProvider(messages)));
+	}
 
-    private static MessageProvider createMessageProvider(Map<Locale, Map<String,String>> messages) {
-        return locale -> {
-            Map<String, String> localizedMessages = messages.get(locale);
-            if (localizedMessages != null) {
-                return Optional.of(new LocaleMessages() {
-                    @Override
-                    public String get(String key) {
-                        return localizedMessages.getOrDefault(key, key);
-                    }
-                });
-            }
-            return Optional.empty();
-        };
-    }
+	private static MessageProvider createMessageProvider(Map<Locale, Map<String,String>> messages) {
+		return locale -> {
+			Map<String, String> localizedMessages = messages.get(locale);
+			if (localizedMessages != null) {
+				return Optional.of(new LocaleMessages() {
+					@Override
+					public String get(String key) {
+						return localizedMessages.getOrDefault(key, key);
+					}
+				});
+			}
+			return Optional.empty();
+		};
+	}
 }

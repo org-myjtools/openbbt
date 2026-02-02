@@ -7,45 +7,45 @@ package org.myjtools.openbbt.core.plan;
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public enum NodeType {
 
-    /** The root node of the test plan. */
-    TEST_PLAN(1),
+	/** The root node of the test plan. */
+	TEST_PLAN(1),
 
-    /** A test suite node, which can contain multiple test cases or aggregators. */
-    TEST_SUITE(2),
+	/** A test suite node, which can contain multiple test cases or aggregators. */
+	TEST_SUITE(2),
 
-    /** A test aggregator node, which can contain multiple test cases. */
-    TEST_AGGREGATOR(3),
+	/** A test aggregator node, which can contain multiple test cases. */
+	TEST_AGGREGATOR(3),
 
-    /** A test case node, which represents a single test case. */
-    TEST_CASE(4),
+	/** A test case node, which represents a single test case. */
+	TEST_CASE(4),
 
-    /** A step aggregator node, which can contain multiple steps. */
-    STEP_AGGREGATOR(5),
+	/** A step aggregator node, which can contain multiple steps. */
+	STEP_AGGREGATOR(5),
 
-    /** A step node, which represents a single step in a test case. */
-    STEP(6),
+	/** A step node, which represents a single step in a test case. */
+	STEP(6),
 
-    /** A virtual step node, which is used for grouping or organizing steps without executing them. */
-    VIRTUAL_STEP(7);
+	/** A virtual step node, which is used for grouping or organizing steps without executing them. */
+	VIRTUAL_STEP(7);
 
-    private static final NodeType[] VALUES = NodeType.values();
+	private static final NodeType[] VALUES = NodeType.values();
 
-    public final int value;
-
-
-
-    NodeType(int value) {
-        this.value = value;
-    }
+	public final int value;
 
 
-    public static NodeType of(int value) {
-        for (var nodeType : VALUES) {
-            if (nodeType.value == value) {
-                return  nodeType;
-            }
-        }
-        throw new IllegalArgumentException();
-    }
+
+	NodeType(int value) {
+		this.value = value;
+	}
+
+
+	public static NodeType of(int value) {
+		for (var nodeType : VALUES) {
+			if (nodeType.value == value) {
+				return  nodeType;
+			}
+		}
+		throw new IllegalArgumentException();
+	}
 }
 

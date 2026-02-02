@@ -63,112 +63,112 @@ import java.util.stream.Stream;
 public class CoreDataTypes implements DataTypeProvider {
 
 
-    /** Single word without spaces. Pattern: {@code [\w-]+}. Example: {@code hello}, {@code my-word} */
-    public static final DataType WORD = new RegexDataTypeAdapter<>(
-        "word", "[\\w-]+", String.class, x -> x, "<word>"
-    );
+	/** Single word without spaces. Pattern: {@code [\w-]+}. Example: {@code hello}, {@code my-word} */
+	public static final DataType WORD = new RegexDataTypeAdapter<>(
+		"word", "[\\w-]+", String.class, x -> x, "<word>"
+	);
 
-    /** URL/URI. Example: {@code https://example.com/path} */
-    public static final DataType URL = new RegexDataTypeAdapter<> (
-        "url",
-        "\\w+:(\\/?\\/?)[^\\s]+",
-        URI.class,
-        URI::new,
-        "<protocol://host/path>"
-    );
+	/** URL/URI. Example: {@code https://example.com/path} */
+	public static final DataType URL = new RegexDataTypeAdapter<> (
+		"url",
+		"\\w+:(\\/?\\/?)[^\\s]+",
+		URI.class,
+		URI::new,
+		"<protocol://host/path>"
+	);
 
-    /** Identifier string. Pattern: {@code \w[\w_-.]+}. Example: {@code user_123}, {@code abc.def} */
-    public static final DataType ID = new RegexDataTypeAdapter<>(
-        "id", "\\w[\\w_-\\.]+", String.class, x -> x, "<UUID>"
-    );
+	/** Identifier string. Pattern: {@code \w[\w_-.]+}. Example: {@code user_123}, {@code abc.def} */
+	public static final DataType ID = new RegexDataTypeAdapter<>(
+		"id", "\\w[\\w_-\\.]+", String.class, x -> x, "<UUID>"
+	);
 
-    /** File path (quoted). Parses to {@link Path}. Example: {@code '/path/to/file.txt'} */
-    public static final DataType FILE = new RegexDataTypeAdapter<>(
-        "file",
-        "\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
-        Path.class,
-        Path::of,
-        "local path to file/dir"
-    );
+	/** File path (quoted). Parses to {@link Path}. Example: {@code '/path/to/file.txt'} */
+	public static final DataType FILE = new RegexDataTypeAdapter<>(
+		"file",
+		"\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
+		Path.class,
+		Path::of,
+		"local path to file/dir"
+	);
 
-    /** Quoted text string. Example: {@code 'hello world'}, {@code "text"} */
-    public static final DataType TEXT = new RegexDataTypeAdapter<>(
-        "text",
-        "\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
-        String.class,
-        x -> x.substring(1, x.length()-1),
-        "'text'"
-    );
+	/** Quoted text string. Example: {@code 'hello world'}, {@code "text"} */
+	public static final DataType TEXT = new RegexDataTypeAdapter<>(
+		"text",
+		"\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
+		String.class,
+		x -> x.substring(1, x.length()-1),
+		"'text'"
+	);
 
-    /** Integer number. Supports grouping separators. Example: {@code 12345}, {@code 12,345} */
-    public static final DataType NUMBER = new NumberDataTypeAdapter<>(
-        "number",
-        Integer.class,
-        false,
-        false,
-        Number::intValue
-    );
+	/** Integer number. Supports grouping separators. Example: {@code 12345}, {@code 12,345} */
+	public static final DataType NUMBER = new NumberDataTypeAdapter<>(
+		"number",
+		Integer.class,
+		false,
+		false,
+		Number::intValue
+	);
 
-    /** Large integer (long). Supports grouping separators. Example: {@code 9999999999} */
-    public static final DataType BIG_NUMBER = new NumberDataTypeAdapter<>(
-        "big-number",
-        Long.class,
-        false,
-        false,
-        Number::longValue
-    );
+	/** Large integer (long). Supports grouping separators. Example: {@code 9999999999} */
+	public static final DataType BIG_NUMBER = new NumberDataTypeAdapter<>(
+		"big-number",
+		Long.class,
+		false,
+		false,
+		Number::longValue
+	);
 
-    /** Decimal number (BigDecimal). Example: {@code 12,345.67} */
-    public static final DataType DECIMAL = new NumberDataTypeAdapter<>(
-        "decimal",
-        BigDecimal.class,
-        true,
-        true,
-        BigDecimal.class::cast
-    );
+	/** Decimal number (BigDecimal). Example: {@code 12,345.67} */
+	public static final DataType DECIMAL = new NumberDataTypeAdapter<>(
+		"decimal",
+		BigDecimal.class,
+		true,
+		true,
+		BigDecimal.class::cast
+	);
 
-    /** ISO date. Format: {@code yyyy-MM-dd}. Example: {@code 2024-01-15} */
-    public static final DataType DATE = new TemporalDataTypeAdapter<>(
-        "date", LocalDate.class, true, false, LocalDate::from
-    );
+	/** ISO date. Format: {@code yyyy-MM-dd}. Example: {@code 2024-01-15} */
+	public static final DataType DATE = new TemporalDataTypeAdapter<>(
+		"date", LocalDate.class, true, false, LocalDate::from
+	);
 
-    /** ISO time. Format: {@code HH:mm:ss}. Example: {@code 14:30:00} */
-    public static final DataType TIME = new TemporalDataTypeAdapter<>(
-        "time", LocalTime.class, false, true, LocalTime::from
-    );
+	/** ISO time. Format: {@code HH:mm:ss}. Example: {@code 14:30:00} */
+	public static final DataType TIME = new TemporalDataTypeAdapter<>(
+		"time", LocalTime.class, false, true, LocalTime::from
+	);
 
-    /** ISO date-time. Format: {@code yyyy-MM-ddTHH:mm:ss}. Example: {@code 2024-01-15T14:30:00} */
-    public static final DataType DATE_TIME = new TemporalDataTypeAdapter<>(
-        "date-time", LocalDateTime.class, true, true, LocalDateTime::from
-    );
+	/** ISO date-time. Format: {@code yyyy-MM-ddTHH:mm:ss}. Example: {@code 2024-01-15T14:30:00} */
+	public static final DataType DATE_TIME = new TemporalDataTypeAdapter<>(
+		"date-time", LocalDateTime.class, true, true, LocalDateTime::from
+	);
 
-    /** Time-based duration. Format: {@code <hours>h <minutes>m <seconds>s <milliseconds>ms}. Example: {@code 2h 30m 15s} */
-    public static final DataType DURATION = new DurationDataTypeAdapter("duration");
+	/** Time-based duration. Format: {@code <hours>h <minutes>m <seconds>s <milliseconds>ms}. Example: {@code 2h 30m 15s} */
+	public static final DataType DURATION = new DurationDataTypeAdapter("duration");
 
-    /** Date-based period. Format: {@code <years>y <months>m <days>d}. Example: {@code 1y 6m 15d} */
-    public static final DataType PERIOD = new PeriodDataTypeAdapter("period");
+	/** Date-based period. Format: {@code <years>y <months>m <days>d}. Example: {@code 1y 6m 15d} */
+	public static final DataType PERIOD = new PeriodDataTypeAdapter("period");
 
-    /** Array of all core data types. */
-    public static final DataType[] ALL = {
-        WORD,
-        URL,
-        ID,
-        FILE,
-        TEXT,
-        NUMBER,
-        BIG_NUMBER,
-        DECIMAL,
-        DATE,
-        TIME,
-        DATE_TIME,
-        DURATION,
-        PERIOD
-    };
+	/** Array of all core data types. */
+	public static final DataType[] ALL = {
+		WORD,
+		URL,
+		ID,
+		FILE,
+		TEXT,
+		NUMBER,
+		BIG_NUMBER,
+		DECIMAL,
+		DATE,
+		TIME,
+		DATE_TIME,
+		DURATION,
+		PERIOD
+	};
 
-    @Override
-    public Stream<DataType> dataTypes() {
-        return Stream.of(ALL);
-    }
+	@Override
+	public Stream<DataType> dataTypes() {
+		return Stream.of(ALL);
+	}
 
 
 }

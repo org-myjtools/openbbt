@@ -1,45 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.myjtools</groupId>
-        <artifactId>myjtools-parent</artifactId>
-        <version>1.4.0</version>
-    </parent>
+	<parent>
+		<groupId>org.myjtools</groupId>
+		<artifactId>myjtools-parent</artifactId>
+		<version>1.4.0</version>
+	</parent>
 
-    <groupId>org.myjtools.openbbt</groupId>
-    <artifactId>openbbt</artifactId>
-    <version>1.0.0-alpha1</version>
-    <packaging>pom</packaging>
+	<groupId>org.myjtools.openbbt</groupId>
+	<artifactId>openbbt</artifactId>
+	<version>1.0.0-alpha1</version>
+	<packaging>pom</packaging>
 
-    <name>Open BBT</name>
-    <description>Open Blackbox Testing</description>
+	<name>Open BBT</name>
+	<description>Open Blackbox Testing</description>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <java.version>21</java.version>
-    </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+		<java.version>21</java.version>
+	</properties>
 
-    <licenses>
-        <license>
-            <name>MIT</name>
-            <url>https://opensource.org/license/mit/</url>
-        </license>
-    </licenses>
+	<licenses>
+		<license>
+			<name>MIT</name>
+			<url>https://opensource.org/license/mit/</url>
+		</license>
+	</licenses>
 
-    <modules>
-        <module>openbbt-core</module>
-        <!--<module>gherkin-openbbt-plugin</module>-->
-        <module>openbbt-core-datatypes</module>
-        <module>openbbt-core-assertions</module>
-        <module>openbbt-core-expressions</module>
-    </modules>
+	<modules>
+		<module>openbbt-core</module>
+		<!--<module>gherkin-openbbt-plugin</module>-->
+		<module>openbbt-core-datatypes</module>
+		<module>openbbt-core-assertions</module>
+		<module>openbbt-core-expressions</module>
+		<module>openbbt-core-persistence</module>
+	</modules>
 
 
 </project>

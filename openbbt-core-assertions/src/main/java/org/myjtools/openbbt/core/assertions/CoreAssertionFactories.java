@@ -43,51 +43,51 @@ import java.util.stream.Stream;
 @Extension(scope = Scope.SINGLETON)
 public class CoreAssertionFactories implements AssertionFactoryProvider {
 
-    /** Message provider for localized assertion patterns. */
-    @Inject("assertions")
-    Messages messages;
+	/** Message provider for localized assertion patterns. */
+	@Inject("assertions")
+	Messages messages;
 
-    /**
-     * Default constructor for extension discovery.
-     */
-    public CoreAssertionFactories() {
-        // default constructor
-    }
+	/**
+	 * Default constructor for extension discovery.
+	 */
+	public CoreAssertionFactories() {
+		// default constructor
+	}
 
-    /**
-     * Constructor for testing purposes.
-     *
-     * @param messages the message provider to use
-     */
-    public CoreAssertionFactories(Messages messages) {
-        // this constructor only exists for testing purposes
-        this.messages = messages;
-    }
+	/**
+	 * Constructor for testing purposes.
+	 *
+	 * @param messages the message provider to use
+	 */
+	public CoreAssertionFactories(Messages messages) {
+		// this constructor only exists for testing purposes
+		this.messages = messages;
+	}
 
-    /**
-     * Returns a stream of all core assertion factories.
-     *
-     * @return stream of assertion factories for numbers, decimals, dates, times, date-times, and text
-     */
-    @Override
-    public Stream<org.myjtools.openbbt.core.AssertionFactory<?>> assertionFactories() {
-        return Stream.of(
-            new ComparableAssertionFactory<>("number-assertion", Integer::valueOf, CoreDataTypes.NUMBER, messages),
-            new ComparableAssertionFactory<>("decimal-assertion", BigDecimal::new, CoreDataTypes.DECIMAL, messages),
-            new TemporalAssertionFactory<>("date-assertion", LocalDate::parse, CoreDataTypes.DATE, messages),
-            new TemporalAssertionFactory<>("time-assertion", LocalTime::parse, CoreDataTypes.TIME, messages),
-            new TemporalAssertionFactory<>("datetime-assertion", LocalDateTime::parse, CoreDataTypes.DATE_TIME, messages),
-            new StringAssertionFactory("text-assertion", CoreDataTypes.TEXT, messages)
-        );
-    }
+	/**
+	 * Returns a stream of all core assertion factories.
+	 *
+	 * @return stream of assertion factories for numbers, decimals, dates, times, date-times, and text
+	 */
+	@Override
+	public Stream<org.myjtools.openbbt.core.AssertionFactory<?>> assertionFactories() {
+		return Stream.of(
+			new ComparableAssertionFactory<>("number-assertion", Integer::valueOf, CoreDataTypes.NUMBER, messages),
+			new ComparableAssertionFactory<>("decimal-assertion", BigDecimal::new, CoreDataTypes.DECIMAL, messages),
+			new TemporalAssertionFactory<>("date-assertion", LocalDate::parse, CoreDataTypes.DATE, messages),
+			new TemporalAssertionFactory<>("time-assertion", LocalTime::parse, CoreDataTypes.TIME, messages),
+			new TemporalAssertionFactory<>("datetime-assertion", LocalDateTime::parse, CoreDataTypes.DATE_TIME, messages),
+			new StringAssertionFactory("text-assertion", CoreDataTypes.TEXT, messages)
+		);
+	}
 
 
-    /**
-     * Array of all core assertion factories for easy access.
-     */
-    public static final AssertionFactory<?>[] ALL = new CoreAssertionFactories(
-            new Messages(List.of(new AssertionMessageProvider()))
-        ).assertionFactories().toArray(AssertionFactory[]::new);
+	/**
+	 * Array of all core assertion factories for easy access.
+	 */
+	public static final AssertionFactory<?>[] ALL = new CoreAssertionFactories(
+			new Messages(List.of(new AssertionMessageProvider()))
+		).assertionFactories().toArray(AssertionFactory[]::new);
 
 
 }

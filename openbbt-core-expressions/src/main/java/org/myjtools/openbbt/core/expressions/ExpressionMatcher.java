@@ -32,64 +32,64 @@ import java.util.*;
  */
 public class ExpressionMatcher {
 
-    List<FragmentMatcher> fragments;
-    Map<String,ArgumentFragmentMatcher> arguments;
+	List<FragmentMatcher> fragments;
+	Map<String,ArgumentFragmentMatcher> arguments;
 
-    /**
-     * Creates a new expression matcher with the given fragment matchers.
-     *
-     * @param fragments the list of fragment matchers
-     */
-    public ExpressionMatcher(List<FragmentMatcher> fragments) {
-        this.fragments = List.copyOf(fragments);
-        this.arguments = new HashMap<>();
-        for (FragmentMatcher fragment : fragments) {
-            if (fragment instanceof ArgumentFragmentMatcher argumentFragmentMatcher)  {
-                arguments.put(argumentFragmentMatcher.name(), argumentFragmentMatcher);
-            }
-        }
-    }
+	/**
+	 * Creates a new expression matcher with the given fragment matchers.
+	 *
+	 * @param fragments the list of fragment matchers
+	 */
+	public ExpressionMatcher(List<FragmentMatcher> fragments) {
+		this.fragments = List.copyOf(fragments);
+		this.arguments = new HashMap<>();
+		for (FragmentMatcher fragment : fragments) {
+			if (fragment instanceof ArgumentFragmentMatcher argumentFragmentMatcher)  {
+				arguments.put(argumentFragmentMatcher.name(), argumentFragmentMatcher);
+			}
+		}
+	}
 
-    /**
-     * Returns the list of fragment matchers.
-     *
-     * @return immutable list of fragment matchers
-     */
-    public List<FragmentMatcher> fragments() {
-        return fragments;
-    }
+	/**
+	 * Returns the list of fragment matchers.
+	 *
+	 * @return immutable list of fragment matchers
+	 */
+	public List<FragmentMatcher> fragments() {
+		return fragments;
+	}
 
-    /**
-     * Matches the input string against this expression pattern.
-     *
-     * @param value  the input string to match
-     * @param locale the locale for assertion pattern matching
-     * @return a {@link Match} result containing extracted arguments and assertions
-     */
-    public Match matches(String value, Locale locale) {
-        String remaining = value;
-        boolean matching = false;
+	/**
+	 * Matches the input string against this expression pattern.
+	 *
+	 * @param value  the input string to match
+	 * @param locale the locale for assertion pattern matching
+	 * @return a {@link Match} result containing extracted arguments and assertions
+	 */
+	public Match matches(String value, Locale locale) {
+		String remaining = value;
+		boolean matching = false;
 
-        Map<String,ArgumentValue> arguments = new HashMap<>();
-        Map<String, Assertion> assertions = new HashMap<>();
+		Map<String,ArgumentValue> arguments = new HashMap<>();
+		Map<String, Assertion> assertions = new HashMap<>();
 
-        for (FragmentMatcher fragmentMatcher : fragments) {
-            var result = fragmentMatcher.matches(remaining, locale);
-            if (result.startMatched()) {
-                matching = true;
-                remaining = remaining.substring(result.consumed());
-                if (result.argument() != null) {
-                    arguments.put(result.argument().name(), result.argument());
-                }
-                if (result.assertion() != null) {
-                    assertions.put(result.assertion().name(),result.assertion());
-                }
-            } else {
-                return new Match(false);
-            }
-        }
-        return new Match(true, arguments, assertions);
-    }
+		for (FragmentMatcher fragmentMatcher : fragments) {
+			var result = fragmentMatcher.matches(remaining, locale);
+			if (result.startMatched()) {
+				matching = true;
+				remaining = remaining.substring(result.consumed());
+				if (result.argument() != null) {
+					arguments.put(result.argument().name(), result.argument());
+				}
+				if (result.assertion() != null) {
+					assertions.put(result.assertion().name(),result.assertion());
+				}
+			} else {
+				return new Match(false);
+			}
+		}
+		return new Match(true, arguments, assertions);
+	}
 
 
 

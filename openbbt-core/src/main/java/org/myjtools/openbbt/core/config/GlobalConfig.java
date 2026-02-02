@@ -10,13 +10,13 @@ import org.myjtools.openbbt.core.contributors.ConfigProvider;
 @Extension(scope = Scope.LOCAL, name = "global")
 public class GlobalConfig extends ConfigAdapter implements ConfigProvider  {
 
-    public static final String ID_TAG_PATTERN = "idTagPattern";
-    public static final String DEFINITION_TAG = "definitionTag";
-    public static final String IMPLEMENTATION_TAG = "implementationTag";
+	public static final String ID_TAG_PATTERN = "idTagPattern";
+	public static final String DEFINITION_TAG = "definitionTag";
+	public static final String IMPLEMENTATION_TAG = "implementationTag";
 
-    @Override
-    protected String resource() {
-        return "global-config.yaml";
-    }
+	@Override
+	protected String resource() {
+		return "global-config.yaml";
+	}
 
 }

@@ -18,18 +18,18 @@ import org.myjtools.openbbt.core.DataType;
  */
 public sealed interface ArgumentValue permits VariableValue, LiteralValue {
 
-    /**
-     * Returns the data type of this argument.
-     *
-     * @return the data type
-     */
-    DataType type();
+	/**
+	 * Returns the data type of this argument.
+	 *
+	 * @return the data type
+	 */
+	DataType type();
 
-    /**
-     * Returns the name of this argument.
-     *
-     * @return the argument name
-     */
-    String name();
+	/**
+	 * Returns the name of this argument.
+	 *
+	 * @return the argument name
+	 */
+	String name();
 
 }

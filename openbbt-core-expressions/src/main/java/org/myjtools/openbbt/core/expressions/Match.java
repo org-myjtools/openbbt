@@ -32,38 +32,38 @@ import java.util.Map;
  * @see Assertion
  */
 public record Match (
-        boolean matched,
-        Map<String,ArgumentValue> argument,
-        Map<String,Assertion> assertions
+		boolean matched,
+		Map<String,ArgumentValue> argument,
+		Map<String,Assertion> assertions
 ) {
 
-    /**
-     * Creates a match result with no arguments or assertions.
-     *
-     * @param matched whether the input matched
-     */
-    public Match(boolean matched) {
-        this(matched, Map.of(), Map.of());
-    }
+	/**
+	 * Creates a match result with no arguments or assertions.
+	 *
+	 * @param matched whether the input matched
+	 */
+	public Match(boolean matched) {
+		this(matched, Map.of(), Map.of());
+	}
 
-    /**
-     * Retrieves an argument value by name.
-     *
-     * @param name the argument name
-     * @return the argument value, or {@code null} if not found
-     */
-    public ArgumentValue argument(String name) {
-        return argument.get(name);
-    }
+	/**
+	 * Retrieves an argument value by name.
+	 *
+	 * @param name the argument name
+	 * @return the argument value, or {@code null} if not found
+	 */
+	public ArgumentValue argument(String name) {
+		return argument.get(name);
+	}
 
-    /**
-     * Retrieves an assertion by name.
-     *
-     * @param name the assertion name
-     * @return the assertion, or {@code null} if not found
-     */
-    public Assertion assertion(String name) {
-        return assertions.get(name);
-    }
+	/**
+	 * Retrieves an assertion by name.
+	 *
+	 * @param name the assertion name
+	 * @return the assertion, or {@code null} if not found
+	 */
+	public Assertion assertion(String name) {
+		return assertions.get(name);
+	}
 
 }

@@ -28,8 +28,8 @@ openbbt/
 │           └── config/           # Configuration management
 │
 └── gherkin-openbbt-plugin/       # Gherkin support plugin
-    └── src/main/java/
-        └── org.myjtools.openbbt.plugins.gherkin/
+	└── src/main/java/
+		└── org.myjtools.openbbt.plugins.gherkin/
 ```
 
 ## Requirements
@@ -52,20 +52,20 @@ Define test steps using annotations:
 ```java
 public class MySteps implements StepContributor {
 
-    @Step("I click on the {button} button")
-    public void clickButton(String button) {
-        // implementation
-    }
+	@Step("I click on the {button} button")
+	public void clickButton(String button) {
+		// implementation
+	}
 
-    @SetUp
-    public void setup() {
-        // runs before tests
-    }
+	@SetUp
+	public void setup() {
+		// runs before tests
+	}
 
-    @TearDown
-    public void teardown() {
-        // runs after tests
-    }
+	@TearDown
+	public void teardown() {
+		// runs after tests
+	}
 }
 ```
 
@@ -106,9 +106,9 @@ The Gherkin plugin enables writing tests using standard Gherkin syntax:
 Feature: User Authentication
 
   Scenario: Successful login
-    Given I am on the login page
-    When I enter valid credentials
-    Then I should see the dashboard
+	Given I am on the login page
+	When I enter valid credentials
+	Then I should see the dashboard
 ```
 
 ### Supported Gherkin Features

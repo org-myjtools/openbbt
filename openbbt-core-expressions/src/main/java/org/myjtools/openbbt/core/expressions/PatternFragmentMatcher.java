@@ -17,54 +17,54 @@ import java.util.regex.Pattern;
  */
 public class PatternFragmentMatcher implements FragmentMatcher {
 
-    private final Pattern pattern;
-    private final String literal;
+	private final Pattern pattern;
+	private final String literal;
 
-    /**
-     * Creates a new pattern fragment matcher.
-     *
-     * @param regex   the regex pattern to match
-     * @param literal the literal representation for display purposes
-     */
-    public PatternFragmentMatcher(String regex, String literal) {
-        this.pattern = Patterns.of(regex);
-        this.literal = literal;
-    }
+	/**
+	 * Creates a new pattern fragment matcher.
+	 *
+	 * @param regex   the regex pattern to match
+	 * @param literal the literal representation for display purposes
+	 */
+	public PatternFragmentMatcher(String regex, String literal) {
+		this.pattern = Patterns.of(regex);
+		this.literal = literal;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MatchResult matches(String input, Locale locale) {
-        var matcher = pattern.matcher(input);
-        if (matcher.find()) {
-            return new MatchResult(true, matcher.end());
-        } else {
-            return new MatchResult(false, 0);
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public MatchResult matches(String input, Locale locale) {
+		var matcher = pattern.matcher(input);
+		if (matcher.find()) {
+			return new MatchResult(true, matcher.end());
+		} else {
+			return new MatchResult(false, 0);
+		}
+	}
 
 
-    /**
-     * Returns the compiled regex pattern.
-     *
-     * @return the pattern
-     */
-    public Pattern pattern() {
-        return pattern;
-    }
+	/**
+	 * Returns the compiled regex pattern.
+	 *
+	 * @return the pattern
+	 */
+	public Pattern pattern() {
+		return pattern;
+	}
 
-    /**
-     * Returns the literal representation of this pattern.
-     *
-     * @return the literal string
-     */
-    public String literal() {
-        return literal;
-    }
+	/**
+	 * Returns the literal representation of this pattern.
+	 *
+	 * @return the literal string
+	 */
+	public String literal() {
+		return literal;
+	}
 
-    @Override
-    public String toString() {
-        return "Pattern["+literal+"]";
-    }
+	@Override
+	public String toString() {
+		return "Pattern["+literal+"]";
+	}
 }

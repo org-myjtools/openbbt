@@ -18,31 +18,31 @@ Matchers, providing descriptive error messages and an extensible API.
 ## Architecture
 
 ```
-                    +-------------------------+
-                    | AssertionFactoryProvider|  (from openbbt-core)
-                    +-------------------------+
-                               ^
-                               |
-                    +-------------------------+
-                    | CoreAssertionFactories  |  Main provider
-                    +-------------------------+
-                               |
-          +--------------------+--------------------+
-          |                    |                    |
+					+-------------------------+
+					| AssertionFactoryProvider|  (from openbbt-core)
+					+-------------------------+
+							   ^
+							   |
+					+-------------------------+
+					| CoreAssertionFactories  |  Main provider
+					+-------------------------+
+							   |
+		  +--------------------+--------------------+
+		  |                    |                    |
 +---------v--------+  +--------v--------+  +-------v---------+
 |ComparableAssertion|  |StringAssertion  |  |TemporalAssertion|
 |     Factory      |  |   Factory       |  |    Factory      |
 +------------------+  +-----------------+  +-----------------+
-          |                    |                    |
-          +--------------------+--------------------+
-                               |
-                    +----------v----------+
-                    |AssertionFactoryAdapter|  Abstract base class
-                    +----------------------+
-                               |
-                    +----------v----------+
-                    |  AssertionAdapter   |  Adapts Hamcrest Matcher
-                    +---------------------+
+		  |                    |                    |
+		  +--------------------+--------------------+
+							   |
+					+----------v----------+
+					|AssertionFactoryAdapter|  Abstract base class
+					+----------------------+
+							   |
+					+----------v----------+
+					|  AssertionAdapter   |  Adapts Hamcrest Matcher
+					+---------------------+
 ```
 
 ## Main Classes
@@ -141,11 +141,11 @@ AssertionFactory<?> numberFactory = factories.byName("number-assertion");
 
 ```java
 module org.myjtools.openbbt.core.assertions {
-    requires org.hamcrest;
-    requires org.myjtools.openbbt.core;
-    requires org.myjtools.openbbt.core.datatypes;
-    requires org.myjtools.jexten;
-    exports org.myjtools.openbbt.core.assertions;
+	requires org.hamcrest;
+	requires org.myjtools.openbbt.core;
+	requires org.myjtools.openbbt.core.datatypes;
+	requires org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.assertions;
 }
 ```
 
@@ -175,15 +175,15 @@ boolean passed = assertion.test(15); // true
 ```java
 public class CustomAssertionFactory extends AssertionFactoryAdapter<MyType> {
 
-    public CustomAssertionFactory(Messages messages) {
-        super("custom-assertion", MyType::parse, myDataType, messages);
-    }
+	public CustomAssertionFactory(Messages messages) {
+		super("custom-assertion", MyType::parse, myDataType, messages);
+	}
 
-    @Override
-    protected void fillSuppliers() {
-        suppliers.put("assertion.custom.valid",
-            it -> new AssertionAdapter(name, myCustomMatcher(it)));
-    }
+	@Override
+	protected void fillSuppliers() {
+		suppliers.put("assertion.custom.valid",
+			it -> new AssertionAdapter(name, myCustomMatcher(it)));
+	}
 }
 ```
 
@@ -195,15 +195,15 @@ To add new assertion factories, implement `AssertionFactoryProvider`:
 @Extension(scope = Scope.SINGLETON)
 public class MyAssertionFactories implements AssertionFactoryProvider {
 
-    @Inject("assertions")
-    Messages messages;
+	@Inject("assertions")
+	Messages messages;
 
-    @Override
-    public Stream<AssertionFactory<?>> assertionFactories() {
-        return Stream.of(
-            new MyCustomAssertionFactory(messages)
-        );
-    }
+	@Override
+	public Stream<AssertionFactory<?>> assertionFactories() {
+		return Stream.of(
+			new MyCustomAssertionFactory(messages)
+		);
+	}
 }
 ```
 

@@ -41,66 +41,66 @@ import java.util.regex.Pattern;
 public abstract class DataTypeAdapter<T> implements DataType {
 
 
-    private final String name;
-    private final Class<T> javaType;
-    private final Pattern pattern;
-    private final String hint;
-    private final Function<String,T> parser;
+	private final String name;
+	private final Class<T> javaType;
+	private final Pattern pattern;
+	private final String hint;
+	private final Function<String,T> parser;
 
 
-    /**
-     * Creates a new data type adapter.
-     *
-     * @param name    the unique name of this data type (e.g., "number", "date")
-     * @param javaType the Java class that this data type produces
-     * @param regex   the regex pattern for matching valid input
-     * @param hint    a human-readable hint showing the expected format
-     * @param parser  the function to convert a matched string into the target type
-     */
-    protected DataTypeAdapter(
-        String name,
-        Class<T> javaType,
-        String regex,
-        String hint,
-        Function<String,T> parser
-    ) {
-        this.name = name;
-        this.javaType = javaType;
-        this.pattern = Patterns.of(regex);
-        this.hint = hint;
-        this.parser = parser;
-    }
+	/**
+	 * Creates a new data type adapter.
+	 *
+	 * @param name    the unique name of this data type (e.g., "number", "date")
+	 * @param javaType the Java class that this data type produces
+	 * @param regex   the regex pattern for matching valid input
+	 * @param hint    a human-readable hint showing the expected format
+	 * @param parser  the function to convert a matched string into the target type
+	 */
+	protected DataTypeAdapter(
+		String name,
+		Class<T> javaType,
+		String regex,
+		String hint,
+		Function<String,T> parser
+	) {
+		this.name = name;
+		this.javaType = javaType;
+		this.pattern = Patterns.of(regex);
+		this.hint = hint;
+		this.parser = parser;
+	}
 
 
-    @Override
-    public String name() {
-        return name;
-    }
+	@Override
+	public String name() {
+		return name;
+	}
 
-    @Override
-    public Class<?> javaType() {
-        return javaType;
-    }
+	@Override
+	public Class<?> javaType() {
+		return javaType;
+	}
 
-    @Override
-    public String hint() {
-        return hint;
-    }
+	@Override
+	public String hint() {
+		return hint;
+	}
 
-    @Override
-    public Pattern pattern() {
-        return pattern;
-    }
+	@Override
+	public Pattern pattern() {
+		return pattern;
+	}
 
-    @Override
-    public T parse(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        Matcher matcher = matcher(value);
-        if (!matcher.matches()) {
-            throw new OpenBBTException("Invalid value for data type {}: {}\nExpected pattern: {}",name,value,hint);
-        }
-        return parser.apply(value);
-    }
+	@Override
+	public T parse(String value) {
+		if (value == null || value.isBlank()) {
+			return null;
+		}
+		Matcher matcher = matcher(value);
+		if (!matcher.matches()) {
+			throw new OpenBBTException("Invalid value for data type {}: {}\nExpected pattern: {}",name,value,hint);
+		}
+		return parser.apply(value);
+	}
 }

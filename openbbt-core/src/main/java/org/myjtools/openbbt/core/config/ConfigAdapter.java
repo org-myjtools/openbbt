@@ -12,24 +12,24 @@ import org.myjtools.openbbt.core.util.Lazy;
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public abstract class ConfigAdapter implements ConfigProvider {
 
-    private final Lazy<Config> config = Lazy.of(
-        ()-> Config.withDefinitions(Config.loadDefinitionsFromResource(resource(),getClass().getClassLoader()))
-    );
+	private final Lazy<Config> config = Lazy.of(
+		()-> Config.withDefinitions(Config.loadDefinitionsFromResource(resource(),getClass().getClassLoader()))
+	);
 
 
-    /**
-     * Returns the resource path from which the configuration definitions
-     * will be loaded.
-     *
-     * @return the resource path as a String
-     */
-    protected abstract String resource();
+	/**
+	 * Returns the resource path from which the configuration definitions
+	 * will be loaded.
+	 *
+	 * @return the resource path as a String
+	 */
+	protected abstract String resource();
 
 
-    @Override
-    public Config config() {
-        return config.get();
-    }
+	@Override
+	public Config config() {
+		return config.get();
+	}
 
 
 }

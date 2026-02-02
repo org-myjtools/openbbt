@@ -9,10 +9,10 @@ import java.util.Locale;
  */
 public interface AssertionFactory<T> {
 
-    String name();
+	String name();
 
-    List<AssertionPattern<T>> patterns(Locale locale);
+	List<AssertionPattern<T>> patterns(Locale locale);
 
-    Assertion assertion(AssertionPattern<T> pattern, String input);
+	Assertion assertion(AssertionPattern<T> pattern, String input);
 
 }

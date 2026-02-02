@@ -8,20 +8,20 @@ import java.util.List;
  */
 public class Messages {
 
-    private final List<MessageProvider> providers;
+	private final List<MessageProvider> providers;
 
 
-    public Messages(List<MessageProvider> providers) {
-        this.providers = providers;
-    }
+	public Messages(List<MessageProvider> providers) {
+		this.providers = providers;
+	}
 
 
-    public LocaleMessages forLocale(java.util.Locale locale) {
-        return providers.stream()
-                .flatMap(provider -> provider.messages(locale).stream())
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No messages found for locale: " + locale));
-    }
+	public LocaleMessages forLocale(java.util.Locale locale) {
+		return providers.stream()
+				.flatMap(provider -> provider.messages(locale).stream())
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("No messages found for locale: " + locale));
+	}
 
 
 }

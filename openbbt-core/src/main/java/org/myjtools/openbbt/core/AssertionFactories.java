@@ -29,56 +29,56 @@ import java.util.Map;
 public class AssertionFactories {
 
 
-    /**
-     * Creates a new registry from the given assertion factories.
-     *
-     * @param assertionFactories the factories to include in the registry
-     * @return a new {@code AssertionFactories} instance
-     */
-    public static AssertionFactories of(AssertionFactory<?>... assertionFactories) {
-        return new AssertionFactories(assertionFactories);
-    }
+	/**
+	 * Creates a new registry from the given assertion factories.
+	 *
+	 * @param assertionFactories the factories to include in the registry
+	 * @return a new {@code AssertionFactories} instance
+	 */
+	public static AssertionFactories of(AssertionFactory<?>... assertionFactories) {
+		return new AssertionFactories(assertionFactories);
+	}
 
-    /**
-     * Creates a new registry from the given collection of assertion factories.
-     *
-     * @param assertionFactories the factories to include in the registry
-     * @return a new {@code AssertionFactories} instance
-     */
-    public static AssertionFactories of(Collection<AssertionFactory<?>> assertionFactories) {
-        return new AssertionFactories(assertionFactories.toArray(AssertionFactory[]::new));
-    }
+	/**
+	 * Creates a new registry from the given collection of assertion factories.
+	 *
+	 * @param assertionFactories the factories to include in the registry
+	 * @return a new {@code AssertionFactories} instance
+	 */
+	public static AssertionFactories of(Collection<AssertionFactory<?>> assertionFactories) {
+		return new AssertionFactories(assertionFactories.toArray(AssertionFactory[]::new));
+	}
 
-    private final Map<String, AssertionFactory<?>> assertionFactoriesByName = new HashMap<>();
+	private final Map<String, AssertionFactory<?>> assertionFactoriesByName = new HashMap<>();
 
-    /**
-     * Private constructor that populates the factory map.
-     *
-     * @param assertionFactories the factories to register
-     */
-    private AssertionFactories(AssertionFactory<?>[] assertionFactories) {
-        for (AssertionFactory<?> assertionFactory : assertionFactories) {
-            this.assertionFactoriesByName.put(assertionFactory.name(), assertionFactory);
-        }
-    }
+	/**
+	 * Private constructor that populates the factory map.
+	 *
+	 * @param assertionFactories the factories to register
+	 */
+	private AssertionFactories(AssertionFactory<?>[] assertionFactories) {
+		for (AssertionFactory<?> assertionFactory : assertionFactories) {
+			this.assertionFactoriesByName.put(assertionFactory.name(), assertionFactory);
+		}
+	}
 
-    /**
-     * Retrieves an assertion factory by its name.
-     *
-     * @param value the name of the factory to retrieve
-     * @return the assertion factory with the given name
-     * @throws OpenBBTException if no factory with the given name exists
-     */
-    public AssertionFactory<?> byName(String value) {
-        AssertionFactory<?> assertionFactory = assertionFactoriesByName.get(value);
-        if (assertionFactory == null) {
-            throw new OpenBBTException(
-                "Unknown assertion {}\n\tAccepted assertions are: {}",
-                value,
-                String.join(", ", assertionFactoriesByName.keySet())
-            );
-        }
-        return assertionFactory;
-    }
+	/**
+	 * Retrieves an assertion factory by its name.
+	 *
+	 * @param value the name of the factory to retrieve
+	 * @return the assertion factory with the given name
+	 * @throws OpenBBTException if no factory with the given name exists
+	 */
+	public AssertionFactory<?> byName(String value) {
+		AssertionFactory<?> assertionFactory = assertionFactoriesByName.get(value);
+		if (assertionFactory == null) {
+			throw new OpenBBTException(
+				"Unknown assertion {}\n\tAccepted assertions are: {}",
+				value,
+				String.join(", ", assertionFactoriesByName.keySet())
+			);
+		}
+		return assertionFactory;
+	}
 
 }

@@ -32,53 +32,53 @@ import org.myjtools.openbbt.core.Assertion;
  */
 public class AssertionAdapter implements Assertion {
 
-    private final Matcher<?> matcher;
-    private final String name;
+	private final Matcher<?> matcher;
+	private final String name;
 
-    /**
-     * Creates a new assertion adapter.
-     *
-     * @param name    the identifier name of the assertion
-     * @param matcher the Hamcrest matcher that will perform the validation
-     */
-    public AssertionAdapter(String name, Matcher<?> matcher) {
-        this.name = name;
-        this.matcher = matcher;
-    }
+	/**
+	 * Creates a new assertion adapter.
+	 *
+	 * @param name    the identifier name of the assertion
+	 * @param matcher the Hamcrest matcher that will perform the validation
+	 */
+	public AssertionAdapter(String name, Matcher<?> matcher) {
+		this.name = name;
+		this.matcher = matcher;
+	}
 
-    /**
-     * Tests whether the actual value matches the expected condition.
-     *
-     * @param actualValue the value to test
-     * @return {@code true} if the value matches, {@code false} otherwise
-     */
-    @Override
-    public boolean test(Object actualValue) {
-        return matcher.matches(actualValue);
-    }
+	/**
+	 * Tests whether the actual value matches the expected condition.
+	 *
+	 * @param actualValue the value to test
+	 * @return {@code true} if the value matches, {@code false} otherwise
+	 */
+	@Override
+	public boolean test(Object actualValue) {
+		return matcher.matches(actualValue);
+	}
 
-    /**
-     * Describes why the assertion failed for the given value.
-     *
-     * @param actualValue the value that failed the assertion
-     * @return a human-readable description of the mismatch
-     */
-    @Override
-    public String describeFailure(Object actualValue) {
-        Description description = new StringDescription();
-        matcher.describeMismatch(actualValue, description);
-        return description.toString();
-    }
+	/**
+	 * Describes why the assertion failed for the given value.
+	 *
+	 * @param actualValue the value that failed the assertion
+	 * @return a human-readable description of the mismatch
+	 */
+	@Override
+	public String describeFailure(Object actualValue) {
+		Description description = new StringDescription();
+		matcher.describeMismatch(actualValue, description);
+		return description.toString();
+	}
 
-    /**
-     * Returns the name of this assertion.
-     *
-     * @return the assertion name
-     */
-    @Override
-    public String name() {
-        return name;
-    }
+	/**
+	 * Returns the name of this assertion.
+	 *
+	 * @return the assertion name
+	 */
+	@Override
+	public String name() {
+		return name;
+	}
 
 
 }

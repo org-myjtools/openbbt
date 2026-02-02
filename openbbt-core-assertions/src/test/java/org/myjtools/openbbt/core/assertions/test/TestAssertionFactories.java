@@ -13,44 +13,44 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class TestAssertionFactories {
 
-    static AssertionFactories factories = AssertionFactories.of(CoreAssertionFactories.ALL);
+	static AssertionFactories factories = AssertionFactories.of(CoreAssertionFactories.ALL);
 
-    @Test
-    void coreEnglish_shouldContainAllDefaultFactories() {
-        assertThat(factories.byName("number-assertion")).isNotNull();
-        assertThat(factories.byName("decimal-assertion")).isNotNull();
-        assertThat(factories.byName("date-assertion")).isNotNull();
-        assertThat(factories.byName("time-assertion")).isNotNull();
-        assertThat(factories.byName("datetime-assertion")).isNotNull();
-        assertThat(factories.byName("text-assertion")).isNotNull();
-    }
+	@Test
+	void coreEnglish_shouldContainAllDefaultFactories() {
+		assertThat(factories.byName("number-assertion")).isNotNull();
+		assertThat(factories.byName("decimal-assertion")).isNotNull();
+		assertThat(factories.byName("date-assertion")).isNotNull();
+		assertThat(factories.byName("time-assertion")).isNotNull();
+		assertThat(factories.byName("datetime-assertion")).isNotNull();
+		assertThat(factories.byName("text-assertion")).isNotNull();
+	}
 
-    @Test
-    void byName_withValidName_shouldReturnFactory() {
-        AssertionFactory<?> factory = factories.byName("number-assertion");
+	@Test
+	void byName_withValidName_shouldReturnFactory() {
+		AssertionFactory<?> factory = factories.byName("number-assertion");
 
-        assertThat(factory).isNotNull();
-        assertThat(factory.name()).isEqualTo("number-assertion");
-    }
+		assertThat(factory).isNotNull();
+		assertThat(factory.name()).isEqualTo("number-assertion");
+	}
 
-    @Test
-    void byName_withInvalidName_shouldThrowException() {
-        assertThatThrownBy(() -> factories.byName("non-existent-assertion"))
-            .isInstanceOf(OpenBBTException.class)
-            .hasMessageContaining("Unknown assertion")
-            .hasMessageContaining("non-existent-assertion");
-    }
+	@Test
+	void byName_withInvalidName_shouldThrowException() {
+		assertThatThrownBy(() -> factories.byName("non-existent-assertion"))
+			.isInstanceOf(OpenBBTException.class)
+			.hasMessageContaining("Unknown assertion")
+			.hasMessageContaining("non-existent-assertion");
+	}
 
-    @Test
-    void of_withVarargs_shouldCreateRegistry() {
-        AssertionFactory<?> numberFactory = factories.byName("number-assertion");
-        AssertionFactory<?> textFactory = factories.byName("text-assertion");
+	@Test
+	void of_withVarargs_shouldCreateRegistry() {
+		AssertionFactory<?> numberFactory = factories.byName("number-assertion");
+		AssertionFactory<?> textFactory = factories.byName("text-assertion");
 
-        AssertionFactories custom = AssertionFactories.of(numberFactory, textFactory);
+		AssertionFactories custom = AssertionFactories.of(numberFactory, textFactory);
 
-        assertThat(custom.byName("number-assertion")).isNotNull();
-        assertThat(custom.byName("text-assertion")).isNotNull();
-        assertThatThrownBy(() -> custom.byName("date-assertion"))
-            .isInstanceOf(OpenBBTException.class);
-    }
+		assertThat(custom.byName("number-assertion")).isNotNull();
+		assertThat(custom.byName("text-assertion")).isNotNull();
+		assertThatThrownBy(() -> custom.byName("date-assertion"))
+			.isInstanceOf(OpenBBTException.class);
+	}
 }

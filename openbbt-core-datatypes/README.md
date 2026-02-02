@@ -61,13 +61,13 @@ Abstract base class that provides:
 
 ```java
 public abstract class DataTypeAdapter<T> implements DataType {
-    protected DataTypeAdapter(
-        String name,
-        Class<T> javaType,
-        String regex,
-        String hint,
-        Function<String,T> parser
-    );
+	protected DataTypeAdapter(
+		String name,
+		Class<T> javaType,
+		String regex,
+		String hint,
+		Function<String,T> parser
+	);
 }
 ```
 
@@ -77,13 +77,13 @@ Lightweight adapter for simple regex-based types:
 
 ```java
 public class RegexDataTypeAdapter<T> implements DataType {
-    public RegexDataTypeAdapter(
-        String name,
-        String regex,
-        Class<T> javaType,
-        ThrowableFunction<String, T> parser,
-        String hint
-    );
+	public RegexDataTypeAdapter(
+		String name,
+		String regex,
+		Class<T> javaType,
+		ThrowableFunction<String, T> parser,
+		String hint
+	);
 }
 ```
 
@@ -94,12 +94,12 @@ Plugin extension that provides all built-in data types:
 ```java
 @Extension(scope = Scope.SINGLETON)
 public class CoreDataTypes implements DataTypeProvider {
-    public static final DataType WORD = ...;
-    public static final DataType NUMBER = ...;
-    // ... other types
+	public static final DataType WORD = ...;
+	public static final DataType NUMBER = ...;
+	// ... other types
 
-    @Override
-    public Stream<DataType> dataTypes() { ... }
+	@Override
+	public Stream<DataType> dataTypes() { ... }
 }
 ```
 
@@ -126,11 +126,11 @@ boolean isValid = NUMBER.matcher("12345").matches();
 
 ```java
 DataType EMAIL = new RegexDataTypeAdapter<>(
-    "email",
-    "[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}",
-    String.class,
-    x -> x,
-    "user@example.com"
+	"email",
+	"[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}",
+	String.class,
+	x -> x,
+	"user@example.com"
 );
 ```
 
@@ -138,15 +138,15 @@ DataType EMAIL = new RegexDataTypeAdapter<>(
 
 ```java
 public class CustomTypeAdapter extends DataTypeAdapter<MyType> {
-    public CustomTypeAdapter() {
-        super(
-            "custom",
-            MyType.class,
-            "regex-pattern",
-            "<hint>",
-            MyType::parse
-        );
-    }
+	public CustomTypeAdapter() {
+		super(
+			"custom",
+			MyType.class,
+			"regex-pattern",
+			"<hint>",
+			MyType::parse
+		);
+	}
 }
 ```
 
@@ -158,12 +158,12 @@ Implement `DataTypeProvider` and annotate with `@Extension`:
 @Extension(scope = Scope.SINGLETON)
 public class MyDataTypes implements DataTypeProvider {
 
-    public static final DataType MY_TYPE = new RegexDataTypeAdapter<>(...);
+	public static final DataType MY_TYPE = new RegexDataTypeAdapter<>(...);
 
-    @Override
-    public Stream<DataType> dataTypes() {
-        return Stream.of(MY_TYPE);
-    }
+	@Override
+	public Stream<DataType> dataTypes() {
+		return Stream.of(MY_TYPE);
+	}
 }
 ```
 
@@ -196,9 +196,9 @@ Examples: `1y`, `6m`, `1y 6m`, `2y 3m 15d`
 
 ```java
 module org.myjtools.openbbt.core.datatypes {
-    requires org.myjtools.openbbt.core;
-    requires org.myjtools.jexten;
-    exports org.myjtools.openbbt.core.datatypes;
+	requires org.myjtools.openbbt.core;
+	requires org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.datatypes;
 }
 ```
 

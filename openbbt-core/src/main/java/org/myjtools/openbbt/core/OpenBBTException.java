@@ -11,40 +11,40 @@ import java.io.Serial;
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public class OpenBBTException extends RuntimeException {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 
-    public OpenBBTException(String message) {
-        super(message);
-    }
+	public OpenBBTException(String message) {
+		super(message);
+	}
 
-    public OpenBBTException(String message, Object... args) {
-        super(format(message,args));
-    }
+	public OpenBBTException(String message, Object... args) {
+		super(format(message,args));
+	}
 
-    public OpenBBTException(Throwable cause, String message) {
-        super(message, cause);
-    }
+	public OpenBBTException(Throwable cause, String message) {
+		super(message, cause);
+	}
 
-    public OpenBBTException(Throwable cause, String message, Object... args) {
-        super(format(message,args), cause);
-    }
+	public OpenBBTException(Throwable cause, String message, Object... args) {
+		super(format(message,args), cause);
+	}
 
-    public OpenBBTException(Throwable cause) {
-        super(cause);
-    }
+	public OpenBBTException(Throwable cause) {
+		super(cause);
+	}
 
 
-    protected static String format(String message, Object... args) {
-        if (args == null || args.length == 0) {
-            return message;
-        }
-        String formattedMessage = message;
-        for (Object arg : args) {
-            formattedMessage = formattedMessage.replaceFirst("\\{}", String.valueOf(arg));
-        }
-        return formattedMessage;
-    }
+	protected static String format(String message, Object... args) {
+		if (args == null || args.length == 0) {
+			return message;
+		}
+		String formattedMessage = message;
+		for (Object arg : args) {
+			formattedMessage = formattedMessage.replaceFirst("\\{}", String.valueOf(arg));
+		}
+		return formattedMessage;
+	}
 
 }

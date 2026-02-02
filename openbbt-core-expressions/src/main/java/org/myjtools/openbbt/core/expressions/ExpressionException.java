@@ -19,27 +19,27 @@ import java.io.Serial;
  */
 public class ExpressionException extends OpenBBTException {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
-    /**
-     * Creates an exception with position information.
-     *
-     * @param text     the expression text
-     * @param position the error position in the text
-     * @param message  the error message
-     */
-    public ExpressionException(String text, int position, String message) {
-        super("Error in expression {} at position {}: {}. {}", position, text, message);
-    }
+	/**
+	 * Creates an exception with position information.
+	 *
+	 * @param text     the expression text
+	 * @param position the error position in the text
+	 * @param message  the error message
+	 */
+	public ExpressionException(String text, int position, String message) {
+		super("Error in expression {} at position {}: {}. {}", position, text, message);
+	}
 
-    /**
-     * Creates an exception with a formatted message.
-     *
-     * @param message the message pattern
-     * @param args    the message arguments
-     */
-    public ExpressionException(String message, Object... args) {
-        super(message, args);
-    }
+	/**
+	 * Creates an exception with a formatted message.
+	 *
+	 * @param message the message pattern
+	 * @param args    the message arguments
+	 */
+	public ExpressionException(String message, Object... args) {
+		super(message, args);
+	}
 }

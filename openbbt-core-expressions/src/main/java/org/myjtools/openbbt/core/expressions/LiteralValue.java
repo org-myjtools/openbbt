@@ -25,13 +25,13 @@ import org.myjtools.openbbt.core.DataType;
  */
 public record LiteralValue(String name, String literal, DataType type) implements ArgumentValue {
 
-    /**
-     * Parses and returns the typed value.
-     *
-     * @return the parsed value according to the data type
-     */
-    public Object value() {
-        return type.parse(literal);
-    }
+	/**
+	 * Parses and returns the typed value.
+	 *
+	 * @return the parsed value according to the data type
+	 */
+	public Object value() {
+		return type.parse(literal);
+	}
 
 }

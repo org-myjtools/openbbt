@@ -9,6 +9,6 @@ import java.util.stream.Stream;
 @ExtensionPoint
 public interface AssertionFactoryProvider {
 
-    Stream<AssertionFactory<?>> assertionFactories();
+	Stream<AssertionFactory<?>> assertionFactories();
 
 }

@@ -38,69 +38,69 @@ import java.util.regex.Pattern;
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public class RegexDataTypeAdapter<T> implements DataType {
 
-    private final String name;
-    private final String regex;
-    private final Class<T> javaType;
-    private final ThrowableFunction<String,T> parser;
-    private final String hint;
+	private final String name;
+	private final String regex;
+	private final Class<T> javaType;
+	private final ThrowableFunction<String,T> parser;
+	private final String hint;
 
 
-    /**
-     * Creates a new regex-based data type adapter.
-     *
-     * @param name     the unique name of this data type
-     * @param regex    the regex pattern for matching valid input
-     * @param javaType the Java class that this data type produces
-     * @param parser   the function to convert a string into the target type
-     * @param hint     a human-readable hint showing the expected format
-     */
-    public RegexDataTypeAdapter(
-        String name,
-        String regex,
-        Class<T> javaType,
-        ThrowableFunction<String, T> parser,
-        String hint
-    ) {
-        this.name = name;
-        this.regex = regex;
-        this.javaType = javaType;
-        this.parser = parser;
-        this.hint = hint;
-    }
+	/**
+	 * Creates a new regex-based data type adapter.
+	 *
+	 * @param name     the unique name of this data type
+	 * @param regex    the regex pattern for matching valid input
+	 * @param javaType the Java class that this data type produces
+	 * @param parser   the function to convert a string into the target type
+	 * @param hint     a human-readable hint showing the expected format
+	 */
+	public RegexDataTypeAdapter(
+		String name,
+		String regex,
+		Class<T> javaType,
+		ThrowableFunction<String, T> parser,
+		String hint
+	) {
+		this.name = name;
+		this.regex = regex;
+		this.javaType = javaType;
+		this.parser = parser;
+		this.hint = hint;
+	}
 
 
-    @Override
-    public String name() {
-        return name;
-    }
+	@Override
+	public String name() {
+		return name;
+	}
 
 
-    @Override
-    public Class<T> javaType() {
-        return javaType;
-    }
+	@Override
+	public Class<T> javaType() {
+		return javaType;
+	}
 
 
-    @Override
-    public String hint() {
-        return hint;
-    }
+	@Override
+	public String hint() {
+		return hint;
+	}
 
 
-    @Override
-    public Pattern pattern() {
-        return Patterns.of(regex);
-    }
+	@Override
+	public Pattern pattern() {
+		return Patterns.of(regex);
+	}
 
 
-    @Override
-    public Object parse(String value) {
-        return parser.apply(value);
-    }
+	@Override
+	public Object parse(String value) {
+		return parser.apply(value);
+	}
 
 
-    @Override
-    public String toString() {
-        return name+"["+javaType.getName()+"]";
-    }
+	@Override
+	public String toString() {
+		return name+"["+javaType.getName()+"]";
+	}
 }

@@ -27,34 +27,34 @@ import java.util.Locale;
  */
 public class AssertionFactoryFragmentMatcher<T> implements FragmentMatcher {
 
-    private final AssertionFactory<T> assertionFactory;
+	private final AssertionFactory<T> assertionFactory;
 
-    /**
-     * Creates an assertion factory fragment matcher.
-     *
-     * @param assertionFactory the factory providing assertion patterns
-     */
-    public AssertionFactoryFragmentMatcher(AssertionFactory<T> assertionFactory) {
-        this.assertionFactory = assertionFactory;
-    }
+	/**
+	 * Creates an assertion factory fragment matcher.
+	 *
+	 * @param assertionFactory the factory providing assertion patterns
+	 */
+	public AssertionFactoryFragmentMatcher(AssertionFactory<T> assertionFactory) {
+		this.assertionFactory = assertionFactory;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MatchResult matches(String input, Locale locale) {
-        for (AssertionPattern<T> pattern : assertionFactory.patterns(locale)) {
-            var matcher = pattern.matcher(input);
-            if (matcher.find()) {
-                Assertion assertion = assertionFactory.assertion(pattern,input);
-                return new MatchResult(true, matcher.end(), assertion);
-            }
-        }
-        return new MatchResult(false);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public MatchResult matches(String input, Locale locale) {
+		for (AssertionPattern<T> pattern : assertionFactory.patterns(locale)) {
+			var matcher = pattern.matcher(input);
+			if (matcher.find()) {
+				Assertion assertion = assertionFactory.assertion(pattern,input);
+				return new MatchResult(true, matcher.end(), assertion);
+			}
+		}
+		return new MatchResult(false);
+	}
 
-    @Override
-    public String toString() {
-        return "AssertionFactory["+assertionFactory.name()+"]";
-    }
+	@Override
+	public String toString() {
+		return "AssertionFactory["+assertionFactory.name()+"]";
+	}
 }

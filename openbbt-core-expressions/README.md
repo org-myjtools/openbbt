@@ -25,36 +25,36 @@ defining step patterns with support for:
 ## Architecture
 
 ```
-                         Expression String
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │  ExpressionTokenizer  │  Lexical analysis
-                    └───────────────────────┘
-                                │
-                         List<ExpressionToken>
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │  ExpressionASTBuilder │  Syntax analysis
-                    └───────────────────────┘
-                                │
-                         ExpressionASTNode (tree)
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │ExpressionMatcherBuilder│  Code generation
-                    └───────────────────────┘
-                                │
-                         ExpressionMatcher
-                                │
-                    ┌───────────┴───────────┐
-                    │    FragmentMatchers   │
-                    ├───────────────────────┤
-                    │ PatternFragmentMatcher│  Regex patterns
-                    │ArgumentFragmentMatcher│  Typed arguments
-                    │AssertionFactoryFragment│  Assertions
-                    └───────────────────────┘
+						 Expression String
+								│
+								▼
+					┌───────────────────────┐
+					│  ExpressionTokenizer  │  Lexical analysis
+					└───────────────────────┘
+								│
+						 List<ExpressionToken>
+								│
+								▼
+					┌───────────────────────┐
+					│  ExpressionASTBuilder │  Syntax analysis
+					└───────────────────────┘
+								│
+						 ExpressionASTNode (tree)
+								│
+								▼
+					┌───────────────────────┐
+					│ExpressionMatcherBuilder│  Code generation
+					└───────────────────────┘
+								│
+						 ExpressionMatcher
+								│
+					┌───────────┴───────────┐
+					│    FragmentMatchers   │
+					├───────────────────────┤
+					│ PatternFragmentMatcher│  Regex patterns
+					│ArgumentFragmentMatcher│  Typed arguments
+					│AssertionFactoryFragment│  Assertions
+					└───────────────────────┘
 ```
 
 ## Expression Syntax
@@ -162,9 +162,9 @@ use parentheses \(like this\)      # literal parentheses
 
 ```java
 module org.myjtools.openbbt.core.expressions {
-    requires org.myjtools.openbbt.core;
-    requires org.myjtools.openbbt.core.assertions;
-    exports org.myjtools.openbbt.core.expressions;
+	requires org.myjtools.openbbt.core;
+	requires org.myjtools.openbbt.core.assertions;
+	exports org.myjtools.openbbt.core.expressions;
 }
 ```
 
@@ -180,15 +180,15 @@ AssertionFactories assertions = AssertionFactories.of(CoreAssertionFactories.ALL
 // Build the matcher
 ExpressionMatcherBuilder builder = new ExpressionMatcherBuilder(dataTypes, assertions);
 ExpressionMatcher matcher = builder.buildExpressionMatcher(
-    "the user {name:text} has {count:number} items"
+	"the user {name:text} has {count:number} items"
 );
 
 // Match against input
 Match match = matcher.matches("the user John has 5 items", Locale.ENGLISH);
 
 if (match.matched()) {
-    ArgumentValue name = match.argument("name");   // LiteralValue("John")
-    ArgumentValue count = match.argument("count"); // LiteralValue("5")
+	ArgumentValue name = match.argument("name");   // LiteralValue("John")
+	ArgumentValue count = match.argument("count"); // LiteralValue("5")
 }
 ```
 
@@ -196,15 +196,15 @@ if (match.matched()) {
 
 ```java
 ExpressionMatcher matcher = builder.buildExpressionMatcher(
-    "the count {{number-assertion}}"
+	"the count {{number-assertion}}"
 );
 
 Match match = matcher.matches("the count is greater than 10", Locale.ENGLISH);
 
 if (match.matched()) {
-    Assertion assertion = match.assertion("number-assertion");
-    boolean passed = assertion.test(15); // true
-    boolean failed = assertion.test(5);  // false
+	Assertion assertion = match.assertion("number-assertion");
+	boolean passed = assertion.test(15); // true
+	boolean failed = assertion.test(5);  // false
 }
 ```
 
@@ -213,7 +213,7 @@ if (match.matched()) {
 ```java
 // Build AST directly
 ExpressionASTBuilder astBuilder = new ExpressionASTBuilder(
-    "click (the) button"
+	"click (the) button"
 );
 ExpressionASTNode tree = astBuilder.buildTree();
 
@@ -231,7 +231,7 @@ ExpressionASTNode tree = astBuilder.buildTree();
 
 ```java
 ExpressionTokenizer tokenizer = new ExpressionTokenizer(
-    "the value is {number}"
+	"the value is {number}"
 );
 List<ExpressionToken> tokens = tokenizer.tokens();
 

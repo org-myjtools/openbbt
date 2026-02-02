@@ -30,77 +30,77 @@ import java.util.regex.Pattern;
  */
 public class ArgumentFragmentMatcher implements FragmentMatcher {
 
-    private static final Pattern variable = Patterns.of("\\$\\{([a-zA-Z_][a-zA-Z0-9_]*)\\}");
+	private static final Pattern variable = Patterns.of("\\$\\{([a-zA-Z_][a-zA-Z0-9_]*)\\}");
 
-    private final DataType dataType;
-    private final String name;
+	private final DataType dataType;
+	private final String name;
 
-    /**
-     * Creates an argument matcher using the data type name as the argument name.
-     *
-     * @param dataType the data type for this argument
-     */
-    public ArgumentFragmentMatcher(DataType dataType) {
-        this(dataType.name(), dataType);
-    }
+	/**
+	 * Creates an argument matcher using the data type name as the argument name.
+	 *
+	 * @param dataType the data type for this argument
+	 */
+	public ArgumentFragmentMatcher(DataType dataType) {
+		this(dataType.name(), dataType);
+	}
 
-    /**
-     * Creates an argument matcher with an explicit name.
-     *
-     * @param name     the argument name
-     * @param dataType the data type for this argument
-     */
-    public ArgumentFragmentMatcher(String name, DataType dataType) {
-        this.dataType = dataType;
-        this.name = name;
-    }
+	/**
+	 * Creates an argument matcher with an explicit name.
+	 *
+	 * @param name     the argument name
+	 * @param dataType the data type for this argument
+	 */
+	public ArgumentFragmentMatcher(String name, DataType dataType) {
+		this.dataType = dataType;
+		this.name = name;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MatchResult matches(String input, Locale locale) {
-        var dataTypePattern = dataType.pattern().matcher(input);
-        if (dataTypePattern.find()) {
-            return new MatchResult(
-                true,
-                dataTypePattern.end(),
-                new LiteralValue(name, dataTypePattern.group(), dataType)
-            );
-        } else {
-            var variableMatcher = variable.matcher(input);
-            if (variableMatcher.find()) {
-                return new MatchResult(
-                    true,
-                    variableMatcher.end(),
-                    new VariableValue(name, variableMatcher.group(1), dataType)
-                );
-            }
-            return new MatchResult(false);
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public MatchResult matches(String input, Locale locale) {
+		var dataTypePattern = dataType.pattern().matcher(input);
+		if (dataTypePattern.find()) {
+			return new MatchResult(
+				true,
+				dataTypePattern.end(),
+				new LiteralValue(name, dataTypePattern.group(), dataType)
+			);
+		} else {
+			var variableMatcher = variable.matcher(input);
+			if (variableMatcher.find()) {
+				return new MatchResult(
+					true,
+					variableMatcher.end(),
+					new VariableValue(name, variableMatcher.group(1), dataType)
+				);
+			}
+			return new MatchResult(false);
+		}
+	}
 
 
-    @Override
-    public String toString() {
-        return "Argument["+name+":"+dataType.name()+"]";
-    }
+	@Override
+	public String toString() {
+		return "Argument["+name+":"+dataType.name()+"]";
+	}
 
-    /**
-     * Returns the data type of this argument.
-     *
-     * @return the data type
-     */
-    public DataType type() {
-        return dataType;
-    }
+	/**
+	 * Returns the data type of this argument.
+	 *
+	 * @return the data type
+	 */
+	public DataType type() {
+		return dataType;
+	}
 
-    /**
-     * Returns the name of this argument.
-     *
-     * @return the argument name
-     */
-    public String name() {
-        return name;
-    }
+	/**
+	 * Returns the name of this argument.
+	 *
+	 * @return the argument name
+	 */
+	public String name() {
+		return name;
+	}
 }

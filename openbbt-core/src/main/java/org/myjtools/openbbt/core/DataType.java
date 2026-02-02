@@ -11,19 +11,19 @@ import java.util.regex.Pattern;
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
 public interface DataType {
 
-    String name();
+	String name();
 
-    Class<?> javaType();
+	Class<?> javaType();
 
-    String hint();
+	String hint();
 
-    Pattern pattern();
+	Pattern pattern();
 
-    Object parse (String value);
+	Object parse (String value);
 
-    default Matcher matcher(String value) {
-        return pattern().matcher(value);
-    }
+	default Matcher matcher(String value) {
+		return pattern().matcher(value);
+	}
 
 
 }

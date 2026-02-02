@@ -21,52 +21,52 @@ public abstract class MessageAdapter implements MessageProvider {
 
 
 
-    protected static class ResourceMessages implements LocaleMessages {
+	protected static class ResourceMessages implements LocaleMessages {
 
-        private final Properties properties;
+		private final Properties properties;
 
-        public ResourceMessages(InputStream inputStream) throws IOException {
-            this.properties = new Properties();
-            properties.load(inputStream);
-        }
+		public ResourceMessages(InputStream inputStream) throws IOException {
+			this.properties = new Properties();
+			properties.load(inputStream);
+		}
 
-        @Override
-        public String get(String key) {
-            return properties.getProperty(key);
-        }
-    }
-
-
-
-    private final String resourceName;
-
-    private final LoadingCache<Locale, LocaleMessages> messages = Caffeine.newBuilder()
-        .maximumSize(10) // max number of messages to cache
-        .build(this::createMessages);
-
-    protected MessageAdapter(String resourceName) {
-        this.resourceName = resourceName;
-    }
+		@Override
+		public String get(String key) {
+			return properties.getProperty(key);
+		}
+	}
 
 
 
-    private LocaleMessages createMessages(Locale locale) {
-        var module = getClass().getModule();
-        try (var is = module.getResourceAsStream(resourceName + "_" + locale.getLanguage() + ".properties")) {
-            if (is == null) {
-                return null;
-            }
-            return new ResourceMessages(is);
-        } catch (IOException e) {
-            throw new OpenBBTException(e, "Could not load messages for {} in locale {}", resourceName, locale);
-        }
-    }
+	private final String resourceName;
+
+	private final LoadingCache<Locale, LocaleMessages> messages = Caffeine.newBuilder()
+		.maximumSize(10) // max number of messages to cache
+		.build(this::createMessages);
+
+	protected MessageAdapter(String resourceName) {
+		this.resourceName = resourceName;
+	}
 
 
-    @Override
-    public Optional<LocaleMessages> messages(Locale locale) {
-        return Optional.ofNullable(messages.get(locale));
-    }
+
+	private LocaleMessages createMessages(Locale locale) {
+		var module = getClass().getModule();
+		try (var is = module.getResourceAsStream(resourceName + "_" + locale.getLanguage() + ".properties")) {
+			if (is == null) {
+				return null;
+			}
+			return new ResourceMessages(is);
+		} catch (IOException e) {
+			throw new OpenBBTException(e, "Could not load messages for {} in locale {}", resourceName, locale);
+		}
+	}
+
+
+	@Override
+	public Optional<LocaleMessages> messages(Locale locale) {
+		return Optional.ofNullable(messages.get(locale));
+	}
 
 
 
