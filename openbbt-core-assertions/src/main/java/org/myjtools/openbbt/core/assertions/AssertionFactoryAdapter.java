@@ -147,7 +147,7 @@ public abstract class AssertionFactoryAdapter<T> implements org.myjtools.openbbt
 		for (String key : suppliers.keySet()) {
 			String expression = localeMessages.get(key);
 			expression = "\\s*" + expression + "\\s*"; // accept blanks before and after
-			expression = expression.replaceAll("\\)", ")?"); // make () optionals
+			expression = expression.replace(")", ")?"); // make () optionals
 			expression = expression.replace("_", parameterPattern);
 			patterns.add(new AssertionPattern<>(key,Patterns.of(expression),suppliers.get(key)));
 		}

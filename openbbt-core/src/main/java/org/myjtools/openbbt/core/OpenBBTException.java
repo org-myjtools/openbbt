@@ -44,7 +44,7 @@ public class OpenBBTException extends RuntimeException {
 		for (Object arg : args) {
 			formattedMessage = formattedMessage.replaceFirst(
 				"\\{}",
-				args == null ? "<null>" : String.valueOf(arg)
+				arg == null ? "<null>" : String.valueOf(arg)
 			);
 		}
 		return formattedMessage;
