@@ -42,7 +42,10 @@ public class OpenBBTException extends RuntimeException {
 		}
 		String formattedMessage = message;
 		for (Object arg : args) {
-			formattedMessage = formattedMessage.replaceFirst("\\{}", String.valueOf(arg));
+			formattedMessage = formattedMessage.replaceFirst(
+				"\\{}",
+				args == null ? "<null>" : String.valueOf(arg)
+			);
 		}
 		return formattedMessage;
 	}

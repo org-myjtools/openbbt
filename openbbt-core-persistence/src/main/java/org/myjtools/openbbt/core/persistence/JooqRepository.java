@@ -1,84 +1,65 @@
 package org.myjtools.openbbt.core.persistence;
 
 import com.github.f4b6a3.ulid.UlidCreator;
-import org.flywaydb.core.Flyway;
 import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DataSourceConnectionProvider;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.PlanNodeCriteria;
-import org.myjtools.openbbt.core.PlanNodeRepository;
 import org.myjtools.openbbt.core.plan.*;
-import javax.sql.DataSource;
 import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * jOOQ-based implementation of {@link PlanNodeRepository}.
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
+public class JooqRepository {
 
-	private static final Table<Record> TABLE_PLAN_NODE = DSL.table("PLAN_NODE");
-	private static final Table<Record> TABLE_PLAN_NODE_TAG = DSL.table("PLAN_NODE_TAG");
-	private static final Table<Record> TABLE_PLAN_NODE_PROPERTY = DSL.table("PLAN_NODE_PROPERTY");
+	private static final Table<Record> TABLE_PLAN_NODE = DSL.table("plan_node");
+	private static final Table<Record> TABLE_PLAN_NODE_TAG = DSL.table("plan_node_tag");
+	private static final Table<Record> TABLE_PLAN_NODE_PROPERTY = DSL.table("plan_node_property");
 
-	private static final Field<UUID> FIELD_NODE_ID = DSL.field("NODE_ID", UUID.class);
-	private static final Field<UUID> FIELD_PARENT_NODE = DSL.field("PARENT_NODE", UUID.class);
-	private static final Field<UUID> FIELD_ROOT_NODE = DSL.field("ROOT_NODE", UUID.class);
-	private static final Field<UUID> FIELD_PLAN_NODE = DSL.field("PLAN_NODE", UUID.class);
-	private static final Field<String> FIELD_TAG = DSL.field("TAG", String.class);
-	private static final Field<String> FIELD_KEY = DSL.field("KEY", String.class);
-	private static final Field<String> FIELD_VALUE = DSL.field("VALUE", String.class);
-	private static final Field<Integer> FIELD_NODE_POSITION = DSL.field("NODE_POSITION", Integer.class);
-	private static final Field<Integer> FIELD_TYPE = DSL.field("TYPE", Integer.class);
-	private static final Field<String> FIELD_NAME = DSL.field("NAME", String.class);
-	private static final Field<String> FIELD_TEST_CASE_ID = DSL.field("TEST_CASE_ID", String.class);
-	private static final Field<String> FIELD_LANGUAGE = DSL.field("LANGUAGE", String.class);
-	private static final Field<String> FIELD_SOURCE = DSL.field("SOURCE", String.class);
-	private static final Field<String> FIELD_DISPLAY = DSL.field("DISPLAY", String.class);
-	private static final Field<String> FIELD_KEYWORD = DSL.field("KEYWORD", String.class);
-	private static final Field<String> FIELD_DESCRIPTION = DSL.field("DESCRIPTION", String.class);
-	private static final Field<String> FIELD_DATA_TABLE = DSL.field("DATA_TABLE", String.class);
-	private static final Field<String> FIELD_DOCUMENT = DSL.field("DOCUMENT", String.class);
-	private static final Field<String> FIELD_DOCUMENT_MIME_TYPE = DSL.field("DOCUMENT_MIME_TYPE", String.class);
+	private static final Field<UUID> FIELD_NODE_ID = DSL.field("node_id", UUID.class);
+	private static final Field<UUID> FIELD_PARENT_NODE = DSL.field("parent_node", UUID.class);
+	private static final Field<UUID> FIELD_ROOT_NODE = DSL.field("root_node", UUID.class);
+	private static final Field<UUID> FIELD_PLAN_NODE = DSL.field("plan_node", UUID.class);
+	private static final Field<String> FIELD_TAG = DSL.field("tag", String.class);
+	private static final Field<String> FIELD_KEY = DSL.field("key", String.class);
+	private static final Field<String> FIELD_VALUE = DSL.field("value", String.class);
+	private static final Field<Integer> FIELD_NODE_POSITION = DSL.field("node_position", Integer.class);
+	private static final Field<Integer> FIELD_TYPE = DSL.field("type", Integer.class);
+	private static final Field<String> FIELD_NAME = DSL.field("name", String.class);
+	private static final Field<String> FIELD_TEST_CASE_ID = DSL.field("test_case_id", String.class);
+	private static final Field<String> FIELD_LANGUAGE = DSL.field("language", String.class);
+	private static final Field<String> FIELD_SOURCE = DSL.field("source", String.class);
+	private static final Field<String> FIELD_DISPLAY = DSL.field("display", String.class);
+	private static final Field<String> FIELD_KEYWORD = DSL.field("keyword", String.class);
+	private static final Field<String> FIELD_DESCRIPTION = DSL.field("description", String.class);
+	private static final Field<String> FIELD_DATA_TABLE = DSL.field("data_table", String.class);
+	private static final Field<String> FIELD_DOCUMENT = DSL.field("document", String.class);
+	private static final Field<String> FIELD_DOCUMENT_MIME_TYPE = DSL.field("document_mime_type", String.class);
 
-	private DataSource dataSource;
-	private DSLContext dsl;
+	private final DSLContext dsl;
 
-
-	protected abstract DataSource createDataSource();
-	protected abstract SQLDialect dialect();
-	protected abstract String migrationLocation();
-
-	protected void init() {
-		this.dataSource = createDataSource();
-		migrate();
-		this.dsl = DSL.using(new DataSourceConnectionProvider(dataSource), dialect());
-	}
-
-	private void migrate() {
-		Flyway flyway = Flyway.configure(getClass().getClassLoader())
-			.dataSource(dataSource)
-			.locations(migrationLocation())
-			.load();
-		flyway.migrate();
+	public JooqRepository(DSLContext dsl) {
+		this.dsl = dsl;
 	}
 
 
-	@Override
-	public Optional<PlanNode> getNode(PlanNodeID id) {
-		return dsl.selectFrom(TABLE_PLAN_NODE)
+	public Optional<PlanNode> getNodeData(PlanNodeID id) {
+		return dsl.select(
+				FIELD_NODE_ID, FIELD_ROOT_NODE, FIELD_PARENT_NODE, FIELD_NODE_POSITION,
+				FIELD_TYPE, FIELD_NAME, FIELD_TEST_CASE_ID, FIELD_LANGUAGE, FIELD_SOURCE,
+				FIELD_KEYWORD, FIELD_DESCRIPTION, FIELD_DISPLAY, FIELD_DATA_TABLE,
+				FIELD_DOCUMENT, FIELD_DOCUMENT_MIME_TYPE
+			)
+			.from(TABLE_PLAN_NODE)
 			.where(FIELD_NODE_ID.eq(id.UUID()))
 			.fetchOptional()
 			.map(this::mapPlanNode);
 	}
 
 
-
-
-	@Override
 	public boolean existsNode(PlanNodeID id) {
 		return dsl.fetchExists(
 			dsl.selectOne()
@@ -88,85 +69,70 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 	}
 
 
-	@Override
-	public Optional<PlanNodeID> getParentNodeID(PlanNodeID id) {
+	public Optional<PlanNodeID> getParentNode(PlanNodeID id) {
 		assertExistsNode(id);
 		return dsl.select(FIELD_PARENT_NODE)
 			.from(TABLE_PLAN_NODE)
 			.where(FIELD_NODE_ID.eq(id.UUID()))
 			.fetchOptional()
-			.map(record1 -> mapPlanNodeID(record1,FIELD_PARENT_NODE));
+			.map(record1 -> record1.get(FIELD_PARENT_NODE))
+			.filter(Objects::nonNull)
+			.map(PlanNodeID::new);
 	}
 
 
-	@Override
-	public Optional<PlanNode> getParentNode(PlanNodeID id) {
-		return getParentNodeID(id).flatMap(this::getNode);
-	}
-
-
-	@Override
 	public void deleteNode(PlanNodeID id) {
-		// First detach from parent if exists
-		getParentNode(id).ifPresent(parent -> detachChildNode(parent.nodeID(), id));
-		// Delete node (cascade should handle hierarchy, tags, properties)
+		// first detach from parent if exists
+		getParentNode(id).ifPresent(parent -> detachChildNode(parent, id));
+		// delete node (cascade should handle hierarchy, tags, properties)
 		dsl.deleteFrom(TABLE_PLAN_NODE)
 		   .where(FIELD_NODE_ID.eq(id.UUID()))
 		   .execute();
 	}
 
 
-	@Override
-	public void attachChildNode(PlanNodeID parent, PlanNodeID child) {
+	public void attachChildNodeLast(PlanNodeID parent, PlanNodeID child) {
 		assertExistsNode(parent);
 		assertExistsNode(child);
-
 		dsl.update(TABLE_PLAN_NODE)
 		   .set(FIELD_PARENT_NODE, parent.UUID())
 		   .set(FIELD_NODE_POSITION, maxNodePosition(parent) + 1)
-		   .set(FIELD_ROOT_NODE, getRootNodeID(parent).orElse(parent).UUID())
+		   .set(FIELD_ROOT_NODE, getRootNode(parent).orElse(parent).UUID())
 		   .where(FIELD_NODE_ID.eq(child.UUID()))
 		   .execute();
 	}
 
 
-
-
-	@Override
 	public void attachChildNodeFirst(PlanNodeID parent, PlanNodeID child) {
 		assertExistsNode(parent);
 		assertExistsNode(child);
-		// Increment position of existing child nodes
+		// increment position of existing child nodes
 		dsl.update(TABLE_PLAN_NODE)
 			.set(FIELD_NODE_POSITION, FIELD_NODE_POSITION.add(1))
 			.where(FIELD_PARENT_NODE.eq(parent.UUID()))
 			.execute();
-		// Set child node as first
+		// set child node as first
 		dsl.update(TABLE_PLAN_NODE)
 			.set(FIELD_PARENT_NODE, parent.UUID())
-			.set(FIELD_ROOT_NODE, getRootNodeID(parent).orElse(parent).UUID())
+			.set(FIELD_ROOT_NODE, getRootNode(parent).orElse(parent).UUID())
 			.set(FIELD_NODE_POSITION, 1)
 			.where(FIELD_NODE_ID.eq(child.UUID()))
 			.execute();
 	}
 
 
-
-
-	@Override
 	public void detachChildNode(PlanNodeID parent, PlanNodeID child) {
 		assertExistsNode(parent);
 		assertExistsNode(child);
 		dsl.update(TABLE_PLAN_NODE)
 			.set(FIELD_PARENT_NODE, (UUID) null)
 			.set(FIELD_ROOT_NODE, child.UUID())
-			.where(FIELD_PLAN_NODE.eq(child.UUID()))
+			.where(FIELD_NODE_ID.eq(child.UUID()))
 			.execute();
 	}
 
 
-	@Override
-	public Optional<PlanNodeID> getRootNodeID(PlanNodeID id) {
+	public Optional<PlanNodeID> getRootNode(PlanNodeID id) {
 		assertExistsNode(id);
 		return dsl.select(FIELD_ROOT_NODE)
 			.from(TABLE_PLAN_NODE)
@@ -176,36 +142,18 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 	}
 
 
-	@Override
-	public Optional<PlanNode> getRootNode(PlanNodeID id) {
-		return getRootNodeID(id).flatMap(this::getNode);
-	}
-
-
-	@Override
-	public List<PlanNodeID> getNodeChildrenID(PlanNodeID id) {
+	public Stream<PlanNodeID> getNodeChildren(PlanNodeID id) {
 		assertExistsNode(id);
 		return dsl.select(FIELD_NODE_ID)
 			.from(TABLE_PLAN_NODE)
 			.where(FIELD_PARENT_NODE.eq(id.UUID()))
 			.orderBy(FIELD_NODE_POSITION)
-			.fetch()
+			.fetchStream()
 			.map(record1 -> mapPlanNodeID(record1, FIELD_NODE_ID));
 	}
 
 
-	@Override
-	public List<PlanNode> getNodeChildren(PlanNodeID id) {
-		return getNodeChildrenID(id).stream()
-			.map(this::getNode)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.toList();
-	}
-
-
-	@Override
-	public Stream<PlanNodeID> getNodeDescendantsID(PlanNodeID id) {
+	public Stream<PlanNodeID> getNodeDescendants(PlanNodeID id) {
 		assertExistsNode(id);
 		return dsl.withRecursive("descendants").as(
 			   DSL.select(FIELD_NODE_ID)
@@ -216,8 +164,8 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 					   .from(TABLE_PLAN_NODE)
 					  .join(DSL.table("descendants"))
 					  .on(
-						  TABLE_PLAN_NODE.field(FIELD_PARENT_NODE).eq(DSL.field("descendants.NODE_ID", UUID.class))
-						  .and(TABLE_PLAN_NODE.field(FIELD_ROOT_NODE).eq(DSL.field("ancestors.ROOT_NODE", UUID.class)))
+						  TABLE_PLAN_NODE.field(FIELD_PARENT_NODE).eq(DSL.field("descendants.node_id", UUID.class))
+						  .and(TABLE_PLAN_NODE.field(FIELD_ROOT_NODE).eq(DSL.field("ancestors.root_node", UUID.class)))
 					  )
 			   )
 		   )
@@ -228,17 +176,7 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 	}
 
 
-	@Override
-	public Stream<PlanNode> getNodeDescendants(PlanNodeID id) {
-		return getNodeDescendantsID(id)
-			.map(this::getNode)
-			.filter(Optional::isPresent)
-			.map(Optional::get);
-	}
-
-
-	@Override
-	public Stream<PlanNodeID> getNodeAncestorsID(PlanNodeID id) {
+	public Stream<PlanNodeID> getNodeAncestors(PlanNodeID id) {
 		assertExistsNode(id);
 		return dsl.withRecursive("ancestors").as(
                DSL.select(FIELD_PARENT_NODE)
@@ -249,8 +187,8 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
                        .from(TABLE_PLAN_NODE)
                       .join(DSL.table("ancestors"))
                       .on(
-                          TABLE_PLAN_NODE.field(FIELD_NODE_ID).eq(DSL.field("ancestors.PARENT_NODE", UUID.class))
-                          .and(TABLE_PLAN_NODE.field(FIELD_ROOT_NODE).eq(DSL.field("ancestors.ROOT_NODE", UUID.class)))
+                          TABLE_PLAN_NODE.field(FIELD_NODE_ID).eq(DSL.field("ancestors.parent_node", UUID.class))
+                          .and(TABLE_PLAN_NODE.field(FIELD_ROOT_NODE).eq(DSL.field("ancestors.root_node", UUID.class)))
                       )
                )
 		   )
@@ -262,16 +200,6 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 	}
 
 
-	@Override
-	public Stream<PlanNode> getNodeAncestors(PlanNodeID id) {
-		return getNodeAncestorsID(id)
-            .map(this::getNode)
-            .filter(Optional::isPresent)
-            .map(Optional::get);
-	}
-
-
-	@Override
 	public PlanNodeID persistNode(PlanNode node) {
 		boolean isUpdate = node.nodeID() != null;
 		PlanNodeID id;
@@ -294,7 +222,7 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 		dsl.insertInto(TABLE_PLAN_NODE)
 		   .set(FIELD_NODE_ID, node.nodeID().UUID())
 		   .set(FIELD_ROOT_NODE, node.nodeID().UUID())
-		   .set(FIELD_PARENT_NODE, (UUID)null)
+		   .set(FIELD_PARENT_NODE, (UUID) null)
 		   .set(FIELD_NODE_POSITION, 1)
 		   .set(FIELD_TYPE, node.nodeType() != null ? node.nodeType().value : null)
 		   .set(FIELD_NAME, node.name())
@@ -364,13 +292,12 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 	}
 
 
-	@Override
-	public Stream<PlanNode> searchNodes(PlanNodeCriteria criteria) {
+	public Stream<PlanNodeID> searchNodes(PlanNodeCriteria criteria) {
 		Condition condition = buildCondition(criteria);
-		return dsl.selectFrom(TABLE_PLAN_NODE)
+		return dsl.select(FIELD_NODE_ID).from(TABLE_PLAN_NODE)
 			.where(condition)
 			.fetchStream()
-			.map(this::mapPlanNode);
+			.map(rec1 -> mapPlanNodeID(rec1, FIELD_NODE_ID));
 	}
 
 
@@ -459,19 +386,19 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 		} else {
 			// All descendants (depth == -1) or up to certain depth
 			return FIELD_NODE_ID.in(
-				DSL.withRecursive("descendants", "NODE_ID", "DEPTH").as(
+				DSL.withRecursive("descendants", "node_id", "depth").as(
 					DSL.select(FIELD_NODE_ID, DSL.inline(1))
 						.from(TABLE_PLAN_NODE)
 						.where(FIELD_PARENT_NODE.eq(parent))
 					.unionAll(
-						DSL.select(TABLE_PLAN_NODE.field(FIELD_NODE_ID), DSL.field("descendants.DEPTH", Integer.class).add(1))
+						DSL.select(TABLE_PLAN_NODE.field(FIELD_NODE_ID), DSL.field("descendants.depth", Integer.class).add(1))
 							.from(TABLE_PLAN_NODE)
 							.join(DSL.table("descendants"))
-							.on(TABLE_PLAN_NODE.field(FIELD_PARENT_NODE).eq(DSL.field("descendants.NODE_ID", UUID.class)))
-							.where(depth < 0 ? DSL.trueCondition() : DSL.field("descendants.DEPTH", Integer.class).lt(depth))
+							.on(TABLE_PLAN_NODE.field(FIELD_PARENT_NODE).eq(DSL.field("descendants.node_id", UUID.class)))
+							.where(depth < 0 ? DSL.trueCondition() : DSL.field("descendants.depth", Integer.class).lt(depth))
 					)
 				)
-				.select(DSL.field("NODE_ID", UUID.class))
+				.select(DSL.field("node_id", UUID.class))
 				.from(DSL.table("descendants"))
 			);
 		}
@@ -489,26 +416,25 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 		} else {
 			// All ancestors (depth == -1) or up to certain depth
 			return FIELD_NODE_ID.in(
-				DSL.withRecursive("ancestors", "NODE_ID", "DEPTH").as(
+				DSL.withRecursive("ancestors", "node_id", "depth").as(
 					DSL.select(FIELD_PARENT_NODE, DSL.inline(1))
 						.from(TABLE_PLAN_NODE)
 						.where(FIELD_NODE_ID.eq(child))
 						.and(FIELD_PARENT_NODE.isNotNull())
 					.unionAll(
-						DSL.select(TABLE_PLAN_NODE.field(FIELD_PARENT_NODE), DSL.field("ancestors.DEPTH", Integer.class).add(1))
+						DSL.select(TABLE_PLAN_NODE.field(FIELD_PARENT_NODE), DSL.field("ancestors.depth", Integer.class).add(1))
 							.from(TABLE_PLAN_NODE)
 							.join(DSL.table("ancestors"))
-							.on(TABLE_PLAN_NODE.field(FIELD_NODE_ID).eq(DSL.field("ancestors.NODE_ID", UUID.class)))
+							.on(TABLE_PLAN_NODE.field(FIELD_NODE_ID).eq(DSL.field("ancestors.node_id", UUID.class)))
 							.where(TABLE_PLAN_NODE.field(FIELD_PARENT_NODE).isNotNull())
-							.and(depth < 0 ? DSL.trueCondition() : DSL.field("ancestors.DEPTH", Integer.class).lt(depth))
+							.and(depth < 0 ? DSL.trueCondition() : DSL.field("ancestors.depth", Integer.class).lt(depth))
 					)
 				)
-				.select(DSL.field("NODE_ID", UUID.class))
+				.select(DSL.field("node_id", UUID.class))
 				.from(DSL.table("ancestors"))
 			);
 		}
 	}
-
 
 
 	private PlanNodeID mapPlanNodeID(Record1<UUID> record1, Field<UUID> field) {
@@ -516,26 +442,26 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 	}
 
 
-	private PlanNode mapPlanNode(Record record) {
+	private PlanNode mapPlanNode(Record rec) {
 		PlanNode node = new PlanNode();
-		node.nodeID(new PlanNodeID(record.get(FIELD_NODE_ID)));
-		Integer typeValue = record.get(FIELD_TYPE);
+		node.nodeID(new PlanNodeID(rec.get(FIELD_NODE_ID)));
+		Integer typeValue = rec.get(FIELD_TYPE);
 		if (typeValue != null) {
 			node.nodeType(NodeType.of(typeValue));
 		}
-		node.name(record.get(FIELD_NAME));
-		node.language(record.get(FIELD_LANGUAGE));
-		node.testCaseID(record.get(FIELD_TEST_CASE_ID));
-		node.source(record.get(FIELD_SOURCE));
-		node.keyword(record.get(FIELD_KEYWORD));
-		node.description(record.get(FIELD_DESCRIPTION));
-		node.display(record.get(FIELD_DISPLAY));
-		String dataTableStr = record.get(FIELD_DATA_TABLE);
+		node.name(rec.get(FIELD_NAME));
+		node.language(rec.get(FIELD_LANGUAGE));
+		node.testCaseID(rec.get(FIELD_TEST_CASE_ID));
+		node.source(rec.get(FIELD_SOURCE));
+		node.keyword(rec.get(FIELD_KEYWORD));
+		node.description(rec.get(FIELD_DESCRIPTION));
+		node.display(rec.get(FIELD_DISPLAY));
+		String dataTableStr = rec.get(FIELD_DATA_TABLE);
 		if (dataTableStr != null) {
 			node.dataTable(DataTable.fromString(dataTableStr));
 		}
-		String documentContent = record.get(FIELD_DOCUMENT);
-		String documentMimeType = record.get(FIELD_DOCUMENT_MIME_TYPE);
+		String documentContent = rec.get(FIELD_DOCUMENT);
+		String documentMimeType = rec.get(FIELD_DOCUMENT_MIME_TYPE);
 		if (documentContent != null) {
 			node.document(Document.of(documentMimeType, documentContent));
 		}
@@ -545,13 +471,15 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 
 	private void fillTagsAndProperties(PlanNode planNode) {
 		// fill tags
-		Set<String> tags = new HashSet<>(dsl.selectFrom(TABLE_PLAN_NODE_TAG)
+		Set<String> tags = new HashSet<>(dsl.select(FIELD_TAG)
+            .from(TABLE_PLAN_NODE_TAG)
             .where(FIELD_PLAN_NODE.eq(planNode.nodeID().UUID()))
             .fetch(FIELD_TAG));
 		planNode.tags(tags);
 		// fill properties
 		SortedMap<String, String> props = new TreeMap<>();
-		dsl.selectFrom(TABLE_PLAN_NODE_PROPERTY)
+		dsl.select(FIELD_KEY, FIELD_VALUE)
+            .from(TABLE_PLAN_NODE_PROPERTY)
             .where(FIELD_PLAN_NODE.eq(planNode.nodeID().UUID()))
             .fetch()
             .forEach(rec -> props.put(rec.get(FIELD_KEY), rec.get(FIELD_VALUE)));
@@ -569,11 +497,13 @@ public abstract class JooqPlanNodeRepository implements PlanNodeRepository {
 
 
 	private void assertExistsNode(PlanNodeID id) {
+		if (id == null) {
+			throw new OpenBBTException("Plan node ID is null!");
+		}
 		if (!existsNode(id)) {
 			throw new OpenBBTException("Plan node {} not present in repository", id);
 		}
 	}
-
 
 
 	private PlanNodeID generatePlanNodeID() {

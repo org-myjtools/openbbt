@@ -10,4 +10,5 @@ module org.myjtools.openbbt.core.persistence {
 	exports org.myjtools.openbbt.core.persistence;
 
 	opens org.myjtools.openbbt.core.persistence.migration.hsqldb;
+	opens org.myjtools.openbbt.core.persistence.migration.postgresql;
 }
