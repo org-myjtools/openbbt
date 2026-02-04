@@ -43,6 +43,7 @@
 			<groupId>org.myjtools.jexten</groupId>
 			<artifactId>jexten-plugin-manager</artifactId>
 			<version>1.0.0-alpha1</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -50,12 +51,7 @@
 			<version>1.18.38</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.myjtools.jexten</groupId>
-			<artifactId>jexten-core</artifactId>
-			<version>1.0.0</version>
-			<scope>compile</scope>
-		</dependency>
+
 	</dependencies>
 
 

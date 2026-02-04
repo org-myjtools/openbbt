@@ -7,7 +7,7 @@ import org.myjtools.openbbt.core.contributors.ConfigProvider;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-@Extension(scope = Scope.LOCAL, name = "global")
+@Extension(scope = Scope.SINGLETON, name = "global")
 public class GlobalConfig extends ConfigAdapter implements ConfigProvider  {
 
 	public static final String ID_TAG_PATTERN = "idTagPattern";
