@@ -4,7 +4,7 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.AssertionFactory;
-import org.myjtools.openbbt.core.AssertionFactoryProvider;
+import org.myjtools.openbbt.core.contributors.AssertionFactoryProvider;
 import org.myjtools.openbbt.core.datatypes.CoreDataTypes;
 import org.myjtools.openbbt.core.messages.Messages;
 import java.math.BigDecimal;

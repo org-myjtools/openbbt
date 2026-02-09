@@ -40,6 +40,7 @@
 		<module>openbbt-core-assertions</module>
 		<module>openbbt-core-expressions</module>
 		<module>openbbt-core-persistence</module>
+		<module>openbbt-plugin-starter</module>
 	</modules>
 
 

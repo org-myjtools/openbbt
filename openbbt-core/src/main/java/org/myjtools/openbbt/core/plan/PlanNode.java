@@ -14,7 +14,7 @@ public class PlanNode {
 	private NodeType nodeType;
 	private String name;
 	private String language;
-	private String testCaseID;
+	private String identifier;
 	private String source;
 	private String keyword;
 	private DataTable dataTable;

@@ -56,7 +56,7 @@
  * }</pre>
  *
  * @see org.myjtools.openbbt.core.DataType
- * @see org.myjtools.openbbt.core.DataTypeProvider
+ * @see org.myjtools.openbbt.core.contributors.DataTypeProvider
  * @see CoreDataTypes
  * @see DataTypeAdapter
  * @see RegexDataTypeAdapter

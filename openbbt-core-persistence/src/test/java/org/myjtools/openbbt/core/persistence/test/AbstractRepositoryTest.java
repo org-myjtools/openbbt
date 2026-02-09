@@ -1,24 +1,35 @@
 package org.myjtools.openbbt.core.persistence.test;
 
-import org.jooq.DSLContext;
+import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.myjtools.openbbt.core.persistence.DataSourceProvider;
 import org.myjtools.openbbt.core.persistence.JooqRepository;
 import org.myjtools.openbbt.core.plan.*;
-
+import javax.sql.DataSource;
 import java.util.*;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 abstract class AbstractRepositoryTest {
 
 	protected JooqRepository repo;
+	private DataSource dataSource;
 
-	protected abstract DSLContext createDSLContext();
+	protected abstract DataSourceProvider dataSourceProvider();
 
 	@BeforeEach
 	void setUp() {
-		repo = new JooqRepository(createDSLContext());
+		DataSourceProvider provider = dataSourceProvider();
+		dataSource = provider.obtainDataSource();
+		repo = new JooqRepository(dataSource, provider.dialect());
+	}
+
+	@AfterEach
+	void tearDown() {
+		if (dataSource instanceof HikariDataSource hikari) {
+			hikari.close();
+		}
 	}
 
 	@Test
@@ -33,7 +44,7 @@ abstract class AbstractRepositoryTest {
 			.nodeType(NodeType.TEST_PLAN)
 			.name("test name")
 			.language("en")
-			.testCaseID("TC-001")
+			.identifier("TC-001")
 			.source("test.feature")
 			.keyword("Scenario")
 			.description("test description")
@@ -53,7 +64,7 @@ abstract class AbstractRepositoryTest {
 		assertThat(retrieved.nodeType()).isEqualTo(NodeType.TEST_PLAN);
 		assertThat(retrieved.name()).isEqualTo("test name");
 		assertThat(retrieved.language()).isEqualTo("en");
-		assertThat(retrieved.testCaseID()).isEqualTo("TC-001");
+		assertThat(retrieved.identifier()).isEqualTo("TC-001");
 		assertThat(retrieved.source()).isEqualTo("test.feature");
 		assertThat(retrieved.keyword()).isEqualTo("Scenario");
 		assertThat(retrieved.description()).isEqualTo("test description");
@@ -234,6 +245,56 @@ abstract class AbstractRepositoryTest {
 
 		List<PlanNodeID> children = repo.getNodeChildren(root).toList();
 		assertThat(children).containsExactly(child4, child2, child1, child3);
+	}
+
+	@Test
+	void deleteNodeWithChildren_cascadesDeletion() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+
+		repo.attachChildNodeLast(root, child1);
+		repo.attachChildNodeLast(root, child2);
+
+		repo.deleteNode(root);
+
+		assertThat(repo.existsNode(root)).isFalse();
+		assertThat(repo.existsNode(child1)).isFalse();
+		assertThat(repo.existsNode(child2)).isFalse();
+	}
+
+	@Test
+	void deleteNodeWithMultipleParents_doesNotDeleteSharedNode() {
+		PlanNodeID root1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root1"));
+		PlanNodeID root2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root2"));
+		PlanNodeID sharedChild = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("sharedChild"));
+
+		repo.attachChildNodeLast(root1, sharedChild);
+		repo.attachChildNodeLast(root2, sharedChild);
+
+		repo.deleteNode(root1);
+
+		assertThat(repo.existsNode(root1)).isFalse();
+		assertThat(repo.existsNode(sharedChild)).isTrue();
+		assertThat(repo.getParentNode(sharedChild)).contains(root2);
+	}
+
+	@Test
+	void reattachNodeToSameParent_maintainsOrder() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		PlanNodeID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
+
+		repo.attachChildNodeLast(root, child1);
+		repo.attachChildNodeLast(root, child2);
+		repo.attachChildNodeLast(root, child3);
+
+		repo.detachChildNode(root, child2);
+		repo.attachChildNodeLast(root, child2);
+
+		List<PlanNodeID> children = repo.getNodeChildren(root).toList();
+		assertThat(children).containsExactly(child1, child3, child2);
 	}
 
 }

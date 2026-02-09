@@ -1,13 +1,14 @@
 package org.myjtools.openbbt.core.util;
 
 import org.myjtools.openbbt.core.OpenBBTException;
-
-import java.io.*;
-import java.net.URI;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.*;
-import java.util.Base64;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 
 public class Hash {
@@ -34,18 +35,35 @@ public class Hash {
 	}
 
 
-	/**
-	 * Creates a new Hash instance from the content of the given URI.
-	 * The content is read from the URI and hashed using SHA3-256 algorithm.
-	 * @param uri the URI to read and hash
-	 * @return a new hash string
-	 */
-	public static String of(URI uri) {
-		try (var stream = new DigestInputStream(uri.toURL().openStream(),newDigest())) {
-			return encoder.encodeToString(stream.getMessageDigest().digest());
-		} catch (IOException e) {
-			throw new OpenBBTException(e,"Cannot calculate hash of {resource}",uri);
+	public static String of(Path path) {
+		return of(List.of(path));
+	}
+
+
+	public static String of(Collection<? extends Path> paths) {
+		List<Path> sorted = new ArrayList<>(paths);
+		Collections.sort(sorted);
+		MessageDigest digest = newDigest();
+		for (Path path : sorted) {
+			if (!path.toFile().isFile()) {
+				continue;
+			}
+			try {
+				// include file name in the hash to detect renames
+				digest.update(path.toAbsolutePath().toString().getBytes(StandardCharsets.UTF_8));
+				// include file content in the hash to detect content changes
+				try (InputStream is = Files.newInputStream(path.toAbsolutePath())) {
+					byte[] buffer = new byte[8192];
+					int bytesRead;
+					while ((bytesRead = is.read(buffer)) != -1) {
+						digest.update(buffer, 0, bytesRead);
+					}
+				}
+			} catch (IOException e) {
+				throw new OpenBBTException(e,"Cannot calculate hash of {resource}",path);
+			}
 		}
+		return encoder.encodeToString(digest.digest());
 	}
 
 

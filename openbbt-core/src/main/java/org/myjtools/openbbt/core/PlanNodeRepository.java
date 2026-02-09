@@ -1,9 +1,8 @@
 package org.myjtools.openbbt.core;
 
-import org.myjtools.jexten.ExtensionPoint;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.PlanNode;
-import java.util.*;
+import org.myjtools.openbbt.core.plan.PlanNodeID;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 
@@ -17,14 +16,12 @@ import java.util.stream.Stream;
  * allowing for flexibility in how plan nodes are stored (e.g., in-memory, database, etc.).
  *
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
-@ExtensionPoint
 public interface PlanNodeRepository  {
 
 
-	Optional<PlanNode> getNode(PlanNodeID id);
+	Optional<PlanNode> getNodeData(PlanNodeID id);
 	boolean existsNode(PlanNodeID id);
-	Optional<PlanNodeID> getParentNodeID(PlanNodeID id);
-	Optional<PlanNode> getParentNode(PlanNodeID id);
+	Optional<PlanNodeID> getParentNode(PlanNodeID id);
 
 
 	/**
@@ -40,7 +37,7 @@ public interface PlanNodeRepository  {
 	 * If the child node was already in the child list, this operation will have no effect.
 	 * @throws OpenBBTException if either the parent UUID or the child UUID do not exist in the repository
 	 */
-	void attachChildNode(PlanNodeID parent, PlanNodeID child);
+	void attachChildNodeLast(PlanNodeID parent, PlanNodeID child);
 
 	/**
 	 * Attach a plan node as child of another node, at the beginning of the existing child list.
@@ -58,14 +55,12 @@ public interface PlanNodeRepository  {
 	void detachChildNode(PlanNodeID parent, PlanNodeID child);
 
 
-	Optional<PlanNodeID> getRootNodeID(PlanNodeID id);
-	Optional<PlanNode> getRootNode(PlanNodeID id);
-	List<PlanNodeID> getNodeChildrenID(PlanNodeID id);
-	List<PlanNode> getNodeChildren(PlanNodeID id);
-	Stream<PlanNodeID> getNodeDescendantsID(PlanNodeID id);
-	Stream<PlanNode> getNodeDescendants(PlanNodeID id);
-	Stream<PlanNodeID> getNodeAncestorsID(PlanNodeID id);
-	Stream<PlanNode> getNodeAncestors(PlanNodeID id);
+	Optional<PlanNodeID> getRootNode(PlanNodeID id);
+
+	Stream<PlanNodeID> getNodeChildren(PlanNodeID id);
+	Stream<PlanNodeID> getNodeDescendants(PlanNodeID id);
+	Stream<PlanNodeID> getNodeAncestors(PlanNodeID id);
+
 
 	/**
 	 * Persist a plan node in the repository. If the node UUID did exist previously, it
@@ -75,7 +70,12 @@ public interface PlanNodeRepository  {
 	 */
 	PlanNodeID persistNode(PlanNode node);
 
-	Stream<PlanNode> searchNodes(PlanNodeCriteria criteria);
+	Stream<PlanNodeID> searchNodes(PlanNodeCriteria criteria);
 
+	boolean existsTag(PlanNodeID nodeID, String tag);
+
+	boolean existsProperty(PlanNodeID nodeID, String propertyKey, String propertyValue);
+
+	Optional<String> getNodeProperty(PlanNodeID nodeID, String propertyKey);
 
 }

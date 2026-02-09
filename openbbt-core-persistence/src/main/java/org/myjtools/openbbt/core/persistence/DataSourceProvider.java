@@ -3,19 +3,27 @@ package org.myjtools.openbbt.core.persistence;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
+import org.jooq.SQLDialect;
 import javax.sql.DataSource;
 import java.nio.file.Path;
 
 public class DataSourceProvider {
 
+
 	public enum DatabaseType {
-		HSQLDB("hsqldb"),
-		POSTGRESQL("postgresql");
+		HSQLDB("hsqldb", SQLDialect.HSQLDB),
+		POSTGRESQL("postgresql", SQLDialect.POSTGRES);
 
 		private final String migrationFolder;
+		private SQLDialect dialect;
 
-		DatabaseType(String migrationFolder) {
+		DatabaseType(String migrationFolder, SQLDialect dialect) {
 			this.migrationFolder = migrationFolder;
+			this.dialect = dialect;
+		}
+
+		public SQLDialect dialect() {
+			return this.dialect;
 		}
 	}
 
@@ -26,10 +34,10 @@ public class DataSourceProvider {
 		DatabaseType databaseType();
 	}
 
-	public static class HsqldbDataSource implements JdbcUrlProvider {
+	public static class HsqldbFileDataSource implements JdbcUrlProvider {
 
 		private final Path file;
-		public HsqldbDataSource(Path file) {
+		public HsqldbFileDataSource(Path file) {
 			this.file = file;
 		}
 
@@ -50,6 +58,28 @@ public class DataSourceProvider {
 			return DatabaseType.HSQLDB;
 		}
 	}
+
+
+	public static class HsqldbMemoryDataSource implements JdbcUrlProvider {
+
+		@Override
+		public String jdbcUrl() {
+			return "jdbc:hsqldb:mem:openbbt;DB_CLOSE_DELAY=-1;MODE=PostgreSQL";
+		}
+		@Override
+		public String username() {
+			return "sa";
+		}
+		@Override
+		public String password() {
+			return "";
+		}
+		@Override
+		public DatabaseType databaseType() {
+			return DatabaseType.HSQLDB;
+		}
+	}
+
 
 	public static class PostgresqlDataSource implements JdbcUrlProvider {
 
@@ -83,7 +113,11 @@ public class DataSourceProvider {
 
 
 	public static DataSourceProvider hsqldb(Path file) {
-		return new DataSourceProvider(new HsqldbDataSource(file));
+		return new DataSourceProvider(new HsqldbFileDataSource(file));
+	}
+
+	public static DataSourceProvider hsqldb() {
+		return new DataSourceProvider(new HsqldbMemoryDataSource());
 	}
 
 	public static DataSourceProvider postgresql(String jdbcUrl, String username, String password) {
@@ -119,5 +153,11 @@ public class DataSourceProvider {
 
 		return dataSource;
 	}
+
+	public SQLDialect dialect() {
+		return jdbcUrlProvider.databaseType().dialect();
+	}
+
+
 
 }

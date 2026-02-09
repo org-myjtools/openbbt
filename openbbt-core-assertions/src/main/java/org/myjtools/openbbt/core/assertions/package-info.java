@@ -59,7 +59,7 @@
  * @author Luis Iñesta Gelabert
  * @see org.myjtools.openbbt.core.Assertion
  * @see org.myjtools.openbbt.core.AssertionFactory
- * @see org.myjtools.openbbt.core.AssertionFactoryProvider
+ * @see org.myjtools.openbbt.core.contributors.AssertionFactoryProvider
  * @see org.hamcrest.Matcher
  */
 package org.myjtools.openbbt.core.assertions;

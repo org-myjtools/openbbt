@@ -1,28 +1,29 @@
-organization: My Org
-project: My Project
+project:
+  organization: My Org
+  name: My Project
+  test-suites:
+    suiteA: A or Aa
+    suiteB: B
 
-test-suites:
-  suiteA: A or Aa
-  suiteB: B
+plugins:
+  - gherkin
+  - org.myjtools.openbbt.plugins:gherkin-openbbt-plugin:1.0.0
 
-plugin-configuration:
+configuration:
+  gherkin:
+    enabled: true
+    gherkin-prop: ${ENV_VAR_ONE}
   rest:
     enabled: true
     httpErrorThreshold: 500
-    rest-prop: $propertyC
+    rest-prop: ${propertyOne}
 
-
-configuration:
-  propertyA: A
-  propertyB: B
-
-configuration-profiles:
+profiles:
   profileA:
-      propertyC: profileA-propertyC
+      propertyOne: A
+  profileB:
+    propertyOne: A
 
-
-al crear el plan, si hay varios profiles, se le debe indicar que profile usar
-si hay varias suites, se puede indicar solo una suite, o todas
 
 
 

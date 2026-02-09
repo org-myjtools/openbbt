@@ -4,16 +4,19 @@ import com.github.f4b6a3.ulid.UlidCreator;
 import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DataSourceConnectionProvider;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.PlanNodeCriteria;
+import org.myjtools.openbbt.core.PlanNodeRepository;
 import org.myjtools.openbbt.core.plan.*;
+import javax.sql.DataSource;
 import java.util.*;
 import java.util.stream.Stream;
 
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-public class JooqRepository {
+public class JooqRepository implements PlanNodeRepository {
 
 	private static final Table<Record> TABLE_PLAN_NODE = DSL.table("plan_node");
 	private static final Table<Record> TABLE_PLAN_NODE_TAG = DSL.table("plan_node_tag");
@@ -29,7 +32,7 @@ public class JooqRepository {
 	private static final Field<Integer> FIELD_NODE_POSITION = DSL.field("node_position", Integer.class);
 	private static final Field<Integer> FIELD_TYPE = DSL.field("type", Integer.class);
 	private static final Field<String> FIELD_NAME = DSL.field("name", String.class);
-	private static final Field<String> FIELD_TEST_CASE_ID = DSL.field("test_case_id", String.class);
+	private static final Field<String> FIELD_IDENTIFIER = DSL.field("identifier", String.class);
 	private static final Field<String> FIELD_LANGUAGE = DSL.field("language", String.class);
 	private static final Field<String> FIELD_SOURCE = DSL.field("source", String.class);
 	private static final Field<String> FIELD_DISPLAY = DSL.field("display", String.class);
@@ -41,15 +44,20 @@ public class JooqRepository {
 
 	private final DSLContext dsl;
 
-	public JooqRepository(DSLContext dsl) {
-		this.dsl = dsl;
+
+	public JooqRepository(DataSourceProvider dataSourceProvider) {
+		this(dataSourceProvider.obtainDataSource(), dataSourceProvider.dialect());
+	}
+
+	public JooqRepository(DataSource dataSource, SQLDialect dialect) {
+		this.dsl = DSL.using(new DataSourceConnectionProvider(dataSource), dialect);
 	}
 
 
 	public Optional<PlanNode> getNodeData(PlanNodeID id) {
 		return dsl.select(
 				FIELD_NODE_ID, FIELD_ROOT_NODE, FIELD_PARENT_NODE, FIELD_NODE_POSITION,
-				FIELD_TYPE, FIELD_NAME, FIELD_TEST_CASE_ID, FIELD_LANGUAGE, FIELD_SOURCE,
+				FIELD_TYPE, FIELD_NAME, FIELD_IDENTIFIER, FIELD_LANGUAGE, FIELD_SOURCE,
 				FIELD_KEYWORD, FIELD_DESCRIPTION, FIELD_DISPLAY, FIELD_DATA_TABLE,
 				FIELD_DOCUMENT, FIELD_DOCUMENT_MIME_TYPE
 			)
@@ -226,7 +234,7 @@ public class JooqRepository {
 		   .set(FIELD_NODE_POSITION, 1)
 		   .set(FIELD_TYPE, node.nodeType() != null ? node.nodeType().value : null)
 		   .set(FIELD_NAME, node.name())
-		   .set(FIELD_TEST_CASE_ID, node.testCaseID())
+		   .set(FIELD_IDENTIFIER, node.identifier())
 		   .set(FIELD_LANGUAGE, node.language())
 		   .set(FIELD_SOURCE, node.source())
 		   .set(FIELD_KEYWORD, node.keyword())
@@ -243,7 +251,7 @@ public class JooqRepository {
 		dsl.update(TABLE_PLAN_NODE)
 		   .set(FIELD_TYPE, node.nodeType() != null ? node.nodeType().value : null)
 		   .set(FIELD_NAME, node.name())
-		   .set(FIELD_TEST_CASE_ID, node.testCaseID())
+		   .set(FIELD_IDENTIFIER, node.identifier())
 		   .set(FIELD_LANGUAGE, node.language())
 		   .set(FIELD_SOURCE, node.source())
 		   .set(FIELD_KEYWORD, node.keyword())
@@ -291,13 +299,44 @@ public class JooqRepository {
 		batch.execute();
 	}
 
-
+	@Override
 	public Stream<PlanNodeID> searchNodes(PlanNodeCriteria criteria) {
 		Condition condition = buildCondition(criteria);
 		return dsl.select(FIELD_NODE_ID).from(TABLE_PLAN_NODE)
 			.where(condition)
 			.fetchStream()
 			.map(rec1 -> mapPlanNodeID(rec1, FIELD_NODE_ID));
+	}
+
+
+	@Override
+	public boolean existsTag(PlanNodeID nodeID, String tag) {
+		return dsl.fetchExists(
+			dsl.selectOne()
+			   .from(TABLE_PLAN_NODE_TAG)
+			   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			   .and(FIELD_TAG.eq(tag))
+		);
+	}
+
+	@Override
+	public boolean existsProperty(PlanNodeID nodeID, String propertyKey, String propertyValue) {
+		return dsl.fetchExists(
+			dsl.selectOne()
+			   .from(TABLE_PLAN_NODE_PROPERTY)
+			   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			   .and(FIELD_KEY.eq(propertyKey))
+			   .and(propertyValue != null ? FIELD_VALUE.eq(propertyValue) : DSL.trueCondition())
+		);
+	}
+
+	@Override
+	public Optional<String> getNodeProperty(PlanNodeID nodeID, String propertyKey) {
+		return dsl.select(FIELD_VALUE)
+			.from(TABLE_PLAN_NODE_PROPERTY)
+			.where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			.and(FIELD_KEY.eq(propertyKey))
+			.fetchOptional(FIELD_VALUE);
 	}
 
 
@@ -366,7 +405,7 @@ public class JooqRepository {
 			case "keyword" -> FIELD_KEYWORD;
 			case "description" -> FIELD_DESCRIPTION;
 			case "display" -> FIELD_DISPLAY;
-			case "testcaseid" -> FIELD_TEST_CASE_ID;
+			case "identifier" -> FIELD_IDENTIFIER;
 			default -> throw new OpenBBTException("Unknown field: {}", fieldName);
 		};
 	}
@@ -451,7 +490,7 @@ public class JooqRepository {
 		}
 		node.name(rec.get(FIELD_NAME));
 		node.language(rec.get(FIELD_LANGUAGE));
-		node.testCaseID(rec.get(FIELD_TEST_CASE_ID));
+		node.identifier(rec.get(FIELD_IDENTIFIER));
 		node.source(rec.get(FIELD_SOURCE));
 		node.keyword(rec.get(FIELD_KEYWORD));
 		node.description(rec.get(FIELD_DESCRIPTION));
