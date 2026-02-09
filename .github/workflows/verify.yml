@@ -24,7 +24,7 @@ jobs:
           cache: maven
 
       - name: Build and Test with Coverage
-        run: mvn -B verify org.jacoco:jacoco-maven-plugin:prepare-agent org.jacoco:jacoco-maven-plugin:report
+        run: mvn -B verify
 
       - name: SonarCloud Scan
         if: github.actor != 'dependabot[bot]'
