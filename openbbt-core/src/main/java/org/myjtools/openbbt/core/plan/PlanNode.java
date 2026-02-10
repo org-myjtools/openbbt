@@ -83,4 +83,15 @@ public class PlanNode {
 		return tags;
 	}
 
+
+	@Override
+	public String toString() {
+		String s = "["+nodeType+"]";
+		if (identifier != null) {
+			s += (" ("+identifier+")");
+		}
+		s += " "+name;
+		return s;
+	}
+
 }

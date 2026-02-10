@@ -23,6 +23,7 @@ abstract class AbstractRepositoryTest {
 		DataSourceProvider provider = dataSourceProvider();
 		dataSource = provider.obtainDataSource();
 		repo = new JooqRepository(dataSource, provider.dialect());
+		repo.clearAllData();
 	}
 
 	@AfterEach
@@ -277,6 +278,207 @@ abstract class AbstractRepositoryTest {
 		assertThat(repo.existsNode(root1)).isFalse();
 		assertThat(repo.existsNode(sharedChild)).isTrue();
 		assertThat(repo.getParentNode(sharedChild)).contains(root2);
+	}
+
+	@Test
+	void countNodeChildren_returnsCorrectCount() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		assertThat(repo.countNodeChildren(root)).isZero();
+
+		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		repo.attachChildNodeLast(root, child1);
+		repo.attachChildNodeLast(root, child2);
+
+		assertThat(repo.countNodeChildren(root)).isEqualTo(2);
+	}
+
+	@Test
+	void getNodeDescendants_returnsAllDescendants() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+
+		repo.attachChildNodeLast(root, child);
+		repo.attachChildNodeLast(child, grandchild);
+
+		List<PlanNodeID> descendants = repo.getNodeDescendants(root).toList();
+		assertThat(descendants).containsExactlyInAnyOrder(child, grandchild);
+	}
+
+	@Test
+	void getNodeDescendants_emptyForLeafNode() {
+		PlanNodeID leaf = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("leaf"));
+		assertThat(repo.getNodeDescendants(leaf).toList()).isEmpty();
+	}
+
+	@Test
+	void countNodeDescendants_returnsCorrectCount() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+
+		repo.attachChildNodeLast(root, child);
+		repo.attachChildNodeLast(child, grandchild);
+
+		assertThat(repo.countNodeDescendants(root)).isEqualTo(2);
+		assertThat(repo.countNodeDescendants(child)).isEqualTo(1);
+		assertThat(repo.countNodeDescendants(grandchild)).isZero();
+	}
+
+	@Test
+	void getNodeAncestors_returnsAllAncestors() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+
+		repo.attachChildNodeLast(root, child);
+		repo.attachChildNodeLast(child, grandchild);
+
+		List<PlanNodeID> ancestors = repo.getNodeAncestors(grandchild).toList();
+		assertThat(ancestors).containsExactlyInAnyOrder(child, root);
+	}
+
+	@Test
+	void getNodeAncestors_emptyForRootNode() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		assertThat(repo.getNodeAncestors(root).toList()).isEmpty();
+	}
+
+	@Test
+	void existsTag_returnsTrueForExistingTag() {
+		PlanNode node = new PlanNode()
+			.nodeType(NodeType.TEST_CASE)
+			.name("tagged")
+			.tags(new HashSet<>(Set.of("smoke", "regression")));
+		PlanNodeID id = repo.persistNode(node);
+
+		assertThat(repo.existsTag(id, "smoke")).isTrue();
+		assertThat(repo.existsTag(id, "regression")).isTrue();
+		assertThat(repo.existsTag(id, "nonexistent")).isFalse();
+	}
+
+	@Test
+	void existsProperty_returnsTrueForExistingProperty() {
+		PlanNode node = new PlanNode()
+			.nodeType(NodeType.TEST_CASE)
+			.name("with props")
+			.properties(new TreeMap<>(Map.of("priority", "high", "author", "tester")));
+		PlanNodeID id = repo.persistNode(node);
+
+		assertThat(repo.existsProperty(id, "priority", "high")).isTrue();
+		assertThat(repo.existsProperty(id, "priority", "low")).isFalse();
+		assertThat(repo.existsProperty(id, "priority", null)).isTrue();
+		assertThat(repo.existsProperty(id, "missing", null)).isFalse();
+	}
+
+	@Test
+	void getNodeProperty_returnsValue() {
+		PlanNode node = new PlanNode()
+			.nodeType(NodeType.TEST_CASE)
+			.name("with props")
+			.properties(new TreeMap<>(Map.of("priority", "high")));
+		PlanNodeID id = repo.persistNode(node);
+
+		assertThat(repo.getNodeProperty(id, "priority")).contains("high");
+		assertThat(repo.getNodeProperty(id, "missing")).isEmpty();
+	}
+
+	@Test
+	void searchNodes_byNodeType() {
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("plan"));
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case1"));
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case2"));
+		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("step"));
+
+		List<PlanNodeID> results = repo.searchNodes(
+			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
+		).toList();
+		assertThat(results).hasSize(2);
+	}
+
+	@Test
+	void searchNodes_byTag() {
+		PlanNode tagged = new PlanNode().nodeType(NodeType.TEST_CASE).name("tagged")
+			.tags(new HashSet<>(Set.of("smoke")));
+		PlanNode untagged = new PlanNode().nodeType(NodeType.TEST_CASE).name("untagged");
+		repo.persistNode(tagged);
+		repo.persistNode(untagged);
+
+		List<PlanNodeID> results = repo.searchNodes(
+			org.myjtools.openbbt.core.PlanNodeCriteria.withTag("smoke")
+		).toList();
+		assertThat(results).hasSize(1);
+	}
+
+	@Test
+	void searchNodes_byProperty() {
+		PlanNode withProp = new PlanNode().nodeType(NodeType.TEST_CASE).name("with")
+			.properties(new TreeMap<>(Map.of("env", "prod")));
+		PlanNode without = new PlanNode().nodeType(NodeType.TEST_CASE).name("without");
+		repo.persistNode(withProp);
+		repo.persistNode(without);
+
+		var criteria = org.myjtools.openbbt.core.PlanNodeCriteria.class;
+		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withProperty("env", "prod")).toList()).hasSize(1);
+		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withProperty("env", null)).toList()).hasSize(1);
+		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withProperty("env", "dev")).toList()).isEmpty();
+	}
+
+	@Test
+	void searchNodes_byField() {
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("with lang").language("en"));
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("no lang"));
+
+		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withField("language", "en")).toList()).hasSize(1);
+		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withField("language")).toList()).hasSize(1);
+	}
+
+	@Test
+	void searchNodes_withAndOrNot() {
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case")
+			.tags(new HashSet<>(Set.of("smoke"))));
+		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("step")
+			.tags(new HashSet<>(Set.of("smoke"))));
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case2"));
+
+		var C = org.myjtools.openbbt.core.PlanNodeCriteria.class;
+
+		List<PlanNodeID> andResult = repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.and(
+			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			org.myjtools.openbbt.core.PlanNodeCriteria.withTag("smoke")
+		)).toList();
+		assertThat(andResult).hasSize(1);
+
+		List<PlanNodeID> orResult = repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.or(
+			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.STEP)
+		)).toList();
+		assertThat(orResult).hasSize(3);
+
+		List<PlanNodeID> notResult = repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.not(
+			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
+		)).toList();
+		assertThat(notResult).hasSize(1);
+	}
+
+	@Test
+	void searchNodes_all() {
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("a"));
+		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("b"));
+
+		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.all()).toList()).hasSize(2);
+	}
+
+	@Test
+	void countNodes_returnsCorrectCount() {
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case1"));
+		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case2"));
+		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("step"));
+
+		assertThat(repo.countNodes(org.myjtools.openbbt.core.PlanNodeCriteria.all())).isEqualTo(3);
+		assertThat(repo.countNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE))).isEqualTo(2);
+		assertThat(repo.countNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.STEP))).isEqualTo(1);
 	}
 
 	@Test

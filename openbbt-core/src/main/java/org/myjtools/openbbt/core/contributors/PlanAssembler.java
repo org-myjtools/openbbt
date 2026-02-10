@@ -16,6 +16,6 @@ public interface PlanAssembler extends Contributor {
 	 * persistence module.
 	 * @return an Optional containing the UUID of the plan if available, or an empty Optional if no plan can be provided
 	 */
-	Optional<PlanNodeID> providePlan();
+	Optional<PlanNodeID> assemblePlan();
 
 }

@@ -61,6 +61,10 @@ public interface PlanNodeRepository  {
 	Stream<PlanNodeID> getNodeDescendants(PlanNodeID id);
 	Stream<PlanNodeID> getNodeAncestors(PlanNodeID id);
 
+	int countNodeChildren(PlanNodeID id);
+	int countNodeDescendants(PlanNodeID id);
+	int countNodeAncestors(PlanNodeID id);
+
 
 	/**
 	 * Persist a plan node in the repository. If the node UUID did exist previously, it
@@ -71,6 +75,8 @@ public interface PlanNodeRepository  {
 	PlanNodeID persistNode(PlanNode node);
 
 	Stream<PlanNodeID> searchNodes(PlanNodeCriteria criteria);
+
+	int countNodes(PlanNodeCriteria criteria);
 
 	boolean existsTag(PlanNodeID nodeID, String tag);
 

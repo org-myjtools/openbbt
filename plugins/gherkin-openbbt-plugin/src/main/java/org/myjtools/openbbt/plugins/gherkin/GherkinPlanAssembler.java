@@ -3,40 +3,31 @@ package org.myjtools.openbbt.plugins.gherkin;
 
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
-import org.myjtools.gherkinparser.elements.Examples;
-import org.myjtools.gherkinparser.elements.Feature;
-import org.myjtools.gherkinparser.elements.ScenarioOutline;
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.PostConstruct;
-import org.myjtools.jexten.Scope;
-import org.myjtools.openbbt.core.PlanNodeRepository;
-import org.myjtools.openbbt.core.Resource;
-import org.myjtools.openbbt.core.ResourceFinder;
+import org.myjtools.openbbt.core.*;
 import org.myjtools.openbbt.core.contributors.PlanAssembler;
 import org.myjtools.openbbt.core.plan.NodeType;
 import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.util.Log;
-import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.GHERKIN_TYPE;
+import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.GHERKIN_TYPE_BACKGROUND;
 
-/**
- * @author Luis Iñesta Gelabert - luiinge@gmail.com
- */
-@Extension(scope = Scope.SINGLETON)
+@Extension
 public class GherkinPlanAssembler implements PlanAssembler {
 
 	private static final Log log = Log.of("plugins.gherkin");
-	private static final String STEP_MAP_PROPERTY = "step-map";
+	private static final String STEP_MAP = "step-map";
 
-	@Inject("plugins.gherkin")
+	@Inject("gherkin")
 	Config config;
 
 	@Inject
@@ -63,37 +54,22 @@ public class GherkinPlanAssembler implements PlanAssembler {
 	}
 
 
-
-
 	@Override
-	public Optional<PlanNodeID> providePlan() {
-		var resourceSet = resourceFinder.findResources("*.gherkin");
-/*
+	public Optional<PlanNodeID> assemblePlan() {
+		ResourceSet resourceSet = resourceFinder.findResources("*.feature");
 		if (resourceSet.size() == 1) {
-			return provideSingleFeature(resourceSet.get(0));
+			return assembleFeatureNode(keywordMapProvider, parser, idTagPattern, resourceSet.get(0));
 		} else {
-			return provideMultipleFeature(resourceSet.resources());
+			return assembleMultipleFeature(resourceSet);
 		}
-*/
-		return Optional.empty();
-	}
-
-
-/*
-	private Optional<PlanNodeID> provideSingleFeature(Resource resource) {
-		return buildFeatureNode(
-			keywordMapProvider,
-			parser,
-			idTagPattern,
-			resource
-		).map(PlanNodeDAO::nodeID);
 	}
 
 
 
-	private Optional<PlanNodeID> provideMultipleFeature(List<Resource> resources) {
+	private Optional<PlanNodeID> assembleMultipleFeature(ResourceSet resourceSet) {
 
-		var root = provideStandaloneFeatures(resources);
+		var root = assembleStandaloneFeatures(resourceSet);
+
 		deleteDefinitionTestCasesWithoutId(root);
 		deleteImplementationScenarioOutlineContent(root);
 		fillImplementationScenarioOutlines(root);
@@ -143,19 +119,18 @@ public class GherkinPlanAssembler implements PlanAssembler {
 	}
 
 
-	private PlanNodeDAO provideStandaloneFeatures(List<Resource> resources) {
-		log.debug("provideStandaloneFeatures");
-		var root = PlanNodeDAO.persist(repository, new PlanNode(NodeType.AGGREGATOR));
-		for (Resource resource : resources) {
-			buildFeatureNode(
-					keywordMapProvider,
-					parser,
-					idTagPattern,
-					resource
-			).ifPresent(root::attachChild);
+	private PlanNodeID assembleStandaloneFeatures(ResourceSet resourceSet) {
+		log.trace("provideStandaloneFeatures");
+		var id = repository.persistNode(new PlanNode(NodeType.TEST_AGGREGATOR));
+		for (Resource resource : resourceSet) {
+			assembleFeatureNode(
+				keywordMapProvider,
+				parser,
+				idTagPattern,
+				resource
+			).ifPresent(child -> repository.attachChildNodeLast(id, child));
 		}
-		logTree(root);
-		return root;
+		return id;
 	}
 
 
@@ -200,7 +175,7 @@ public class GherkinPlanAssembler implements PlanAssembler {
 				.examples()
 				.get(0);
 
-		var stepsFromExamples = new FeaturePlanAssembler(
+		var stepsFromExamples = new FeaturePlanBuilder(
 				(Feature) underlyingModels.get(impFeature.nodeID()),
 				impFeature.node().source(),
 				keywordMapProvider,
@@ -257,74 +232,60 @@ public class GherkinPlanAssembler implements PlanAssembler {
 
 
 
-	private void redefineStepNodeType(int[] stepMap, int defStepCount, PlanNode defStep) {
+	private void redefineStepNodeType(int[] stepMap, int defStepCount, PlanNodeDAO defStep) {
 		if (stepMap[defStepCount] == 0) {
-			defStep.nodeType(NodeType.VIRTUAL_STEP);
+			defStep.node().nodeType(NodeType.VIRTUAL_STEP);
 		} else {
-			defStep.nodeType(NodeType.STEP_AGGREGATOR);
+			defStep.node().nodeType(NodeType.STEP_AGGREGATOR);
 		}
-		repository.persistNode(defStep);
+		defStep.update();
 	}
 
 
-	private void moveBackroundToOtherTestCase(PlanNode origin,PlanNode target) {
-
-		repository.getNodeChildren(origin.nodeID())
-			.filter(childID -> repository.existsProperty(childID, GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND))
-			.findFirst()
-			.ifPresent(originBackgroundID -> {
-				repository.detachChildNode(origin.nodeID(), originBackgroundID);
-				repository.attachChildNodeFirst(target.nodeID(), originBackgroundID);
-				var originBackground = repository.getNodeData(originBackgroundID).orElseThrow();
-				originBackground.name("<definition>");
-				repository.persistNode(originBackground);
-			});
+	private void moveBackroundToOtherTestCase(PlanNodeDAO origin,PlanNodeDAO target) {
+		origin.getChildren().stream()
+				.filter(it -> it.node().hasProperty(GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND))
+				.findFirst()
+				.ifPresent(originBackground -> {
+					origin.detachChild(originBackground);
+					target.attachChild(originBackground,0); // background always in first position
+					originBackground.node().name("<definition>");
+					originBackground.update();
+				});
 	}
 
 
-	private int[] extractStepMap(PlanNodeID defTestCase, PlanNodeID impTestCase) {
+	private int[] extractStepMap(PlanNode defTestCase, PlanNode impTestCase) {
 		// step map is in form: x-x-x-x...
-		String stepMapProperty = repository.getNodeProperty(impTestCase, STEP_MAP_PROPERTY)
-		.orElseGet(() -> {
-			// if not defined, map 1-to-1 for each step
-			int defTestCaseChildrenCount = (int) repository.getNodeChildren(defTestCase).count();
-			return "-1".repeat(defTestCaseChildrenCount).substring(1);
-		});
+		String stepMapProperty = impTestCase.properties().get(STEP_MAP);
+		if (stepMapProperty == null || stepMapProperty.isBlank()) {
+			// if not defiend, map 1-to-1 for each step
+			int defTestCaseChildren = repository.getNodeChildren()defTestCase.getChildrenCount()
+			stepMapProperty = "-1".repeat().substring(1);
+		}
 		return Stream.of(stepMapProperty.split("-")).mapToInt(Integer::parseInt).toArray();
 	}
 
 
 	private void deleteBackground(PlanNodeID defTestCase) {
 		repository.getNodeChildren(defTestCase)
-			.forEach(childID -> {
-				if (repository.existsProperty(childID, GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND)) {
-					repository.deleteNode(childID);
-				}
-		});
+			.filter(child -> repository.existsProperty(child, GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND))
+			.forEach( child -> repository.deleteNode(child) );
 	}
 
 
-	private Optional<PlanNodeDAO> implementationTestCase(
-		PlanNodeDAO root,
-		PlanNodeDAO definitionTestCase
-	) {
-		return root.findDescendants(and(
-			withNodeType(NodeType.TEST_CASE),
-			withTag(implementationTag),
-			withField("id",definitionTestCase.node().id())
+	private Optional<PlanNodeID> implementationTestCase(PlanNode root, PlanNode definitionTestCase) {
+		return repository.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.descendantOf(root.nodeID()),
+			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			PlanNodeCriteria.withTag(implementationTag),
+			PlanNodeCriteria.withField("identifier",definitionTestCase.identifier())
 		)).findFirst();
-
-		planNodeRepository.
-
 	}
 
 
-	private void logTree(PlanNodeDAO root) {
-		log.debug("{}", ()->debugSerializer.serializeTreeToString(root.nodeID()));
-	}
 
-
-	private Optional<PlanNodeDAO> buildFeatureNode(
+	private Optional<PlanNodeID> assembleFeatureNode(
 		DefaultKeywordMapProvider keywordMapProvider,
 		GherkinParser parser,
 		String idTagPattern,
@@ -351,7 +312,6 @@ public class GherkinPlanAssembler implements PlanAssembler {
 		}
 
 	}
-*/
 
 
 }
