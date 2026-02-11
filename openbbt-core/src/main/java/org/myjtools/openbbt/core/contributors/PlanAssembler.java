@@ -2,6 +2,7 @@ package org.myjtools.openbbt.core.contributors;
 
 import org.myjtools.jexten.ExtensionPoint;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
+import org.myjtools.openbbt.core.plan.TagExpression;
 import java.util.Optional;
 
 
@@ -14,8 +15,9 @@ public interface PlanAssembler extends Contributor {
 	/**
 	 * Assemble a plan for the given configuration. It should be stored in the OpenBBT
 	 * persistence module.
+	 * @param tagExpression the TagExpression containing the tags that should be used to find a suitable plan
 	 * @return an Optional containing the UUID of the plan if available, or an empty Optional if no plan can be provided
 	 */
-	Optional<PlanNodeID> assemblePlan();
+	Optional<PlanNodeID> assemblePlan(TagExpression tagExpression);
 
 }

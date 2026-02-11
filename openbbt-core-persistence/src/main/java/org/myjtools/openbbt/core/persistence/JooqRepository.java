@@ -394,6 +394,22 @@ public class JooqRepository implements PlanNodeRepository {
 	}
 
 	@Override
+	public void addTag(PlanNodeID nodeID, String tag) {
+		dsl.insertInto(TABLE_PLAN_NODE_TAG)
+		   .set(FIELD_PLAN_NODE, nodeID.UUID())
+		   .set(FIELD_TAG, tag)
+		   .execute();
+	}
+
+	@Override
+	public void removeTag(PlanNodeID nodeID, String tag) {
+		dsl.deleteFrom(TABLE_PLAN_NODE_TAG)
+		   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+		   .and(FIELD_TAG.eq(tag))
+		   .execute();
+	}
+
+	@Override
 	public boolean existsProperty(PlanNodeID nodeID, String propertyKey, String propertyValue) {
 		return dsl.fetchExists(
 			dsl.selectOne()
@@ -402,6 +418,24 @@ public class JooqRepository implements PlanNodeRepository {
 			   .and(FIELD_KEY.eq(propertyKey))
 			   .and(propertyValue != null ? FIELD_VALUE.eq(propertyValue) : DSL.trueCondition())
 		);
+	}
+
+
+	@Override
+	public void addProperty(PlanNodeID nodeID, String propertyKey, String propertyValue) {
+		dsl.insertInto(TABLE_PLAN_NODE_PROPERTY)
+		   .set(FIELD_PLAN_NODE, nodeID.UUID())
+		   .set(FIELD_KEY, propertyKey)
+		   .set(FIELD_VALUE, propertyValue)
+		   .execute();
+	}
+
+	@Override
+	public void removeProperty(PlanNodeID nodeID, String propertyKey) {
+		dsl.deleteFrom(TABLE_PLAN_NODE_PROPERTY)
+		   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+		   .and(FIELD_KEY.eq(propertyKey))
+		   .execute();
 	}
 
 	@Override

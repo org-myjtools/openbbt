@@ -27,10 +27,12 @@ public class FeaturePlanAssembler {
 	private final Feature feature;
 	private final String relativePath;
 	private final String scenarioKeyword;
+	private final String backgroundKeyword;
 	private final Background background;
 	private final Pattern idTagPattern;
 	private final PlanNodeRepository repository;
 	private final Map<PlanNodeID, Object> underlyingModels = new HashMap<>();
+
 
 
 	public FeaturePlanAssembler(
@@ -42,10 +44,9 @@ public class FeaturePlanAssembler {
 	) {
 		this.feature = feature;
 		this.relativePath = relativePath;
-		this.scenarioKeyword = new GherkinDialectFactory(keywordMapProvider,"en")
-			.dialectFor(feature.language())
-			.keywords(KeywordType.SCENARIO)
-			.getFirst();
+		var dialect = new GherkinDialectFactory(keywordMapProvider,"en").dialectFor(feature.language());
+		this.scenarioKeyword = dialect.keywords(KeywordType.SCENARIO).getFirst();
+		this.backgroundKeyword = dialect.keywords(KeywordType.BACKGROUND).getFirst();
 		this.repository = repository;
 		this.background = feature.children().stream()
 			.filter(Background.class::isInstance)
@@ -187,7 +188,7 @@ public class FeaturePlanAssembler {
 			return null;
 		}
 		var node = new PlanNode(NodeType.STEP_AGGREGATOR)
-			.name(name == null ? background.name() : name)
+			.name(notEmpty(name, background.name(), backgroundKeyword))
 			.language(feature.language())
 			.keyword(background.keyword())
 			.description(background.description())
@@ -334,4 +335,12 @@ public class FeaturePlanAssembler {
 		return Stream.concat(list1.stream(), list2.stream()).toList();
 	}
 
+	private static String notEmpty(String... options) {
+		for (String option : options) {
+			if (option != null && !option.isBlank()) {
+				return option;
+			}
+		}
+		return "";
+	}
 }

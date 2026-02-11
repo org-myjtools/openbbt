@@ -3,6 +3,9 @@ package org.myjtools.openbbt.plugins.gherkin;
 
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
+import org.myjtools.gherkinparser.elements.Examples;
+import org.myjtools.gherkinparser.elements.Feature;
+import org.myjtools.gherkinparser.elements.ScenarioOutline;
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
@@ -18,8 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.GHERKIN_TYPE;
-import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.GHERKIN_TYPE_BACKGROUND;
+import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 
 @Extension
 public class GherkinPlanAssembler implements PlanAssembler {
@@ -56,16 +58,17 @@ public class GherkinPlanAssembler implements PlanAssembler {
 
 	@Override
 	public Optional<PlanNodeID> assemblePlan() {
-		ResourceSet resourceSet = resourceFinder.findResources("*.feature");
+		return Optional.empty();
+/*		ResourceSet resourceSet = resourceFinder.findResources("*.feature");
 		if (resourceSet.size() == 1) {
 			return assembleFeatureNode(keywordMapProvider, parser, idTagPattern, resourceSet.get(0));
 		} else {
 			return assembleMultipleFeature(resourceSet);
 		}
-	}
+*/	}
 
 
-
+/*
 	private Optional<PlanNodeID> assembleMultipleFeature(ResourceSet resourceSet) {
 
 		var root = assembleStandaloneFeatures(resourceSet);
@@ -75,46 +78,51 @@ public class GherkinPlanAssembler implements PlanAssembler {
 		fillImplementationScenarioOutlines(root);
 
 		// redefine definition test cases with implementation steps
-		root.findDescendants(and(withNodeType(NodeType.TEST_CASE),withTag(definitionTag)))
-				.forEach(it -> redefine(root,it));
+		repository.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.descendantOf(root),
+			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			PlanNodeCriteria.withTag(definitionTag)
+		)).forEach(it -> redefine(root,it));
 
 		root.getChildren(node ->
 				node.hasProperty(GHERKIN_TYPE,GHERKIN_TYPE_FEATURE) &&
 						node.hasTag(implementationTag)
 		).forEach(PlanNodeDAO::delete);
-		logTree(root);
 
-		root.findDescendants(or(withTag(definitionTag),withTag(implementationTag)))
-				.forEach( it-> {
-					it.node().tags().remove(implementationTag);
-					it.node().tags().remove(definitionTag);
-					it.update();
-				});
-		logTree(root);
 
+		repository.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.descendantOf(root),
+			PlanNodeCriteria.or(
+				PlanNodeCriteria.withTag(definitionTag),
+				PlanNodeCriteria.withTag(implementationTag)
+			)
+		)).forEach(it -> {
+			repository.removeTag(it, implementationTag);
+			repository.removeTag(it, definitionTag);
+		});
 		return normalize(root);
 
 	}
 
 
-	private void deleteImplementationScenarioOutlineContent(PlanNodeDAO root) {
-		log.debug("deleteImplementationScenarioOutlineContent");
-		root.findDescendants(and(
-				withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE),
-				withTag(implementationTag)
-		),2).forEach(PlanNodeDAO::deleteChildren);
-		logTree(root);
+	private void deleteImplementationScenarioOutlineContent(PlanNodeID root) {
+		log.trace("deleteImplementationScenarioOutlineContent");
+		repository.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.descendantOf(root),
+			PlanNodeCriteria.withTag(implementationTag),
+			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE)
+		)).forEach(it -> repository.deleteNode(it));
 	}
 
 
-	private Optional<PlanNodeID> normalize(PlanNodeDAO root) {
-		if (root.getChildrenCount() == 1) {
-			var child = repository.getChildren(root.nodeID()).get(0);
-			repository.detachChild(root.nodeID(), child);
-			repository.delete(root.nodeID());
+	private Optional<PlanNodeID> normalize(PlanNodeID root) {
+		if (repository.countNodeChildren(root) == 1) {
+			var child = repository.getNodeChildren(root).findFirst().orElseThrow();
+			repository.detachChildNode(root, child);
+			repository.deleteNode(root);
 			return Optional.of(child);
 		} else {
-			return Optional.of(root.nodeID());
+			return Optional.of(root);
 		}
 	}
 
@@ -134,23 +142,23 @@ public class GherkinPlanAssembler implements PlanAssembler {
 	}
 
 
-	private void deleteDefinitionTestCasesWithoutId(PlanNodeDAO root) {
-		root.findDescendants(and(
-				withTag(definitionTag),
-				withNodeType(NodeType.TEST_CASE),
-				withField("id", null)
-		)).forEach(PlanNodeDAO::delete);
+	private void deleteDefinitionTestCasesWithoutId(PlanNodeID root) {
+		repository.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.descendantOf(root),
+			PlanNodeCriteria.withTag(definitionTag),
+			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			PlanNodeCriteria.withField("identifier", null)
+		)).forEach(it -> repository.deleteNode(it));
 	}
 
 
-	private void fillImplementationScenarioOutlines(PlanNodeDAO root) {
-		log.debug("fillImplementationScenarioOutlines");
-		root.findDescendants(and(
-				withNodeType(NodeType.AGGREGATOR),
-				withTag(implementationTag),
-				withProperty(GHERKIN_TYPE,GHERKIN_TYPE_SCENARIO_OUTLINE)
-		)).forEach(scenarioOutline -> fillImplementationScenarioOutlines(root,scenarioOutline));
-		logTree(root);
+	private void fillImplementationScenarioOutlines(PlanNodeID root) {
+		log.trace("fillImplementationScenarioOutlines");
+		repository.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.descendantOf(root),
+			PlanNodeCriteria.withTag(implementationTag),
+			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE)
+		)).forEach(scenarioOutline -> fillImplementationScenarioOutline(root, scenarioOutline));
 	}
 
 
@@ -193,24 +201,27 @@ public class GherkinPlanAssembler implements PlanAssembler {
 
 
 
-	private void redefine(PlanNodeDAO root, PlanNodeDAO defTestCase) {
-		log.debug("redefine {}",defTestCase.node().id());
+	private void redefine(PlanNode root, PlanNode defTestCase) {
+		log.trace("redefine {}",defTestCase.nodeID());
 		implementationTestCase(root,defTestCase).ifPresentOrElse(
-				impTestCase -> redefineTestCase(defTestCase, impTestCase),
-				defTestCase::delete
+			impTestCase -> redefineTestCase(defTestCase, impTestCase),
+			defTestCase::delete
 		);
-		logTree(root);
 	}
 
 
-	private void redefineTestCase(PlanNodeDAO defTestCase, PlanNodeDAO impTestCase) {
+	private void redefineTestCase(PlanNode defTestCase, PlanNode impTestCase) {
 
 		// definition background is ignored
-		deleteBackground(defTestCase);
+		deleteBackground(defTestCase.nodeID());
 
-		int[] stepMap = extractStepMap(defTestCase, impTestCase);
+		int[] stepMap = extractStepMap(defTestCase.nodeID(), impTestCase.nodeID());
 
-		var impSteps = impTestCase.getChildren(it -> it.nodeType() == NodeType.STEP);
+		var impSteps = repository.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.childOf(impTestCase.nodeID()),
+			PlanNodeCriteria.withNodeType(NodeType.STEP)
+		));
+
 
 		int defStepCount = 0;
 		int impStepCount = 0;
@@ -255,13 +266,13 @@ public class GherkinPlanAssembler implements PlanAssembler {
 	}
 
 
-	private int[] extractStepMap(PlanNode defTestCase, PlanNode impTestCase) {
+	private int[] extractStepMap(PlanNodeID defTestCase, PlanNodeID impTestCase) {
 		// step map is in form: x-x-x-x...
-		String stepMapProperty = impTestCase.properties().get(STEP_MAP);
+		String stepMapProperty = repository.getNodeProperty(impTestCase, STEP_MAP).orElse(null);
 		if (stepMapProperty == null || stepMapProperty.isBlank()) {
 			// if not defiend, map 1-to-1 for each step
-			int defTestCaseChildren = repository.getNodeChildren()defTestCase.getChildrenCount()
-			stepMapProperty = "-1".repeat().substring(1);
+			int defTestCaseChildren = repository.countNodeChildren(defTestCase);
+			stepMapProperty = "-1".repeat(defTestCaseChildren).substring(1);
 		}
 		return Stream.of(stepMapProperty.split("-")).mapToInt(Integer::parseInt).toArray();
 	}
@@ -313,5 +324,5 @@ public class GherkinPlanAssembler implements PlanAssembler {
 
 	}
 
-
+*/
 }
