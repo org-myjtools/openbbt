@@ -5,11 +5,9 @@ import org.myjtools.gherkinparser.GherkinDialectFactory;
 import org.myjtools.gherkinparser.KeywordMapProvider;
 import org.myjtools.gherkinparser.KeywordType;
 import org.myjtools.gherkinparser.elements.*;
+import org.myjtools.gherkinparser.elements.DataTable;
 import org.myjtools.openbbt.core.PlanNodeRepository;
-import org.myjtools.openbbt.core.plan.Document;
-import org.myjtools.openbbt.core.plan.NodeType;
-import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
+import org.myjtools.openbbt.core.plan.*;
 import org.myjtools.openbbt.core.util.Patterns;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -30,6 +28,7 @@ public class FeaturePlanAssembler {
 	private final String backgroundKeyword;
 	private final Background background;
 	private final Pattern idTagPattern;
+	private final TagExpression tagExpression;
 	private final PlanNodeRepository repository;
 	private final Map<PlanNodeID, Object> underlyingModels = new HashMap<>();
 
@@ -40,7 +39,8 @@ public class FeaturePlanAssembler {
 		String relativePath,
 		KeywordMapProvider keywordMapProvider,
 		String idTagPattern,
-		PlanNodeRepository repository
+		PlanNodeRepository repository,
+		TagExpression tagExpression
 	) {
 		this.feature = feature;
 		this.relativePath = relativePath;
@@ -54,15 +54,16 @@ public class FeaturePlanAssembler {
 			.findFirst()
 			.orElse(null);
 		this.idTagPattern = Pattern.compile(idTagPattern);
+		this.tagExpression = tagExpression;
 	}
 
 
-	public PlanNodeID createTestPlan() {
+	public Optional<PlanNodeID> createTestPlan() {
 		return featureNode();
 	}
 
 
-	private PlanNodeID featureNode() {
+	private Optional<PlanNodeID> featureNode() {
 
 		var nodeData = new PlanNode(NodeType.TEST_AGGREGATOR)
 			.identifier(idFromTags(feature))
@@ -81,23 +82,33 @@ public class FeaturePlanAssembler {
 
 		for (var child : feature.children()) {
 			if (child instanceof Scenario scenario) {
-				repository.attachChildNodeLast(id, scenarioNode(scenario,node));
+				scenarioNode(scenario,node).ifPresent( scenarioNode ->
+					repository.attachChildNodeLast(id, scenarioNode)
+				);
 			} else if (child instanceof ScenarioOutline scenarioOutline) {
-				repository.attachChildNodeLast(id, scenarioOutlineNode(scenarioOutline,node));
+				scenarioOutlineNode(scenarioOutline,node).ifPresent( scenarioOutlineNode ->
+					 repository.attachChildNodeLast(id, scenarioOutlineNode)
+				);
 			}
 		}
 
-		return id;
+		if (repository.countNodeChildren(id) == 0) {
+			repository.deleteNode(id);
+			underlyingModels.remove(id);
+			return Optional.empty();
+		}
+
+		return Optional.of(id);
 	}
 
 
 
-	private PlanNodeID scenarioNode(Scenario scenario, PlanNode parent) {
+	private Optional<PlanNodeID> scenarioNode(Scenario scenario, PlanNode parent) {
 		return scenarioNode(scenario, scenario.name(), idFromTags(scenario), scenario.keyword(), parent);
 	}
 
 
-	private PlanNodeID scenarioNode(ScenarioOutline scenarioOutline, int example, PlanNode parent) {
+	private Optional<PlanNodeID> scenarioNode(ScenarioOutline scenarioOutline, int example, PlanNode parent) {
 		return scenarioNode(
 			scenarioOutline,
 			"%s [%s]".formatted(scenarioOutline.name(), example),
@@ -108,13 +119,17 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private PlanNodeID scenarioNode(
+	private Optional<PlanNodeID> scenarioNode(
 		ScenarioDefinition scenarioDefinition,
 		String name,
 		String identifier,
 		String keyword,
 		PlanNode parent
 	) {
+		boolean include = tagExpression.evaluate(tags(parent, scenarioDefinition));
+		if (!include) {
+			return Optional.empty();
+		}
 		var data = new PlanNode(NodeType.TEST_CASE)
 			.identifier(identifier)
 			.name(name)
@@ -135,12 +150,16 @@ public class FeaturePlanAssembler {
 		}
 
 		scenarioDefinition.children().forEach( step -> repository.attachChildNodeLast(id, stepNode(step)));
-		return id;
+		return Optional.of(id);
 	}
 
 
-	private PlanNodeID scenarioOutlineNode(ScenarioOutline scenarioOutline, PlanNode parent) {
+	private Optional<PlanNodeID> scenarioOutlineNode(ScenarioOutline scenarioOutline, PlanNode parent) {
 
+		boolean include = tagExpression.evaluate(tags(parent, scenarioOutline));
+		if (!include) {
+			return Optional.empty();
+		}
 		var node = new PlanNode(NodeType.TEST_AGGREGATOR)
 				.identifier(idFromTags(scenarioOutline))
 				.name(scenarioOutline.name())
@@ -162,7 +181,7 @@ public class FeaturePlanAssembler {
 			.flatMap(examples -> createScenariosFromExamples(scenarioOutline, examples, node).stream())
 			.forEach(childID -> repository.attachChildNodeLast(id, childID));
 
-		return id;
+		return Optional.of(id);
 	}
 
 
@@ -210,7 +229,10 @@ public class FeaturePlanAssembler {
 	) {
 		return indexMapped(substitutions(examples), (number, substitution) -> {
 			var scenarioID = scenarioNode(scenarioOutline, number+1, parent);
-			repository.getNodeChildren(scenarioID).forEach(scenarioChildID -> {
+			if (scenarioID.isEmpty()) {
+				return scenarioID;
+			}
+			repository.getNodeChildren(scenarioID.orElseThrow()).forEach(scenarioChildID -> {
 				var scenarioChild = repository.getNodeData(scenarioChildID).orElseThrow();
 				if (scenarioChild.name() != null) {
 					scenarioChild.name(substitution.apply(scenarioChild.name()));
@@ -218,7 +240,7 @@ public class FeaturePlanAssembler {
 				}
 			});
 			return scenarioID;
-		});
+		}).stream().filter(Optional::isPresent).map(Optional::get).toList();
 	}
 
 

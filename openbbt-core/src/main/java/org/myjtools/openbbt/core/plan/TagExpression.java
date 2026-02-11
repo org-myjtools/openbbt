@@ -17,10 +17,22 @@ import java.util.Collection;
  */
  public sealed interface TagExpression {
 
+	TagExpression EMPTY = new Empty();
+
 	boolean evaluate(Collection<String> tags);
 
 	static TagExpression parse(String expression) {
+		if (expression == null || expression.isBlank()) {
+			return EMPTY;
+		}
 		return Parser.parse(expression);
+	}
+
+	final class Empty implements TagExpression {
+		@Override
+		public boolean evaluate(Collection<String> tags) {
+			return true; // Matches all tags
+		}
 	}
 
 

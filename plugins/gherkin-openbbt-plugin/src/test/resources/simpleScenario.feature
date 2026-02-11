@@ -10,7 +10,7 @@ Background:
 
 # This is a comment on the scenario
 # scenarioProperty: B
-@ID-Test1_Scenario1
+@ID-Test1_Scenario1 @ScenarioA
 Scenario: Test Scenario
   # This is a comment on the step
   # stepProperty: C
@@ -18,7 +18,7 @@ Scenario: Test Scenario
   When both numbers are multiplied
   Then the matchResult is equals to 72.18
 
-@ID-Test1_ScenarioOutline
+@ID-Test1_ScenarioOutline @ScenarioB
 Scenario Outline: Test Scenario Outline
   Given a number with value <number1> and another number with value <number2>
   When both numbers are multiplied

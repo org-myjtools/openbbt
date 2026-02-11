@@ -1,16 +1,20 @@
 package org.myjtools.openbbt.core.test;
 
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.List;
-import java.util.Set;
-
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.plan.TagExpression;
+import java.util.List;
+import java.util.Set;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class TagExpressionTest {
+
+	@Test
+	void emptyExpression_matches() {
+		var expr = TagExpression.parse("");
+		assertTrue(expr.evaluate(List.of()));
+	}
 
 	@Test
 	void singleTag_matches() {
@@ -85,16 +89,6 @@ class TagExpressionTest {
 		assertTrue(upper.evaluate(tags));
 		assertTrue(mixed.evaluate(tags));
 		assertTrue(lower.evaluate(tags));
-	}
-
-	@Test
-	void nullExpression_throws() {
-		assertThrows(IllegalArgumentException.class, () -> TagExpression.parse(null));
-	}
-
-	@Test
-	void blankExpression_throws() {
-		assertThrows(IllegalArgumentException.class, () -> TagExpression.parse("  "));
 	}
 
 	@Test
