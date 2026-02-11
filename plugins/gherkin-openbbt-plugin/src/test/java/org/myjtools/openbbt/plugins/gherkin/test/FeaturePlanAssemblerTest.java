@@ -116,7 +116,7 @@ class FeaturePlanAssemblerTest {
 
 	private Optional<PlanNodeID> assembleFeature (PlanNodeRepository planNodeRepository, String tagExpression) throws IOException {
 		GherkinParser parser = new GherkinParser(new DefaultKeywordMapProvider());
-		var gherkinDocument = parser.parse(Files.newInputStream(Path.of("src/test/resources/simpleScenario.feature")));
+		var gherkinDocument = parser.parse(Files.newInputStream(Path.of("src/test/resources/test1/simpleScenario.feature")));
 		var feature = gherkinDocument.feature();
 
 		FeaturePlanAssembler assembler = new FeaturePlanAssembler(

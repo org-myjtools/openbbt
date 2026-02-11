@@ -54,6 +54,12 @@
 			<version>2.0.17</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.myjtools</groupId>
+			<artifactId>junit5-memory-check</artifactId>
+			<version>1.0.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 

@@ -59,7 +59,9 @@ public class FeaturePlanAssembler {
 
 
 	public Optional<PlanNodeID> createTestPlan() {
-		return featureNode();
+		var result = featureNode();
+		underlyingModels.clear();
+		return result;
 	}
 
 

@@ -57,7 +57,7 @@ public class GherkinPlanAssembler implements PlanAssembler {
 
 
 	@Override
-	public Optional<PlanNodeID> assemblePlan() {
+	public Optional<PlanNodeID> assemblePlan(org.myjtools.openbbt.core.plan.TagExpression tagExpression) {
 		return Optional.empty();
 /*		ResourceSet resourceSet = resourceFinder.findResources("*.feature");
 		if (resourceSet.size() == 1) {

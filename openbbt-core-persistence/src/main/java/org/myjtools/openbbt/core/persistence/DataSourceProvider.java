@@ -37,13 +37,24 @@ public class DataSourceProvider {
 	public static class HsqldbFileDataSource implements JdbcUrlProvider {
 
 		private final Path file;
+		private final boolean cached;
+
 		public HsqldbFileDataSource(Path file) {
+			this(file, false);
+		}
+
+		public HsqldbFileDataSource(Path file, boolean cached) {
 			this.file = file;
+			this.cached = cached;
 		}
 
 		@Override
 		public String jdbcUrl() {
-			return "jdbc:hsqldb:file:" + file.toAbsolutePath() + ";DB_CLOSE_DELAY=-1;MODE=PostgreSQL";
+			var url = "jdbc:hsqldb:file:" + file.toAbsolutePath() + ";DB_CLOSE_DELAY=-1;MODE=PostgreSQL";
+			if (cached) {
+				url += ";hsqldb.default_table_type=cached;hsqldb.cache_rows=2000;hsqldb.cache_size=1000";
+			}
+			return url;
 		}
 		@Override
 		public String username() {
@@ -114,6 +125,10 @@ public class DataSourceProvider {
 
 	public static DataSourceProvider hsqldb(Path file) {
 		return new DataSourceProvider(new HsqldbFileDataSource(file));
+	}
+
+	public static DataSourceProvider hsqldb(Path file, boolean cached) {
+		return new DataSourceProvider(new HsqldbFileDataSource(file, cached));
 	}
 
 	public static DataSourceProvider hsqldb() {
