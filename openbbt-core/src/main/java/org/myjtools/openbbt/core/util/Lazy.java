@@ -1,7 +1,8 @@
 package org.myjtools.openbbt.core.util;
 
 import java.util.Optional;
-import java.util.function.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
@@ -40,5 +41,6 @@ public class Lazy<T> {
 	public <U> Lazy<U> map(Function<T,U> function) {
 		return new Lazy<>(()->function.apply(supplier.get()));
 	}
+
 
 }

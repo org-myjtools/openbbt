@@ -96,6 +96,22 @@ abstract class AbstractRepositoryTest {
 	}
 
 	@Test
+	void updateAndRetrieveFields() {
+		PlanNode node = new PlanNode()
+			.nodeType(NodeType.TEST_CASE)
+			.name("original name")
+			.description("original description");
+
+		PlanNodeID id = repo.persistNode(node);
+
+		String retrievedName = repo.getNodeField(id, "name").orElseThrow().toString();
+		assertThat(retrievedName).isEqualTo("original name");
+		repo.updateNodeField(id, "name", "updated name");
+		String updatedName = repo.getNodeField(id, "name").orElseThrow().toString();
+		assertThat(updatedName).isEqualTo("updated name");
+	}
+
+	@Test
 	void updatePlanNode() {
 		PlanNode node = new PlanNode()
 			.nodeType(NodeType.TEST_CASE)
@@ -380,8 +396,8 @@ abstract class AbstractRepositoryTest {
 			.properties(new TreeMap<>(Map.of("priority", "high")));
 		PlanNodeID id = repo.persistNode(node);
 
-		assertThat(repo.getNodeProperty(id, "priority")).contains("high");
-		assertThat(repo.getNodeProperty(id, "missing")).isEmpty();
+		assertThat(repo.getProperty(id, "priority")).contains("high");
+		assertThat(repo.getProperty(id, "missing")).isEmpty();
 	}
 
 	@Test

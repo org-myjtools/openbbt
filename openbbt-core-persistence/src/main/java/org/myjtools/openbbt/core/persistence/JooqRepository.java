@@ -11,6 +11,7 @@ import org.myjtools.openbbt.core.PlanNodeRepository;
 import org.myjtools.openbbt.core.plan.*;
 import javax.sql.DataSource;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -73,6 +74,27 @@ public class JooqRepository implements PlanNodeRepository {
 			.map(this::mapPlanNode);
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> void updateNodeField(PlanNodeID id, String fieldName, T fieldValue) {
+		Field<T> field = (Field<T>) resolveField(fieldName);
+		dsl.update(TABLE_PLAN_NODE)
+		   .set(field, fieldValue)
+		   .where(FIELD_NODE_ID.eq(id.UUID()))
+		   .execute();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> Optional<T> getNodeField(PlanNodeID id, String fieldName) {
+		Field<T> field = (Field<T>) resolveField(fieldName);
+		return dsl.select(field)
+		   .from(TABLE_PLAN_NODE)
+		   .where(FIELD_NODE_ID.eq(id.UUID()))
+		   .fetchOptional(field);
+	}
+
+
 
 	public boolean existsNode(PlanNodeID id) {
 		return dsl.fetchExists(
@@ -90,7 +112,6 @@ public class JooqRepository implements PlanNodeRepository {
 			.where(FIELD_NODE_ID.eq(id.UUID()))
 			.fetchOptional()
 			.map(record1 -> record1.get(FIELD_PARENT_NODE))
-			.filter(Objects::nonNull)
 			.map(PlanNodeID::new);
 	}
 
@@ -169,10 +190,11 @@ public class JooqRepository implements PlanNodeRepository {
 
 	public int countNodeChildren(PlanNodeID id) {
 		assertExistsNode(id);
-		return dsl.selectCount()
+		Integer count = dsl.selectCount()
 			.from(TABLE_PLAN_NODE)
 			.where(FIELD_PARENT_NODE.eq(id.UUID()))
 			.fetchOne(0, int.class);
+		return count != null ? count : 0;
 	}
 
 
@@ -207,7 +229,7 @@ public class JooqRepository implements PlanNodeRepository {
 	public int countNodeDescendants(PlanNodeID id) {
 		assertExistsNode(id);
 		UUID rootUUID = getRootNode(id).orElse(id).UUID();
-		return dsl.withRecursive(DSL.unquotedName("descendants"), DSL.unquotedName("nid")).as(
+		Integer count = dsl.withRecursive(DSL.unquotedName("descendants"), DSL.unquotedName("nid")).as(
 			   DSL.select(FIELD_NODE_ID)
 				   .from(TABLE_PLAN_NODE)
 				   .where(FIELD_PARENT_NODE.eq(id.UUID()))
@@ -223,13 +245,14 @@ public class JooqRepository implements PlanNodeRepository {
 		   .selectCount()
 		   .from(CTE_DESC)
 		   .fetchOne(0, int.class);
+		return count != null ? count : 0;
 	}
 
 
 	public int countNodeAncestors(PlanNodeID id) {
 		assertExistsNode(id);
 		UUID rootUUID = getRootNode(id).orElse(id).UUID();
-		return dsl.withRecursive(DSL.unquotedName("ancestors"), DSL.unquotedName("pid")).as(
+		Integer count = dsl.withRecursive(DSL.unquotedName("ancestors"), DSL.unquotedName("pid")).as(
 			   DSL.select(FIELD_PARENT_NODE)
 				   .from(TABLE_PLAN_NODE)
 				   .where(FIELD_NODE_ID.eq(id.UUID()))
@@ -246,6 +269,7 @@ public class JooqRepository implements PlanNodeRepository {
 		   .from(CTE_ANCS)
 		   .where(CTE_PID.isNotNull())
 		   .fetchOne(0, int.class);
+		return count != null ? count : 0;
 	}
 
 
@@ -377,9 +401,10 @@ public class JooqRepository implements PlanNodeRepository {
 
 	public int countNodes(PlanNodeCriteria criteria) {
 		Condition condition = buildCondition(criteria);
-		return dsl.selectCount().from(TABLE_PLAN_NODE)
+		Integer count = dsl.selectCount().from(TABLE_PLAN_NODE)
 				.where(condition)
 				.fetchOne(0, int.class);
+		return count != null ? count : 0;
 	}
 
 
@@ -407,6 +432,14 @@ public class JooqRepository implements PlanNodeRepository {
 		   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
 		   .and(FIELD_TAG.eq(tag))
 		   .execute();
+	}
+
+	public List<String> getTags(PlanNodeID nodeID) {
+		return dsl.select(FIELD_TAG)
+		   .from(TABLE_PLAN_NODE_TAG)
+		   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+		   .fetchStream()
+		   .map(rec -> rec.get(FIELD_TAG)).toList();
 	}
 
 	@Override
@@ -439,12 +472,24 @@ public class JooqRepository implements PlanNodeRepository {
 	}
 
 	@Override
-	public Optional<String> getNodeProperty(PlanNodeID nodeID, String propertyKey) {
+	public Optional<String> getProperty(PlanNodeID nodeID, String propertyKey) {
 		return dsl.select(FIELD_VALUE)
 			.from(TABLE_PLAN_NODE_PROPERTY)
 			.where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
 			.and(FIELD_KEY.eq(propertyKey))
 			.fetchOptional(FIELD_VALUE);
+	}
+
+
+	public Map<String, String> getProperties(PlanNodeID nodeID) {
+		return dsl.select(FIELD_KEY, FIELD_VALUE)
+			.from(TABLE_PLAN_NODE_PROPERTY)
+			.where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			.fetchStream()
+			.collect(Collectors.toMap(
+				rec -> rec.get(FIELD_KEY),
+				rec -> rec.get(FIELD_VALUE)
+			));
 	}
 
 
@@ -532,21 +577,25 @@ public class JooqRepository implements PlanNodeRepository {
 			return FIELD_PARENT_NODE.eq(parent.UUID());
 		} else {
 			// All descendants (depth == -1) or up to certain depth
+			var descendants = DSL.unquotedName("descendants");
+			var descendantsTable = DSL.table(descendants);
+			var dNodeId = DSL.field(DSL.unquotedName("descendants", "node_id"), UUID.class);
+			var dDepth = DSL.field(DSL.unquotedName("descendants", "depth"), Integer.class);
 			return FIELD_NODE_ID.in(
-				DSL.withRecursive("descendants", "node_id", "depth").as(
+				DSL.withRecursive(descendants, DSL.unquotedName("node_id"), DSL.unquotedName("depth")).as(
 					DSL.select(FIELD_NODE_ID, DSL.inline(1))
 						.from(TABLE_PLAN_NODE)
 						.where(FIELD_PARENT_NODE.eq(parent.UUID()))
 					.unionAll(
-						DSL.select(TABLE_PLAN_NODE.field(FIELD_NODE_ID), DSL.field("descendants.depth", Integer.class).add(1))
+						DSL.select(FIELD_NODE_ID, dDepth.add(1))
 							.from(TABLE_PLAN_NODE)
-							.join(DSL.table("descendants"))
-							.on(TABLE_PLAN_NODE.field(FIELD_PARENT_NODE).eq(DSL.field("descendants.node_id", UUID.class)))
-							.where(depth < 0 ? DSL.trueCondition() : DSL.field("descendants.depth", Integer.class).lt(depth))
+							.join(descendantsTable)
+							.on(FIELD_PARENT_NODE.eq(dNodeId))
+							.where(depth < 0 ? DSL.trueCondition() : dDepth.lt(depth))
 					)
 				)
-				.select(DSL.field("node_id", UUID.class))
-				.from(DSL.table("descendants"))
+				.select(dNodeId)
+				.from(descendantsTable)
 			);
 		}
 	}

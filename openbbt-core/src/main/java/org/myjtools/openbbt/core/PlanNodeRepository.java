@@ -2,6 +2,8 @@ package org.myjtools.openbbt.core;
 
 import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -25,6 +27,27 @@ public interface PlanNodeRepository  {
 	 * @return the plan node data, or empty if the node does not exist
 	 */
 	Optional<PlanNode> getNodeData(PlanNodeID id);
+
+	/**
+	 * Update a specific field of a plan node. The field name and value are determined by the caller,
+	 * and the repository implementation should handle the storage and retrieval of these fields.
+	 * @param id the node ID
+	 * @param fieldName the name of the field to update
+	 * @param fieldValue the new value for the field
+	 * @throws OpenBBTException if the node does not exist in the repository
+	 */
+	<T> void updateNodeField(PlanNodeID id, String fieldName, T fieldValue);
+
+
+	/**
+	 * Retrieve the value of a specific field of a plan node.
+	 * @param id the node ID
+	 * @param fieldName the name of the field to retrieve
+	 * @return the value of the field, or empty if the node or field does not exist
+	 * @throws OpenBBTException if the node does not exist in the repository
+	 */
+	<T> Optional<T> getNodeField(PlanNodeID id, String fieldName);
+
 
 	/**
 	 * Check whether a plan node exists in the repository.
@@ -160,8 +183,26 @@ public interface PlanNodeRepository  {
 	 */
 	boolean existsTag(PlanNodeID nodeID, String tag);
 
+	/**
+	 * Retrieve all tags of a node.
+	 * @param nodeID the node ID
+	 * @return a stream of tags associated with the node, or an empty stream if the node has no tags
+	 */
 	void addTag(PlanNodeID nodeID, String tag);
+
+	/**
+	 * Remove a specific tag from a node. If the tag does not exist on the node, this operation will have no effect.
+	 * @param nodeID the node ID
+	 * @param tag the tag to remove
+	 */
 	void removeTag(PlanNodeID nodeID, String tag);
+
+	/**
+	 * Retrieve all tags of a node as a list.
+	 * @param nodeID the node ID
+	 * @return a list of tags associated with the node, or an empty list if the node has no tags
+	 */
+	List<String> getTags(PlanNodeID nodeID);
 
 	/**
 	 * Check whether a node has a specific property. If {@code propertyValue} is {@code null},
@@ -182,6 +223,13 @@ public interface PlanNodeRepository  {
 	 * @param propertyKey the property key
 	 * @return the property value, or empty if the property does not exist
 	 */
-	Optional<String> getNodeProperty(PlanNodeID nodeID, String propertyKey);
+	Optional<String> getProperty(PlanNodeID nodeID, String propertyKey);
+
+	/**
+	 * Retrieve all properties of a node as a map of key-value pairs.
+	 * @param nodeID the node ID
+	 * @return a map containing all properties of the node, or an empty map if the node has no properties
+	 */
+	Map<String, String> getProperties(PlanNodeID nodeID);
 
 }

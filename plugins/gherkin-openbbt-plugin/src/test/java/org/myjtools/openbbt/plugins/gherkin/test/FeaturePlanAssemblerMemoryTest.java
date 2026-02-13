@@ -41,7 +41,7 @@ class FeaturePlanAssemblerMemoryTest {
 	}
 
 	@Nested
-	class DefaultDatabase {
+	class FileDatabase {
 
 		@RegisterExtension
 		MemoryExtension memoryCheck = new MemoryExtension(20_000_000);
@@ -62,25 +62,5 @@ class FeaturePlanAssemblerMemoryTest {
 		}
 	}
 
-	@Nested
-	class CachedDatabase {
 
-		@RegisterExtension
-		MemoryExtension memoryCheck = new MemoryExtension(5_000_000);
-
-		@TempDir
-		private Path tempDir;
-
-		private PlanNodeRepository repository;
-
-		@BeforeEach
-		void setUp() {
-			repository = new JooqRepository(DataSourceProvider.hsqldb(tempDir.resolve("cacheddb"), true));
-		}
-
-		@Test
-		void test() throws IOException {
-			processFeatures(repository);
-		}
-	}
 }

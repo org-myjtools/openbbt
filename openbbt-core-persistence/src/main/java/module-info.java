@@ -11,4 +11,7 @@ module org.myjtools.openbbt.core.persistence {
 
 	opens org.myjtools.openbbt.core.persistence.migration.hsqldb;
 	opens org.myjtools.openbbt.core.persistence.migration.postgresql;
+
+	provides org.myjtools.openbbt.core.contributors.PlanNodeRepositoryFactory
+			with org.myjtools.openbbt.core.persistence.JooqPlanNodeRepositoryFactory;
 }

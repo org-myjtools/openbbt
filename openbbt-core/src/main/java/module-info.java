@@ -1,7 +1,4 @@
-import org.myjtools.openbbt.core.contributors.AssertionFactoryProvider;
-import org.myjtools.openbbt.core.contributors.ConfigProvider;
-import org.myjtools.openbbt.core.contributors.PlanAssembler;
-import org.myjtools.openbbt.core.contributors.DataTypeProvider;
+import org.myjtools.openbbt.core.contributors.*;
 
 module org.myjtools.openbbt.core {
 
@@ -34,6 +31,6 @@ module org.myjtools.openbbt.core {
 	uses org.myjtools.openbbt.core.messages.MessageProvider;
 	uses PlanAssembler;
 	uses org.myjtools.openbbt.core.step.StepContributor;
-
+	uses PlanNodeRepositoryFactory;
 
 }

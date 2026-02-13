@@ -1,4 +1,4 @@
-idTagPattern:
+gherkin.idTagPattern:
   description: |
     Regex for tags used as identifier. If it contains a regex group, 
     only the group value would be used as identifier.
@@ -6,7 +6,7 @@ idTagPattern:
   defaultValue: ID-(\w+)
 
 
-definitionTag:
+gherkin.definitionTag:
   description: |
     Tag used to annotate a node aggregator as a definition node
   type: text
@@ -15,7 +15,7 @@ definitionTag:
   defaultValue: definition
 
 
-implementationTag:
+gherkin.implementationTag:
   description: |
     Tag used to annotate a node as an implementation node
   type: text

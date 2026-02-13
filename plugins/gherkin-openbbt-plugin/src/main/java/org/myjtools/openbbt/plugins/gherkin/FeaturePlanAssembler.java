@@ -80,15 +80,14 @@ public class FeaturePlanAssembler {
 
 		var id = repository.persistNode(nodeData);
 		underlyingModels.put(id, feature);
-		PlanNode node = repository.getNodeData(id).orElseThrow();
 
 		for (var child : feature.children()) {
 			if (child instanceof Scenario scenario) {
-				scenarioNode(scenario,node).ifPresent( scenarioNode ->
+				scenarioNode(scenario,id).ifPresent( scenarioNode ->
 					repository.attachChildNodeLast(id, scenarioNode)
 				);
 			} else if (child instanceof ScenarioOutline scenarioOutline) {
-				scenarioOutlineNode(scenarioOutline,node).ifPresent( scenarioOutlineNode ->
+				scenarioOutlineNode(scenarioOutline,id).ifPresent( scenarioOutlineNode ->
 					 repository.attachChildNodeLast(id, scenarioOutlineNode)
 				);
 			}
@@ -105,12 +104,12 @@ public class FeaturePlanAssembler {
 
 
 
-	private Optional<PlanNodeID> scenarioNode(Scenario scenario, PlanNode parent) {
+	private Optional<PlanNodeID> scenarioNode(Scenario scenario, PlanNodeID parent) {
 		return scenarioNode(scenario, scenario.name(), idFromTags(scenario), scenario.keyword(), parent);
 	}
 
 
-	private Optional<PlanNodeID> scenarioNode(ScenarioOutline scenarioOutline, int example, PlanNode parent) {
+	private Optional<PlanNodeID> scenarioNode(ScenarioOutline scenarioOutline, int example, PlanNodeID parent) {
 		return scenarioNode(
 			scenarioOutline,
 			"%s [%s]".formatted(scenarioOutline.name(), example),
@@ -126,7 +125,7 @@ public class FeaturePlanAssembler {
 		String name,
 		String identifier,
 		String keyword,
-		PlanNode parent
+		PlanNodeID parent
 	) {
 		boolean include = tagExpression.evaluate(tags(parent, scenarioDefinition));
 		if (!include) {
@@ -146,7 +145,7 @@ public class FeaturePlanAssembler {
 		var id = repository.persistNode(data);
 		underlyingModels.put(id,scenarioDefinition);
 
-		var backgroundNodeId = createBackgroundStepsNode(data, null);
+		var backgroundNodeId = createBackgroundStepsNode(id, null);
 		if (backgroundNodeId != null) {
 			repository.attachChildNodeLast(id, backgroundNodeId);
 		}
@@ -156,23 +155,23 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private Optional<PlanNodeID> scenarioOutlineNode(ScenarioOutline scenarioOutline, PlanNode parent) {
+	private Optional<PlanNodeID> scenarioOutlineNode(ScenarioOutline scenarioOutline, PlanNodeID parent) {
 
 		boolean include = tagExpression.evaluate(tags(parent, scenarioOutline));
 		if (!include) {
 			return Optional.empty();
 		}
 		var node = new PlanNode(NodeType.TEST_AGGREGATOR)
-				.identifier(idFromTags(scenarioOutline))
-				.name(scenarioOutline.name())
-				.display("%s %s".formatted(scenarioOutline.keyword(), scenarioOutline.name()))
-				.language(feature.language())
-				.keyword(scenarioOutline.keyword())
-				.description(scenarioOutline.description())
-				.tags(tags(parent,scenarioOutline))
-				.source(nodeLocation(scenarioOutline))
-				.addProperties(propertiesFromComments(scenarioOutline,parent))
-				.addProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE);
+			.identifier(idFromTags(scenarioOutline))
+			.name(scenarioOutline.name())
+			.display("%s %s".formatted(scenarioOutline.keyword(), scenarioOutline.name()))
+			.language(feature.language())
+			.keyword(scenarioOutline.keyword())
+			.description(scenarioOutline.description())
+			.tags(tags(parent,scenarioOutline))
+			.source(nodeLocation(scenarioOutline))
+			.addProperties(propertiesFromComments(scenarioOutline,parent))
+			.addProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE);
 
 		node.dataTable(tableOf(scenarioOutline.examples().getFirst()));
 
@@ -180,7 +179,7 @@ public class FeaturePlanAssembler {
 		underlyingModels.put(id,scenarioOutline);
 
 		scenarioOutline.examples().stream()
-			.flatMap(examples -> createScenariosFromExamples(scenarioOutline, examples, node).stream())
+			.flatMap(examples -> createScenariosFromExamples(scenarioOutline, examples, id).stream())
 			.forEach(childID -> repository.attachChildNodeLast(id, childID));
 
 		return Optional.of(id);
@@ -204,7 +203,7 @@ public class FeaturePlanAssembler {
 	}
 
 
-	public PlanNodeID createBackgroundStepsNode(PlanNode parent, String name) {
+	public PlanNodeID createBackgroundStepsNode(PlanNodeID parent, String name) {
 		if (background == null) {
 			return null;
 		}
@@ -225,9 +224,9 @@ public class FeaturePlanAssembler {
 
 
 	public List<PlanNodeID> createScenariosFromExamples(
-			ScenarioOutline scenarioOutline,
-			Examples examples,
-			PlanNode parent
+		ScenarioOutline scenarioOutline,
+		Examples examples,
+		PlanNodeID parent
 	) {
 		return indexMapped(substitutions(examples), (number, substitution) -> {
 			var scenarioID = scenarioNode(scenarioOutline, number+1, parent);
@@ -251,8 +250,8 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private Map<String,String> propertiesFromComments(Commented node, PlanNode parent) {
-		SortedMap<String,String> properties = new TreeMap<>(parent.properties());
+	private Map<String,String> propertiesFromComments(Commented node, PlanNodeID nodeID) {
+		SortedMap<String,String> properties = new TreeMap<>(repository.getProperties(nodeID));
 		properties.putAll(propertiesFromComments(node));
 		return properties;
 	}
@@ -275,8 +274,8 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private Set<String> tags(PlanNode parent, Tagged node) {
-		Set<String> result = new HashSet<>(parent.tags());
+	private Set<String> tags(PlanNodeID nodeID, Tagged node) {
+		Set<String> result = new HashSet<>(repository.getTags(nodeID));
 		result.addAll(tags(node));
 		return result;
 	}

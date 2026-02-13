@@ -11,4 +11,6 @@ module org.myjtools.openbbt.plugins.gherkin {
 	provides org.myjtools.openbbt.core.contributors.PlanAssembler with org.myjtools.openbbt.plugins.gherkin.GherkinPlanAssembler;
 	provides org.myjtools.openbbt.core.contributors.ConfigProvider with org.myjtools.openbbt.plugins.gherkin.GherkinConfig;
 
+	opens org.myjtools.openbbt.plugins.gherkin to org.myjtools.jexten;
+
 }
