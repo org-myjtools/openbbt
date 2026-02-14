@@ -78,6 +78,7 @@ class TagExpressionTest {
 		assertTrue(expr.evaluate(Set.of("MainTest", "Light")));
 		assertFalse(expr.evaluate(Set.of("MainTest", "Heavy")));
 		assertFalse(expr.evaluate(Set.of("Quick")));
+		assertEquals("MainTest and (Quick or not Heavy)", expr.toString());
 	}
 
 	@Test

@@ -6,17 +6,17 @@ import org.myjtools.gherkinparser.GherkinParser;
 import org.myjtools.gherkinparser.elements.Examples;
 import org.myjtools.gherkinparser.elements.Feature;
 import org.myjtools.gherkinparser.elements.ScenarioOutline;
-import org.myjtools.gherkinparser.elements.Tagged;
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.PostConstruct;
 import org.myjtools.openbbt.core.*;
-import org.myjtools.openbbt.core.contributors.PlanAssembler;
+import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.plan.NodeType;
 import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.TagExpression;
+import org.myjtools.openbbt.core.project.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
 import java.io.IOException;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 
 @Extension
-public class GherkinPlanAssembler implements PlanAssembler {
+public class GherkinSuiteAssembler implements SuiteAssembler {
 
 	private static final Log log = Log.of("plugins.gherkin");
 	private static final String STEP_MAP = "step-map";
@@ -59,24 +59,34 @@ public class GherkinPlanAssembler implements PlanAssembler {
 
 
 	@Override
-	public Optional<PlanNodeID> assemblePlan(TagExpression tagExpression) {
+	public Optional<PlanNodeID> assembleSuite(TestSuite testSuite) {
 		ResourceSet resourceSet = resourceFinder.findResources("*.feature");
+		TagExpression tagExpression = testSuite.tagExpression();
 		if (resourceSet.size() == 1) {
-			return assembleFeatureNode(keywordMapProvider, parser, idTagPattern, resourceSet.get(0), tagExpression);
+			var feature = assembleFeatureNode(keywordMapProvider, parser, idTagPattern, resourceSet.get(0), testSuite);
+			return feature.flatMap(it -> wrapTestSuite(it, testSuite));
 		} else {
-			return assembleMultipleFeature(resourceSet, tagExpression);
+			return assembleMultipleFeature(resourceSet, testSuite);
 		}
 	}
 
 
+	private Optional<PlanNodeID> wrapTestSuite(PlanNodeID feature, TestSuite testSuite) {
+		PlanNode root = new PlanNode(NodeType.TEST_SUITE);
+		root.name(testSuite.name());
+		var id = repository.persistNode(root);
+		repository.attachChildNodeLast(id, feature);
+		return Optional.of(id);
+	}
 
-	private Optional<PlanNodeID> assembleMultipleFeature(ResourceSet resourceSet, TagExpression tagExpression) {
 
-		var root = assembleStandaloneFeatures(resourceSet, tagExpression);
+	private Optional<PlanNodeID> assembleMultipleFeature(ResourceSet resourceSet, TestSuite testSuite) {
+
+		var root = assembleStandaloneFeatures(resourceSet, testSuite);
 
 		deleteDefinitionTestCasesWithoutId(root);
 		deleteImplementationScenarioOutlineContent(root);
-		fillImplementationScenarioOutlines(root, tagExpression);
+		fillImplementationScenarioOutlines(root, testSuite.tagExpression());
 
 		// redefine definition test cases with implementation steps
 		repository.searchNodes(PlanNodeCriteria.and(
@@ -101,7 +111,15 @@ public class GherkinPlanAssembler implements PlanAssembler {
 			repository.removeTag(it, implementationTag);
 			repository.removeTag(it, definitionTag);
 		});
-		return normalize(root);
+
+		if (repository.countNodeChildren(root) == 0) {
+			repository.deleteNode(root);
+			return Optional.empty();
+		} else {
+			repository.updateNodeField(root, "nodeType", NodeType.TEST_SUITE.value);
+			repository.updateNodeField(root, "name", testSuite.name());
+			return Optional.ofNullable(root);
+		}
 
 	}
 
@@ -128,7 +146,7 @@ public class GherkinPlanAssembler implements PlanAssembler {
 	}
 
 
-	private PlanNodeID assembleStandaloneFeatures(ResourceSet resourceSet, TagExpression tagExpression) {
+	private PlanNodeID assembleStandaloneFeatures(ResourceSet resourceSet, TestSuite testSuite) {
 		log.trace("provideStandaloneFeatures");
 		var id = repository.persistNode(new PlanNode(NodeType.TEST_AGGREGATOR));
 		for (Resource resource : resourceSet) {
@@ -137,7 +155,7 @@ public class GherkinPlanAssembler implements PlanAssembler {
 				parser,
 				idTagPattern,
 				resource,
-				tagExpression
+				testSuite
 			).ifPresent(child -> repository.attachChildNodeLast(id, child));
 		}
 		return id;
@@ -303,8 +321,9 @@ public class GherkinPlanAssembler implements PlanAssembler {
 		GherkinParser parser,
 		String idTagPattern,
 		Resource resource,
-		TagExpression tagExpression
+		TestSuite testSuite
 	) {
+
 		try (var inputStream = resource.open()) {
 			var gherkinDocument = parser.parse(inputStream);
 			if (gherkinDocument.feature() == null) {
@@ -316,7 +335,7 @@ public class GherkinPlanAssembler implements PlanAssembler {
 				keywordMapProvider,
 				idTagPattern,
 				repository,
-				tagExpression
+				testSuite.tagExpression()
 			);
 			var result = builder.createTestPlan();
 			this.underlyingModels.putAll(builder.underlyingModels());

@@ -1,4 +1,8 @@
 package org.myjtools.openbbt.core.project;
 
-public class TestSuite {
+import org.myjtools.openbbt.core.plan.TagExpression;
+
+public record TestSuite (String name, String description, TagExpression tagExpression) {
+
+
 }
