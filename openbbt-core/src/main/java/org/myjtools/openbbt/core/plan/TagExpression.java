@@ -33,6 +33,10 @@ import java.util.Collection;
 		public boolean evaluate(Collection<String> tags) {
 			return true; // Matches all tags
 		}
+		@Override
+		public String toString() {
+			return "";
+		}
 	}
 
 
@@ -40,6 +44,10 @@ import java.util.Collection;
 		@Override
 		public boolean evaluate(Collection<String> tags) {
 			return tags.contains(name);
+		}
+		@Override
+		public String toString() {
+			return name;
 		}
 	}
 
@@ -49,6 +57,12 @@ import java.util.Collection;
 		public boolean evaluate(Collection<String> tags) {
 			return left.evaluate(tags) && right.evaluate(tags);
 		}
+		@Override
+		public String toString() {
+			String l = left instanceof Or ? "(" + left + ")" : left.toString();
+			String r = right instanceof Or ? "(" + right + ")" : right.toString();
+			return l + " and " + r;
+		}
 	}
 
 
@@ -57,6 +71,10 @@ import java.util.Collection;
 		public boolean evaluate(Collection<String> tags) {
 			return left.evaluate(tags) || right.evaluate(tags);
 		}
+		@Override
+		public String toString() {
+			return left + " or " + right;
+		}
 	}
 
 
@@ -64,6 +82,12 @@ import java.util.Collection;
 		@Override
 		public boolean evaluate(Collection<String> tags) {
 			return !operand.evaluate(tags);
+		}
+		@Override
+		public String toString() {
+			String op = operand instanceof And || operand instanceof Or
+				? "(" + operand + ")" : operand.toString();
+			return "not " + op;
 		}
 	}
 
