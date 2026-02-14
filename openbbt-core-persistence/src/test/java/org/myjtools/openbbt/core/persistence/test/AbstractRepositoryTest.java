@@ -498,6 +498,94 @@ abstract class AbstractRepositoryTest {
 	}
 
 	@Test
+	void attachChildNodeLast_updatesRootNodeOfEntireSubtree() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+		PlanNodeID greatGrandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("greatGrandchild"));
+
+		// Build a subtree: child -> grandchild -> greatGrandchild
+		repo.attachChildNodeLast(child, grandchild);
+		repo.attachChildNodeLast(grandchild, greatGrandchild);
+
+		// Verify subtree root is child
+		assertThat(repo.getRootNode(child)).contains(child);
+		assertThat(repo.getRootNode(grandchild)).contains(child);
+		assertThat(repo.getRootNode(greatGrandchild)).contains(child);
+
+		// Now attach the subtree to root
+		repo.attachChildNodeLast(root, child);
+
+		// All nodes in the subtree should now have root as root_node
+		assertThat(repo.getRootNode(child)).contains(root);
+		assertThat(repo.getRootNode(grandchild)).contains(root);
+		assertThat(repo.getRootNode(greatGrandchild)).contains(root);
+	}
+
+	@Test
+	void attachChildNodeFirst_updatesRootNodeOfEntireSubtree() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+
+		repo.attachChildNodeLast(child, grandchild);
+
+		// Attach subtree to root using attachFirst
+		repo.attachChildNodeFirst(root, child);
+
+		assertThat(repo.getRootNode(child)).contains(root);
+		assertThat(repo.getRootNode(grandchild)).contains(root);
+	}
+
+	@Test
+	void detachChildNode_updatesRootNodeOfEntireSubtree() {
+		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+		PlanNodeID greatGrandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("greatGrandchild"));
+
+		repo.attachChildNodeLast(root, child);
+		repo.attachChildNodeLast(child, grandchild);
+		repo.attachChildNodeLast(grandchild, greatGrandchild);
+
+		// Verify all have root as root_node
+		assertThat(repo.getRootNode(grandchild)).contains(root);
+		assertThat(repo.getRootNode(greatGrandchild)).contains(root);
+
+		// Detach child (with its subtree) from root
+		repo.detachChildNode(root, child);
+
+		// child becomes its own root, and all its descendants should follow
+		assertThat(repo.getRootNode(child)).contains(child);
+		assertThat(repo.getRootNode(grandchild)).contains(child);
+		assertThat(repo.getRootNode(greatGrandchild)).contains(child);
+	}
+
+	@Test
+	void moveSubtreeBetweenRoots_updatesAllDescendantRootNodes() {
+		PlanNodeID root1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root1"));
+		PlanNodeID root2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root2"));
+		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+
+		repo.attachChildNodeLast(root1, child);
+		repo.attachChildNodeLast(child, grandchild);
+
+		assertThat(repo.getRootNode(grandchild)).contains(root1);
+
+		// Move subtree from root1 to root2
+		repo.detachChildNode(root1, child);
+		repo.attachChildNodeLast(root2, child);
+
+		assertThat(repo.getRootNode(child)).contains(root2);
+		assertThat(repo.getRootNode(grandchild)).contains(root2);
+
+		// Descendants query should work correctly from root2
+		assertThat(repo.getNodeDescendants(root2).toList()).containsExactlyInAnyOrder(child, grandchild);
+		assertThat(repo.getNodeDescendants(root1).toList()).isEmpty();
+	}
+
+	@Test
 	void reattachNodeToSameParent_maintainsOrder() {
 		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
 		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
