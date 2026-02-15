@@ -70,7 +70,7 @@ public class PlanNode {
 
 	public SortedMap<String, String> properties() {
 		if (properties == null) {
-			return new TreeMap<>();
+			properties = new TreeMap<>();
 		}
 		return properties;
 	}
@@ -78,7 +78,7 @@ public class PlanNode {
 
 	public Set<String> tags() {
 		if (tags == null) {
-			return new HashSet<>();
+			tags = new HashSet<>();
 		}
 		return tags;
 	}
@@ -86,12 +86,18 @@ public class PlanNode {
 
 	@Override
 	public String toString() {
-		String s = "["+nodeType+"]";
-		if (identifier != null) {
-			s += (" ("+identifier+")");
+		if (display == null) {
+			return name != null ? name : nodeType.name();
 		}
-		s += " "+name;
-		return s;
+		return display
+			.replace("{name}", name)
+			.replace("{nodeType}", nodeType.name())
+			.replace("{nodeID}", nodeID != null ? nodeID.toString() : "null")
+			.replace("{language}", language != null ? language : "null")
+			.replace("{identifier}", identifier != null ? identifier : "null")
+			.replace("{source}", source != null ? source : "null")
+			.replace("{keyword}", keyword != null ? keyword : "null")
+			.replace("{description}", description != null ? description : "null");
 	}
 
 }

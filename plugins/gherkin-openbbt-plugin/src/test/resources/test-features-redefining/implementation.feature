@@ -7,7 +7,7 @@ Característica: Test feature [Spanish]
 Antecedentes: Estos son los antecedentes
   Dado el conjunto de números reales ℝ
 
-# gherkin.stepMap: 2-1-2-0
+# gherkin.step-map: 2-1-2-0
 @ID-1
 Escenario: Escenario de test en español
  Dado un número con valor 6,1 y otro número con valor 3
@@ -20,7 +20,7 @@ Escenario: Escenario de test en español
 @ID-2
 # Examples provided by the definition feature
 # dataFormatLanguage: en
-# gherkin.stepMap: 0-1-1-2
+# gherkin.step-map: 0-1-1-2
 Esquema del escenario: Esquema de escenario de test en español
  # Given a number with value <a>
  # And another number with value <b>

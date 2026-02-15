@@ -33,23 +33,23 @@ class FeaturePlanAssemblerTest {
 			[TEST_AGGREGATOR] Test 1 - Simple Scenario
 			  [TEST_CASE] (Test1_Scenario1) Test Scenario
 			    [STEP_AGGREGATOR] Background
-			      [STEP] the set of real numbers
-			    [STEP] a number with value 8.02 and another number with value 9
-			    [STEP] both numbers are multiplied
-			    [STEP] the matchResult is equals to 72.18
+			      [STEP] Given the set of real numbers
+			    [STEP] Given a number with value 8.02 and another number with value 9
+			    [STEP] When both numbers are multiplied
+			    [STEP] Then the matchResult is equals to 72.18
 			  [TEST_AGGREGATOR] (Test1_ScenarioOutline) Test Scenario Outline
 			    [TEST_CASE] (Test1_ScenarioOutline_1) Test Scenario Outline [1]
 			      [STEP_AGGREGATOR] Background
-			        [STEP] the set of real numbers
-			      [STEP] a number with value 8.02 and another number with value 9
-			      [STEP] both numbers are multiplied
-			      [STEP] the matchResult is equals to 72.18
+			        [STEP] Given the set of real numbers
+			      [STEP] Given a number with value 8.02 and another number with value 9
+			      [STEP] When both numbers are multiplied
+			      [STEP] Then the matchResult is equals to 72.18
 			    [TEST_CASE] (Test1_ScenarioOutline_2) Test Scenario Outline [2]
 			      [STEP_AGGREGATOR] Background
-			        [STEP] the set of real numbers
-			      [STEP] a number with value 5 and another number with value 4
-			      [STEP] both numbers are multiplied
-			      [STEP] the matchResult is equals to 20
+			        [STEP] Given the set of real numbers
+			      [STEP] Given a number with value 5 and another number with value 4
+			      [STEP] When both numbers are multiplied
+			      [STEP] Then the matchResult is equals to 20
 			""");
 
 	}
@@ -68,10 +68,10 @@ class FeaturePlanAssemblerTest {
 			[TEST_AGGREGATOR] Test 1 - Simple Scenario
 			  [TEST_CASE] (Test1_Scenario1) Test Scenario
 			    [STEP_AGGREGATOR] Background
-			      [STEP] the set of real numbers
-			    [STEP] a number with value 8.02 and another number with value 9
-			    [STEP] both numbers are multiplied
-			    [STEP] the matchResult is equals to 72.18
+			      [STEP] Given the set of real numbers
+			    [STEP] Given a number with value 8.02 and another number with value 9
+			    [STEP] When both numbers are multiplied
+			    [STEP] Then the matchResult is equals to 72.18
 			""");
 
 	}
@@ -92,16 +92,16 @@ class FeaturePlanAssemblerTest {
 			  [TEST_AGGREGATOR] (Test1_ScenarioOutline) Test Scenario Outline
 			    [TEST_CASE] (Test1_ScenarioOutline_1) Test Scenario Outline [1]
 			      [STEP_AGGREGATOR] Background
-			        [STEP] the set of real numbers
-			      [STEP] a number with value 8.02 and another number with value 9
-			      [STEP] both numbers are multiplied
-			      [STEP] the matchResult is equals to 72.18
+			        [STEP] Given the set of real numbers
+			      [STEP] Given a number with value 8.02 and another number with value 9
+			      [STEP] When both numbers are multiplied
+			      [STEP] Then the matchResult is equals to 72.18
 			    [TEST_CASE] (Test1_ScenarioOutline_2) Test Scenario Outline [2]
 			      [STEP_AGGREGATOR] Background
-			        [STEP] the set of real numbers
-			      [STEP] a number with value 5 and another number with value 4
-			      [STEP] both numbers are multiplied
-			      [STEP] the matchResult is equals to 20
+			        [STEP] Given the set of real numbers
+			      [STEP] Given a number with value 5 and another number with value 4
+			      [STEP] When both numbers are multiplied
+			      [STEP] Then the matchResult is equals to 20
 			""");
 
 	}

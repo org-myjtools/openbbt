@@ -59,9 +59,7 @@ public class FeaturePlanAssembler {
 
 
 	public Optional<PlanNodeID> createTestPlan() {
-		var result = featureNode();
-		underlyingModels.clear();
-		return result;
+		return featureNode();
 	}
 
 
@@ -72,6 +70,7 @@ public class FeaturePlanAssembler {
 			.name(feature.name())
 			.language(feature.language())
 			.keyword(feature.keyword())
+			.display("{name}")
 			.description(feature.description())
 			.tags(tags(feature))
 			.source(nodeLocation(feature))
@@ -135,6 +134,7 @@ public class FeaturePlanAssembler {
 			.identifier(identifier)
 			.name(name)
 			.language(feature.language())
+			.display("{name}")
 			.keyword(keyword)
 			.description(scenarioDefinition.description())
 			.tags(tags(parent,scenarioDefinition))
@@ -164,7 +164,7 @@ public class FeaturePlanAssembler {
 		var node = new PlanNode(NodeType.TEST_AGGREGATOR)
 			.identifier(idFromTags(scenarioOutline))
 			.name(scenarioOutline.name())
-			.display("%s %s".formatted(scenarioOutline.keyword(), scenarioOutline.name()))
+			.display("{name}")
 			.language(feature.language())
 			.keyword(scenarioOutline.keyword())
 			.description(scenarioOutline.description())
@@ -191,7 +191,7 @@ public class FeaturePlanAssembler {
 			.name(step.text())
 			.language(feature.language())
 			.keyword(step.keyword())
-			.display("%s %s".formatted(step.keyword(), step.text()))
+			.display("{keyword} {name}")
 			.source(nodeLocation(step))
 			.addProperty(GHERKIN_TYPE,GHERKIN_TYPE_STEP);
 		if (step.argument() instanceof DataTable dataTable) {
@@ -208,9 +208,10 @@ public class FeaturePlanAssembler {
 			return null;
 		}
 		var node = new PlanNode(NodeType.STEP_AGGREGATOR)
-			.name(notEmpty(name, background.name(), backgroundKeyword))
+			.name(notEmpty(name, background.name()))
 			.language(feature.language())
 			.keyword(background.keyword())
+			.display("{keyword}")
 			.description(background.description())
 			.tags(tags(parent,background))
 			.source(nodeLocation(background))

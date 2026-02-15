@@ -1,7 +1,6 @@
 
 CREATE TABLE PLAN_NODE (
     NODE_ID UUID NOT null primary key,
-    ROOT_NODE UUID not null ,
     PARENT_NODE UUID NULL,
     NODE_POSITION INTEGER,
     TYPE INTEGER NOT NULL,
@@ -18,11 +17,8 @@ CREATE TABLE PLAN_NODE (
 );
 
 ALTER TABLE PLAN_NODE ADD CONSTRAINT fk_plan_node_parent FOREIGN KEY (PARENT_NODE) REFERENCES PLAN_NODE (NODE_ID) on delete CASCADE;
-ALTER TABLE PLAN_NODE ADD CONSTRAINT fk_plan_node_root FOREIGN KEY (ROOT_NODE) REFERENCES PLAN_NODE (NODE_ID) ON DELETE CASCADE;
 
 CREATE INDEX idx_plan_node_parent ON plan_node(parent_node);
-CREATE INDEX idx_plan_node_root ON plan_node(root_node);
-CREATE INDEX idx_plan_node_root_parent ON plan_node(root_node, parent_node);
 
 
 CREATE TABLE PLAN_NODE_TAG (

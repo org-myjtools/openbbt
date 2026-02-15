@@ -95,14 +95,6 @@ public interface PlanNodeRepository  {
 	void detachChildNode(PlanNodeID parent, PlanNodeID child);
 
 
-	/**
-	 * Retrieve the root node of the tree that contains the given node.
-	 * If the node itself is a root, it returns its own ID.
-	 * @param id the node ID
-	 * @return the root node ID
-	 * @throws OpenBBTException if the node does not exist in the repository
-	 */
-	Optional<PlanNodeID> getRootNode(PlanNodeID id);
 
 	/**
 	 * Retrieve the direct children of a node, ordered by their position.

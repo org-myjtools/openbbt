@@ -29,7 +29,7 @@ import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 public class GherkinSuiteAssembler implements SuiteAssembler {
 
 	private static final Log log = Log.of("plugins.gherkin");
-	private static final String STEP_MAP = "step-map";
+	private static final String STEP_MAP = "gherkin.step-map";
 
 	@Inject("gherkin")
 	Config config;
@@ -130,7 +130,10 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 			PlanNodeCriteria.descendantOf(root),
 			PlanNodeCriteria.withTag(implementationTag),
 			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE)
-		)).forEach(it -> repository.deleteNode(it));
+		)).forEach(scenarioOutline ->
+			repository.getNodeChildren(scenarioOutline).toList()
+				.forEach(child -> repository.deleteNode(child))
+		);
 	}
 
 
@@ -256,6 +259,8 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 				repository.attachChildNodeLast(defStep,impStep);
 				impStepCount++;
 			}
+			redefineStepNodeType(stepMap, defStepCount, defStep);
+			defStepCount++;
 		}
 
 		moveBackgroundToOtherTestCase(impTestCase, defTestCase);

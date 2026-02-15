@@ -19,7 +19,16 @@ public class PlanNodeRepositoryWriter {
 
 	private void write(PlanNodeID nodeID, Writer writer, int indent) throws IOException {
 		PlanNode node = repository.getNodeData(nodeID).orElseThrow();
-		writer.append("  ".repeat(indent)).append(node.toString()).append("\n");
+		writer.append("  ".repeat(indent))
+			.append("[")
+			.append(String.valueOf(node.nodeType()))
+			.append("] ");
+		if (node.identifier() != null) {
+			writer.append("(")
+			.append(node.identifier())
+			.append(") ");
+		}
+		writer.append(node.toString()).append("\n");
 		for (PlanNodeID childID : repository.getNodeChildren(nodeID).toList()) {
 			write(childID,writer,indent+1);
 		}
