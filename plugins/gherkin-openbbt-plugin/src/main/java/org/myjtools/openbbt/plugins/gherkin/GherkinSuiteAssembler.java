@@ -25,6 +25,32 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 
+/**
+ * SPI implementation that assembles a test suite from Gherkin {@code .feature} files.
+ *
+ * <p>This assembler discovers all {@code .feature} resources in the project, parses them
+ * using the Gherkin parser, and builds a {@link PlanNode} tree that represents the test
+ * suite. When multiple feature files are present, it also handles the
+ * <em>definition/implementation redefining</em> mechanism: features tagged with
+ * {@code @definition} provide abstract test case structures, while features tagged with
+ * {@code @implementation} supply the concrete steps that replace them.</p>
+ *
+ * <p>The redefining process works as follows:</p>
+ * <ol>
+ *   <li>All features are parsed independently into plan nodes.</li>
+ *   <li>Definition test cases without an identifier are removed.</li>
+ *   <li>Implementation scenario outlines are filled with examples from their
+ *       matching definition counterparts.</li>
+ *   <li>Each definition test case is redefined with the steps from its matching
+ *       implementation test case (matched by identifier), using the optional
+ *       {@code gherkin.step-map} property to control step mapping.</li>
+ *   <li>Implementation-only features are removed from the final tree.</li>
+ * </ol>
+ *
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ * @see FeaturePlanAssembler
+ * @see GherkinConfig
+ */
 @Extension
 public class GherkinSuiteAssembler implements SuiteAssembler {
 
@@ -48,6 +74,11 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	private final Map<PlanNodeID,Object> underlyingModels = new HashMap<>();
 
 
+	/**
+	 * Initializes the Gherkin parser and reads configuration values for identifier tag
+	 * pattern, definition tag, and implementation tag. Called automatically after
+	 * dependency injection.
+	 */
 	@PostConstruct
 	public void init() {
 		this.keywordMapProvider = new DefaultKeywordMapProvider();
@@ -58,6 +89,14 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>Discovers all {@code *.feature} resources and assembles them into a plan node tree.
+	 * When a single feature is found, it is wrapped directly in a test suite node. When
+	 * multiple features are found, the definition/implementation redefining mechanism is
+	 * applied before producing the final suite.</p>
+	 */
 	@Override
 	public Optional<PlanNodeID> assembleSuite(TestSuite testSuite) {
 		ResourceSet resourceSet = resourceFinder.findResources("*.feature");

@@ -18,6 +18,29 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 
+/**
+ * Transforms a parsed Gherkin {@link Feature} into a tree of
+ * {@link org.myjtools.openbbt.core.plan.PlanNode} elements persisted in a
+ * {@link PlanNodeRepository}.
+ *
+ * <p>Each Gherkin element is mapped to a plan node type:</p>
+ * <ul>
+ *   <li>{@code Feature} &rarr; {@link NodeType#TEST_AGGREGATOR}</li>
+ *   <li>{@code Scenario} &rarr; {@link NodeType#TEST_CASE}</li>
+ *   <li>{@code Scenario Outline} &rarr; {@link NodeType#TEST_AGGREGATOR} with child
+ *       test cases expanded from its {@code Examples} table</li>
+ *   <li>{@code Background} &rarr; {@link NodeType#STEP_AGGREGATOR}</li>
+ *   <li>{@code Step} &rarr; {@link NodeType#STEP}</li>
+ * </ul>
+ *
+ * <p>Tags, properties (extracted from Gherkin comments matching
+ * {@code # key: value}), identifiers, and source locations are propagated to the
+ * resulting plan nodes. A {@link TagExpression} filter is applied so that only
+ * scenarios matching the expression are included in the output.</p>
+ *
+ * @author Luis Iñesta Gelabert - luiinge@gmail.com
+ * @see GherkinSuiteAssembler
+ */
 public class FeaturePlanAssembler {
 
 	private final Pattern propertyRegex = Patterns.of("\\s*#+\\s*([^\\s]+)\\s*:\\s*([^\\s]+)\\s*");
@@ -34,6 +57,17 @@ public class FeaturePlanAssembler {
 
 
 
+	/**
+	 * Creates a new assembler for the given feature.
+	 *
+	 * @param feature            the parsed Gherkin feature
+	 * @param relativePath       the relative path of the {@code .feature} file, used for
+	 *                           source location references
+	 * @param keywordMapProvider provider for localized Gherkin keywords
+	 * @param idTagPattern       regex pattern used to extract identifiers from tags
+	 * @param repository         the repository where plan nodes are persisted
+	 * @param tagExpression      expression used to filter scenarios by tags
+	 */
 	public FeaturePlanAssembler(
 		Feature feature,
 		String relativePath,
@@ -58,6 +92,12 @@ public class FeaturePlanAssembler {
 	}
 
 
+	/**
+	 * Builds the plan node tree for the feature and returns the root node identifier.
+	 *
+	 * @return the persisted root node ID, or empty if the feature produced no scenarios
+	 *         (e.g. all scenarios were filtered out by the tag expression)
+	 */
 	public Optional<PlanNodeID> createTestPlan() {
 		return featureNode();
 	}
@@ -203,6 +243,14 @@ public class FeaturePlanAssembler {
 	}
 
 
+	/**
+	 * Creates a step-aggregator node from the feature's {@code Background} section, if present.
+	 *
+	 * @param parent the parent node ID whose tags are inherited
+	 * @param name   optional name override; if {@code null} or blank, the background's own
+	 *               name is used
+	 * @return the persisted background node ID, or {@code null} if the feature has no background
+	 */
 	public PlanNodeID createBackgroundStepsNode(PlanNodeID parent, String name) {
 		if (background == null) {
 			return null;
@@ -224,6 +272,16 @@ public class FeaturePlanAssembler {
 	}
 
 
+	/**
+	 * Expands a scenario outline into individual scenario nodes by substituting placeholders
+	 * with values from the given examples table. Each row in the examples table produces one
+	 * test case node.
+	 *
+	 * @param scenarioOutline the scenario outline to expand
+	 * @param examples        the examples table providing substitution values
+	 * @param parent          the parent node ID for the generated scenarios
+	 * @return list of persisted scenario node IDs
+	 */
 	public List<PlanNodeID> createScenariosFromExamples(
 		ScenarioOutline scenarioOutline,
 		Examples examples,
@@ -337,6 +395,14 @@ public class FeaturePlanAssembler {
 	}
 
 
+	/**
+	 * Returns the mapping from plan node IDs to their underlying Gherkin model objects
+	 * (e.g. {@link Feature}, {@link org.myjtools.gherkinparser.elements.ScenarioOutline}).
+	 * This map is populated during {@link #createTestPlan()} and is used by
+	 * {@link GherkinSuiteAssembler} for the redefining mechanism.
+	 *
+	 * @return an unmodifiable view would be safer, but currently returns the internal mutable map
+	 */
 	public Map<PlanNodeID,Object> underlyingModels() {
 		return underlyingModels;
 	}
