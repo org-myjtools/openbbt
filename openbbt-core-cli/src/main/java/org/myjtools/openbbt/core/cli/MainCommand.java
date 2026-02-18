@@ -1,22 +1,50 @@
 package org.myjtools.openbbt.core.cli;
 
 import picocli.CommandLine;
+import java.util.List;
+import java.util.Map;
 
 @CommandLine.Command(
 	name = "openbbt",
 	description = "OpenBBT CLI utility",
 	subcommands = {
-		CleanCommand.class,
-		VersionCommand.class
+		InstallCommand.class,
+		VersionCommand.class,
+		PurgeCommand.class,
+		PlanCommand.class
 	}
 )
 public class MainCommand implements Runnable {
 
-	@CommandLine.Option(names = {"-f", "--file"}, description = "Configuration file", scope = CommandLine.ScopeType.INHERIT)
-	boolean configurationFile;
+	@CommandLine.Option(
+		names = {"-f", "--file"},
+		description = "Configuration file",
+		scope = CommandLine.ScopeType.INHERIT,
+		defaultValue = "openbbt.yaml"
+	)
+	String configurationFile;
 
-	@CommandLine.Option(names = {"-d", "--debug"}, description = "Enable debug mode", scope = CommandLine.ScopeType.INHERIT)
+	@CommandLine.Option(
+		names = {"-d", "--debug"},
+		description = "Enable debug mode",
+		scope = CommandLine.ScopeType.INHERIT,
+		defaultValue = "false"
+	)
 	boolean debugMode;
+
+	@CommandLine.Option(
+		names = {"-s", "--suite"},
+		description = "Test suite names",
+		scope = CommandLine.ScopeType.INHERIT
+	)
+	List<String> suites;
+
+	@CommandLine.Option(
+		names = "-D",
+		description = "Parameters in key=value format",
+		scope = CommandLine.ScopeType.INHERIT
+	)
+	Map<String, String> params;
 
 
 	public static void main(String[] args) {

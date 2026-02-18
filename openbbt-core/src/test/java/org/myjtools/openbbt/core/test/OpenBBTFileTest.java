@@ -38,9 +38,11 @@ class OpenBBTFileTest {
 	void testCreateContext() throws IOException {
 		try (var reader = Files.newReader(new File("src/test/resources/openbbt.yaml"), StandardCharsets.UTF_8)) {
 			var file = OpenBBTFile.read(reader);
-			Config env = Config.ofMap(Map.of("ENV_VAR_ONE","value1"));
-			Config params = Config.ofMap(Map.of("param1","valueA"));
-			var context = file.createContext(List.of("suiteA"), "profileA", env, params);
+			Config env = Config.ofMap(Map.of(
+				"ENV_VAR_ONE","value1",
+				"param1","valueA"
+			));
+			var context = file.createContext(List.of("suiteA"), "profileA", env);
 			assertThat(context).isNotNull();
 			assertThat(context.project()).extracting(Project::name).isEqualTo("My Project");
 			assertThat(context.testSuites()).containsExactlyInAnyOrder(
@@ -50,6 +52,11 @@ class OpenBBTFileTest {
 			assertThat(context.configuration().getString("gherkin.gherkin-prop")).hasValue("value1");
 			assertThat(context.configuration().getString("gherkin.gherkin-param")).hasValue("valueA");
 			assertThat(context.configuration().getString("rest.rest-prop")).hasValue("A");
+			assertThat(context.plugins()).containsExactlyInAnyOrder(
+				"org.myjtools.openbbt.plugins:gherkin-openbbt-plugin",
+				"org.myjtools.openbbt.plugins:gherkin-openbbt-plugin",
+				"org.myjtools.openbbt.plugins:gherkin-openbbt-plugin:1.0.0"
+			);
 		}
 	}
 

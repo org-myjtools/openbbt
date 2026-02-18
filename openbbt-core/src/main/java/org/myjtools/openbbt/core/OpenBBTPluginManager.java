@@ -30,7 +30,10 @@ public class OpenBBTPluginManager {
 	}
 
 
-	public void installPlugin(String pluginName) {
+	public boolean installPlugin(String pluginName) {
+		if (!pluginName.contains(":")) {
+			pluginName = "org.myjtools.openbbt.plugins:" + pluginName;
+		}
 		String[] parts = pluginName.split(":");
 		String groupId = parts[0];
 		String artifactId = parts[1];
@@ -38,14 +41,16 @@ public class OpenBBTPluginManager {
 		PluginID pluginID = new PluginID(groupId, artifactId);
 		if (pluginManager.plugins().contains(pluginID)) {
 			log.info("Plugin {} is already installed.", pluginName);
-			return;
+			return true;
 		}
 		log.info("Installing plugin {} from artifact store...", pluginName);
 		try {
 			pluginManager.installPluginFromArtifactStore(pluginID, version);
 			log.info("Plugin {} installed successfully.", pluginName);
+			return true;
 		} catch (Exception e) {
-			log.error(e,"Failed to resolve plugin {}: {}", pluginName, e.getMessage());
+			log.error(e,"Failed to resolve plugin {}", pluginName);
+			return false;
 		}
 	}
 
@@ -78,8 +83,6 @@ public class OpenBBTPluginManager {
 		});
 		return artifactStoreProperties;
 	}
-
-
 
 
 

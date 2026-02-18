@@ -6,7 +6,7 @@ import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class CleanCommandTest {
+class MainCommandTest {
 
 	@Test
 	void noArgsShowsHelp() {

@@ -73,7 +73,7 @@ public class OpenBBTFile {
 	}
 
 
-	public OpenBBTContext createContext(List<String> testSuites, String profile, Config env, Config parameters) {
+	public OpenBBTContext createContext(List<String> testSuites, String profile, Config parameters) {
 		var contextProject = new Project(
 			project.name(),
 			project.description(),
@@ -95,7 +95,6 @@ public class OpenBBTFile {
 			}
 			profiledConfiguration = applyProfile(this.configuration, this.profiles.get(profile));
 		}
-		profiledConfiguration = applyProfile(profiledConfiguration, env.asMap());
 		profiledConfiguration = applyProfile(profiledConfiguration, parameters.asMap());
 		List<String> plugins = List.of();
 		if (this.plugins != null) {
@@ -121,8 +120,8 @@ public class OpenBBTFile {
 
 	private String normalizePluginName(String name) {
 		int groupNameIndex = name.indexOf(":");
-		if (groupNameIndex == -1) {
-			return "org.myjtools.openbbt.plugins:" + name;
+		if (groupNameIndex == -1) { // If no group is specified, assume it's an OpenBBT plugin
+			return "org.myjtools.openbbt.plugins:" + name + "-openbbt-plugin";
 		}
 		return name;
 	}
