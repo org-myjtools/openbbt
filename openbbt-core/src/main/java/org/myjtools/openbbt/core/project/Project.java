@@ -1,4 +1,13 @@
 package org.myjtools.openbbt.core.project;
 
-public class Project {
+import java.util.List;
+
+public record Project(
+	String name,
+	String description,
+	String organization,
+	List<TestSuite> testSuites
+) {
+
+
 }

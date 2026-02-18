@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.imconfig.Config;
+import org.myjtools.jexten.Version;
 import org.myjtools.jexten.maven.artifactstore.MavenArtifactStore;
 import org.myjtools.jexten.plugin.PluginID;
 import org.myjtools.jexten.plugin.PluginManager;
@@ -9,44 +10,43 @@ import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
 import java.util.Properties;
 
-public class Plugins {
+public class OpenBBTPluginManager {
 
 
 	private static final Log log = Log.of();
 
 	private final PluginManager pluginManager;
-	private final MavenArtifactStore artifactStore;
 
-	public Plugins(Config config) {
+	public OpenBBTPluginManager(Config config) {
 
 		Path envPath = config.get(OpenBBTConfig.ENV_PATH, Path::of).orElse(OpenBBTConfig.ENV_DEFAULT_PATH);
-		Properties mavenFetcherProperties = computeMavenFetcherProperties(config, envPath);
-
-		this.artifactStore = new MavenArtifactStore();
-		this.artifactStore.configure(mavenFetcherProperties);
-
 		this.pluginManager = new PluginManager(
 			"org.myjtools.openbbt",
 			getClass().getClassLoader(),
 			envPath.resolve(OpenBBTConfig.PLUGINS_PATH)
 		);
-		this.pluginManager.setArtifactStore(new MavenArtifactStore());
-
-
+		Properties mavenFetcherProperties = computeMavenFetcherProperties(config, envPath);
+		this.pluginManager.setArtifactStore(new MavenArtifactStore().configure(mavenFetcherProperties));
 	}
 
 
 	public void installPlugin(String pluginName) {
-		String normalizedPluginName = normalizePluginName(pluginName);
-		String groupId = normalizedPluginName.substring(0, normalizedPluginName.indexOf(":"));
-		String artifactId = normalizedPluginName.substring(normalizedPluginName.indexOf(":") + 1);
+		String[] parts = pluginName.split(":");
+		String groupId = parts[0];
+		String artifactId = parts[1];
+		Version version = (parts.length > 2) ? Version.of(parts[2]) : null;
 		PluginID pluginID = new PluginID(groupId, artifactId);
 		if (pluginManager.plugins().contains(pluginID)) {
-			log.info("Plugin {} is already installed.", normalizedPluginName);
+			log.info("Plugin {} is already installed.", pluginName);
 			return;
 		}
-		pluginManager.installPluginFromArtifactStore(new PluginID(groupId, artifactId));
-		log.info("Installing plugin {} from artifact store...", normalizedPluginName);
+		log.info("Installing plugin {} from artifact store...", pluginName);
+		try {
+			pluginManager.installPluginFromArtifactStore(pluginID, version);
+			log.info("Plugin {} installed successfully.", pluginName);
+		} catch (Exception e) {
+			log.error(e,"Failed to resolve plugin {}: {}", pluginName, e.getMessage());
+		}
 	}
 
 
@@ -81,12 +81,6 @@ public class Plugins {
 
 
 
-	private String normalizePluginName(String name) {
-		int groupNameIndex = name.indexOf(":");
-		if (groupNameIndex == -1) {
-			return "org.myjtools.openbbt.plugins:" + name;
-		}
-		return name;
-	}
+
 
 }

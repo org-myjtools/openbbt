@@ -35,12 +35,12 @@
 
 	<modules>
 		<module>openbbt-core</module>
-		<!--<module>gherkin-openbbt-plugin</module>-->
 		<module>openbbt-core-datatypes</module>
 		<module>openbbt-core-assertions</module>
 		<module>openbbt-core-expressions</module>
 		<module>openbbt-core-persistence</module>
 		<module>openbbt-plugin-starter</module>
+		<module>openbbt-core-cli</module>
 	</modules>
 
 	<build>

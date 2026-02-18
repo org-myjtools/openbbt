@@ -9,6 +9,11 @@ module org.myjtools.openbbt.core {
 	requires static lombok;
 	requires java.sql;
 	requires com.github.f4b6a3.ulid;
+	requires org.myjtools.jexten.plugin;
+	requires org.myjtools.mavenfetcher;
+	requires org.myjtools.jexten.maven.artifact.store;
+	requires org.jspecify;
+	requires org.yaml.snakeyaml;
 
 	exports org.myjtools.openbbt.core;
 	exports org.myjtools.openbbt.core.util;

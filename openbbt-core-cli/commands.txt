@@ -1,0 +1,33 @@
+openbbt version                             # show the version of OpenBB
+openbbt help                                # show the available commands
+openbbt install                             # install plugins and dependencies
+openbbt install --clean                     # clean install plugins and dependencies
+
+openbbt plan --suite <suite_name>           # assemble the execution plan for the specified suite, return the plan root UUID
+openbbt plan --profile <profile_name>       # assemble the execution plan for the specified profile, return the plan root UUID
+openbbt plan --details                      # show the details of the current execution plan
+
+openbbt run --all                           # execute the current plan with all suitres, return the execution root UUIDs
+openbbt run --suite <suite_name>            # execute the current plan with the specified suite, return the execution root UUID
+openbbt run --profile <profile_name>        # execute the current plan with the specified profile, return the execution root UUID
+openbbt run --plan <plan_uuid>              # execute the specified plan, return the execution root UUID*
+openbbt run --detach                        # execute the current plan in detached mode, return the execution root UUID*
+
+openbbt report --all --exec <exec_uuid>     # generate all the execution reports for the specified execution UUID*
+openbbt report --plugin <plugin_name> --exec <exec_uuid>  # generate the execution report in the specified format (e.g., json, html)*
+
+openbbt log --exec <exec_uuid>              # show the execution log for the specified execution UUID
+
+openbbt status --exec <exec_uuid>           # show the execution status for the specified execution UUID*
+
+openbbt show-config                         # show the current configuration including default values
+openbbt show-config --key <section>         # show the value of the specified configuration section
+
+openbbt show-plugins                        # show the list of installed plugins
+openbbt show-plugins --details              # show the list of installed plugins with details
+openbbt show-plugins --plugin <plugin_name> # show the details of the specified plugin
+
+
+
+
+* only available for repository.mode <> in-memory

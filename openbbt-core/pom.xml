@@ -37,12 +37,12 @@
 		<dependency>
 			<groupId>org.myjtools.jexten</groupId>
 			<artifactId>jexten-core</artifactId>
-			<version>1.0.0-alpha1</version>
+			<version>1.0.0-alpha2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.myjtools.jexten</groupId>
 			<artifactId>jexten-plugin-manager</artifactId>
-			<version>1.0.0-alpha1</version>
+			<version>1.0.0-alpha2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -50,6 +50,16 @@
 			<artifactId>lombok</artifactId>
 			<version>1.18.38</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.myjtools</groupId>
+			<artifactId>maven-fetcher</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.myjtools.jexten</groupId>
+			<artifactId>jexten-maven-artifact-store</artifactId>
+			<version>1.0.0-alpha2</version>
 		</dependency>
 
 	</dependencies>
@@ -70,7 +80,7 @@
 						<path>
 							<groupId>org.myjtools.jexten</groupId>
 							<artifactId>jexten-processor</artifactId>
-							<version>1.0.0-alpha1</version>
+							<version>1.0.0-alpha2</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
