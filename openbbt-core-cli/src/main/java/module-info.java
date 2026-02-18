@@ -1,0 +1,2 @@
+module openbbt.core.cli {
+}
