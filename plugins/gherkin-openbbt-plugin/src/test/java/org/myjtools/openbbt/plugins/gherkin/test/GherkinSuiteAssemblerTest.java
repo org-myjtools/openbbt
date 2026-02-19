@@ -169,9 +169,9 @@ class GherkinSuiteAssemblerTest {
 		PlanNodeID planID = planAssembler.assembleSuite(testSuite).orElseThrow();
 		var repository = cm.getPlanNodeRepository();
 		PlanNodeRepositoryWriter writer = new PlanNodeRepositoryWriter(repository);
-		Writer string = new StringWriter();
-		writer.write(planID, string);
-		return string.toString();
+		StringBuilder output = new StringBuilder();
+		writer.write(planID, output::append);
+		return output.toString();
 	}
 
 }

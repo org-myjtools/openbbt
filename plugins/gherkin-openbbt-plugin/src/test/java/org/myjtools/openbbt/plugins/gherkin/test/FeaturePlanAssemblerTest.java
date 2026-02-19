@@ -11,7 +11,6 @@ import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.TagExpression;
 import org.myjtools.openbbt.plugins.gherkin.FeaturePlanAssembler;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -26,8 +25,8 @@ class FeaturePlanAssemblerTest {
 		var writer = new PlanNodeRepositoryWriter(repository);
 		Optional<PlanNodeID> testPlan = assembleFeature(repository,"");
 		assertThat(testPlan).isPresent();
-		StringWriter output = new StringWriter();
-		writer.write(testPlan.orElseThrow(), output);
+		StringBuilder output = new StringBuilder();
+		writer.write(testPlan.orElseThrow(), output::append);
 
 		assertThat(output).hasToString("""
 			[TEST_AGGREGATOR] Test 1 - Simple Scenario
@@ -61,8 +60,8 @@ class FeaturePlanAssemblerTest {
 		var writer = new PlanNodeRepositoryWriter(repository);
 		Optional<PlanNodeID> testPlan = assembleFeature(repository,"ScenarioA");
 		assertThat(testPlan).isPresent();
-		StringWriter output = new StringWriter();
-		writer.write(testPlan.orElseThrow(), output);
+		StringBuilder output = new StringBuilder();
+		writer.write(testPlan.orElseThrow(), output::append);
 
 		assertThat(output).hasToString("""
 			[TEST_AGGREGATOR] Test 1 - Simple Scenario
@@ -84,8 +83,8 @@ class FeaturePlanAssemblerTest {
 		var writer = new PlanNodeRepositoryWriter(repository);
 		Optional<PlanNodeID> testPlan = assembleFeature(repository,"ScenarioB");
 		assertThat(testPlan).isPresent();
-		StringWriter output = new StringWriter();
-		writer.write(testPlan.orElseThrow(), output);
+		StringBuilder output = new StringBuilder();
+		writer.write(testPlan.orElseThrow(), output::append);
 
 		assertThat(output).hasToString("""
 			[TEST_AGGREGATOR] Test 1 - Simple Scenario

@@ -8,6 +8,7 @@ import org.myjtools.openbbt.core.OpenBBTFile;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 public abstract sealed class AbstractCommand implements Callable<Integer> permits InstallCommand, PlanCommand, PurgeCommand, ShowConfigCommand {
@@ -21,7 +22,7 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 	protected OpenBBTContext getContext() {
 		return readConfigurationFile().createContext(
 			Config.ofMap(parent.params),
-			parent.suites,
+			parent.suites == null ? List.of() : parent.suites,
 			parent.profile,
 			Config.ofMap(parent.params).append(Config.env())
 		);
@@ -46,7 +47,7 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 				var cl = Thread.currentThread().getContextClassLoader();
 				var levelClass = Class.forName("ch.qos.logback.classic.Level", true, cl);
 				var debugLevel = levelClass.getField("DEBUG").get(null);
-				var root = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+				var root = LoggerFactory.getLogger("org.myjtools.openbbt");
 				root.getClass().getMethod("setLevel", levelClass).invoke(root, debugLevel);
 			} catch (ReflectiveOperationException ignored) {}
 		}

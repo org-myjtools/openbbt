@@ -3,9 +3,12 @@ package org.myjtools.openbbt.core;
 import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
 import java.io.IOException;
-import java.io.Writer;
 
 public class PlanNodeRepositoryWriter {
+
+	public interface Appender {
+		void append(String string) throws IOException;
+	}
 
 	private final PlanNodeRepository repository;
 
@@ -13,24 +16,25 @@ public class PlanNodeRepositoryWriter {
 		this.repository = repository;
 	}
 
-	public void write(PlanNodeID rootNodeID, Writer writer) throws IOException {
-		write(rootNodeID,writer,0);
+	public void write(PlanNodeID rootNodeID, Appender appender) throws IOException {
+		write(rootNodeID,appender,0);
 	}
 
-	private void write(PlanNodeID nodeID, Writer writer, int indent) throws IOException {
+	private void write(PlanNodeID nodeID, Appender appender, int indent) throws IOException {
 		PlanNode node = repository.getNodeData(nodeID).orElseThrow();
-		writer.append("  ".repeat(indent))
-			.append("[")
-			.append(String.valueOf(node.nodeType()))
-			.append("] ");
+		appender.append("  ".repeat(indent));
+		appender.append("[");
+		appender.append(String.valueOf(node.nodeType()));
+		appender.append("] ");
 		if (node.identifier() != null) {
-			writer.append("(")
-			.append(node.identifier())
-			.append(") ");
+			appender.append("(");
+			appender.append(node.identifier());
+			appender.append(") ");
 		}
-		writer.append(node.toString()).append("\n");
+		appender.append(node.toString());
+		appender.append("\n");
 		for (PlanNodeID childID : repository.getNodeChildren(nodeID).toList()) {
-			write(childID,writer,indent+1);
+			write(childID,appender,indent+1);
 		}
 	}
 

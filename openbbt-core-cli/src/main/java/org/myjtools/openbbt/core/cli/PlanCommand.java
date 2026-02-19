@@ -8,8 +8,6 @@ import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.util.Log;
 import picocli.CommandLine;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 @CommandLine.Command(
 	name = "plan",
@@ -40,13 +38,11 @@ public final class PlanCommand extends AbstractCommand {
 		log.info(plan.toString());
 		if (detail) {
 			PlanNodeRepositoryWriter writer = new PlanNodeRepositoryWriter(cm.getPlanNodeRepository());
-			Writer string = new StringWriter();
 			try {
-				writer.write(plan, string);
+				writer.write(plan, System.out::print);
 			} catch (IOException e) {
 				throw new OpenBBTException(e);
 			}
-			log.info(string.toString());
 		}
 
 
