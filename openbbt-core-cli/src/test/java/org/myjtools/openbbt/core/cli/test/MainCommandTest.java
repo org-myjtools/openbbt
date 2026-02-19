@@ -14,4 +14,10 @@ class MainCommandTest {
 		assertEquals(0, exitCode);
 	}
 
+	@Test
+	void helptShowsHelp() {
+		int exitCode = new CommandLine(new MainCommand()).execute("--help");
+		assertEquals(0, exitCode);
+	}
+
 }

@@ -156,7 +156,11 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 			return Optional.empty();
 		} else {
 			repository.updateNodeField(root, "nodeType", NodeType.TEST_SUITE.value);
-			repository.updateNodeField(root, "name", testSuite.name());
+			if (testSuite.description() != null && !testSuite.description().isBlank()) {
+				repository.updateNodeField(root, "name", testSuite.description());
+			} else {
+				repository.updateNodeField(root, "name", testSuite.name());
+			}
 			return Optional.ofNullable(root);
 		}
 

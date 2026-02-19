@@ -11,7 +11,8 @@ import java.util.Map;
 		InstallCommand.class,
 		VersionCommand.class,
 		PurgeCommand.class,
-		PlanCommand.class
+		PlanCommand.class,
+		ShowConfigCommand.class
 	}
 )
 public class MainCommand implements Runnable {
@@ -53,6 +54,14 @@ public class MainCommand implements Runnable {
 		defaultValue = ""
 	)
 	String profile;
+
+
+	@CommandLine.Option(
+		names = {"--help"},
+		description = "Show command help",
+		scope = CommandLine.ScopeType.INHERIT
+	)
+	boolean showHelp;
 
 
 	public static void main(String[] args) {

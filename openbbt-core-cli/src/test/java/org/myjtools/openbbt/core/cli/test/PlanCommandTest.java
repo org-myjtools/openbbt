@@ -6,12 +6,12 @@ import org.myjtools.openbbt.core.cli.MainCommand;
 import picocli.CommandLine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class InstallCommandTest {
+class PlanCommandTest {
 
 	@Test
 	void showHelp() {
 		int exitCode = new CommandLine(new MainCommand()).execute(
-			"install", "--help",
+			"plan", "--help",
 			"-f","src/test/resources/openbbt.yaml",
 			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt"
 		);
@@ -19,24 +19,31 @@ class InstallCommandTest {
 	}
 
 	@Test
-	void installTest() {
+	void assembleTestPlan() {
 		int exitCode = new CommandLine(new MainCommand()).execute(
-			"install",
+			"plan",
 			"-f","src/test/resources/openbbt.yaml",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt"
-		);
-		assertEquals(0, exitCode);
-	}
-
-	@Test
-	void installTestWithClean() {
-		int exitCode = new CommandLine(new MainCommand()).execute(
-			"install",
 			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
-			"-f","src/test/resources/openbbt.yaml",
-			"--clean"
+			"--suite", "suiteA",
+			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_MEMORY,
+			"-D"+OpenBBTConfig.RESOURCE_PATH+"=src/test/resources/test-features"
 		);
 		assertEquals(0, exitCode);
 	}
+
+
+	@Test
+	void assembleTestPlanWithDetails() {
+		int exitCode = new CommandLine(new MainCommand()).execute(
+			"plan", "--detail",
+			"-f","src/test/resources/openbbt.yaml",
+			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
+			"--suite", "suiteA",
+			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_MEMORY,
+			"-D"+OpenBBTConfig.RESOURCE_PATH+"=src/test/resources/test-features"
+		);
+		assertEquals(0, exitCode);
+	}
+
 
 }

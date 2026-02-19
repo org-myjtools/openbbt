@@ -6,11 +6,23 @@ import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
 import org.myjtools.openbbt.core.contributors.PlanNodeRepositoryFactory;
+import org.myjtools.openbbt.core.contributors.SuiteAssembler;
+import org.myjtools.openbbt.core.plan.NodeType;
+import org.myjtools.openbbt.core.plan.PlanNode;
+import org.myjtools.openbbt.core.plan.PlanNodeID;
+import org.myjtools.openbbt.core.project.TestSuite;
 import org.myjtools.openbbt.core.util.Lazy;
+import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class OpenBBTContextManager implements InjectionProvider {
+
+
+	private static final Log log = Log.of();
 
 	private final ExtensionManager extensionManager;
 	private final OpenBBTPluginManager pluginManager;
@@ -36,6 +48,41 @@ public class OpenBBTContextManager implements InjectionProvider {
 		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
 			()-> new OpenBBTException("Resource path not configured {}: ",OpenBBTConfig.RESOURCE_PATH)
 		));
+	}
+
+
+
+	public Optional<PlanNodeID> assembleTestPlan(OpenBBTContext context) {
+
+		List<SuiteAssembler> assemblers = extensionManager.getExtensions(SuiteAssembler.class).toList();
+		if (assemblers.isEmpty()) {
+			log.warn("No SuiteAssembler found, cannot assemble test plan");
+			return Optional.empty();
+		}
+
+		List<PlanNodeID> nodes = new ArrayList<>();
+
+		for (String suiteName : context.testSuites()) {
+			TestSuite testSuite = context.testSuite(suiteName).orElseThrow(
+				() -> new OpenBBTException("Test suite not found in project: {}", suiteName)
+			);
+			for (SuiteAssembler assembler : assemblers) {
+				assembler.assembleSuite(testSuite).ifPresent(nodes::add);
+			}
+		}
+		if (nodes.isEmpty()) {
+			log.warn("No test plan nodes assembled for test suites: {}", context.testSuites());
+			return Optional.empty();
+		}
+
+		PlanNode root = new PlanNode(NodeType.TEST_PLAN);
+		root.name("Test Plan");
+		var rootID = getPlanNodeRepository().persistNode(root);
+		for (PlanNodeID nodeId : nodes) {
+			getPlanNodeRepository().attachChildNodeLast(rootID, nodeId);
+		}
+		return Optional.ofNullable(rootID);
+
 	}
 
 
@@ -72,6 +119,7 @@ public class OpenBBTContextManager implements InjectionProvider {
 
 	private PlanNodeRepository createPlanNodeRepository() {
 		if (planNodeRepositoryFactory == null) {
+			log.warn("No PlanNodeRepositoryFactory found, cannot create PlanNodeRepository");
 			return null;
 		}
 		return planNodeRepositoryFactory.createPlanNodeRepository();

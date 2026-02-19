@@ -5,12 +5,12 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTFile;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.Callable;
 
-public abstract sealed class AbstractCommand implements Callable<Integer> permits InstallCommand, PlanCommand, PurgeCommand {
+public abstract sealed class AbstractCommand implements Callable<Integer> permits InstallCommand, PlanCommand, PurgeCommand, ShowConfigCommand {
 
 	@CommandLine.ParentCommand
 	MainCommand parent;
@@ -21,7 +21,7 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 	protected OpenBBTContext getContext() {
 		return readConfigurationFile().createContext(
 			Config.ofMap(parent.params),
-			List.of(),
+			parent.suites,
 			parent.profile,
 			Config.ofMap(parent.params).append(Config.env())
 		);
@@ -41,7 +41,20 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 
 	@Override
 	public Integer call() throws Exception {
+		if (parent.debugMode) {
+			try {
+				var cl = Thread.currentThread().getContextClassLoader();
+				var levelClass = Class.forName("ch.qos.logback.classic.Level", true, cl);
+				var debugLevel = levelClass.getField("DEBUG").get(null);
+				var root = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+				root.getClass().getMethod("setLevel", levelClass).invoke(root, debugLevel);
+			} catch (ReflectiveOperationException ignored) {}
+		}
 		try {
+			if (parent.showHelp) {
+				CommandLine.usage(this, System.out);
+				return 0;
+			}
 			execute();
 			return 0;
 		} catch (Exception e) {

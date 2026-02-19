@@ -9,6 +9,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PurgeCommandTest {
 
 	@Test
+	void showHelp() {
+		int exitCode = new CommandLine(new MainCommand()).execute(
+			"purge", "--help",
+			"-D"+ OpenBBTConfig.ENV_PATH+"=target/.openbbt",
+			"-f","src/test/resources/openbbt.yaml"
+		);
+		assertEquals(0, exitCode);
+	}
+
+	@Test
 	void purgeTest() {
 		int exitCode = new CommandLine(new MainCommand()).execute(
 			"purge",

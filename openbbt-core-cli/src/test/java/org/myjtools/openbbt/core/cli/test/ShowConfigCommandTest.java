@@ -6,12 +6,12 @@ import org.myjtools.openbbt.core.cli.MainCommand;
 import picocli.CommandLine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class InstallCommandTest {
+class ShowConfigCommandTest {
 
 	@Test
 	void showHelp() {
 		int exitCode = new CommandLine(new MainCommand()).execute(
-			"install", "--help",
+			"show-config", "--help",
 			"-f","src/test/resources/openbbt.yaml",
 			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt"
 		);
@@ -19,24 +19,16 @@ class InstallCommandTest {
 	}
 
 	@Test
-	void installTest() {
+	void showConfig() {
 		int exitCode = new CommandLine(new MainCommand()).execute(
-			"install",
+			"show-config",
+			"--debug",
 			"-f","src/test/resources/openbbt.yaml",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt"
-		);
-		assertEquals(0, exitCode);
-	}
-
-	@Test
-	void installTestWithClean() {
-		int exitCode = new CommandLine(new MainCommand()).execute(
-			"install",
 			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
-			"-f","src/test/resources/openbbt.yaml",
-			"--clean"
+			"-Dparam1=value1"
 		);
 		assertEquals(0, exitCode);
 	}
+
 
 }
