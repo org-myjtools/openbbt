@@ -32,6 +32,13 @@
 			<artifactId>gherkin-parser</artifactId>
 			<version>1.0.1</version>
 		</dependency>
+		<!-- Force commons-logging >= 1.3 to get Automatic-Module-Name=org.apache.commons.logging,
+		     required by commons-configuration2's module-info. Version 1.2 lacks that attribute. -->
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.3.5</version>
+		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -67,6 +74,12 @@
 			<groupId>org.myjtools</groupId>
 			<artifactId>junit5-memory-check</artifactId>
 			<version>1.0.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.myjtools.jexten</groupId>
+			<artifactId>jexten-maven-artifact-store</artifactId>
+			<version>1.0.0-alpha2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

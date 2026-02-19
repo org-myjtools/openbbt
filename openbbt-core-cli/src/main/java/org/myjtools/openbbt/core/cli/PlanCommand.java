@@ -1,6 +1,5 @@
 package org.myjtools.openbbt.core.cli;
 
-import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.util.Log;
 import picocli.CommandLine;
@@ -25,8 +24,6 @@ public final class PlanCommand extends AbstractCommand {
 	protected void execute() {
 
 		OpenBBTContext context = getContext();
-		Config config = getConfig(context);
-
 
 
 

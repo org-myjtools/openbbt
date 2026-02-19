@@ -73,7 +73,12 @@ public class OpenBBTFile {
 	}
 
 
-	public OpenBBTContext createContext(List<String> testSuites, String profile, Config parameters) {
+	public OpenBBTContext createContext(
+			Config inputParameters,
+			List<String> testSuites,
+			String profile,
+			Config substitutions
+	) {
 		var contextProject = new Project(
 			project.name(),
 			project.description(),
@@ -95,12 +100,18 @@ public class OpenBBTFile {
 			}
 			profiledConfiguration = applyProfile(this.configuration, this.profiles.get(profile));
 		}
-		profiledConfiguration = applyProfile(profiledConfiguration, parameters.asMap());
+		profiledConfiguration = applyProfile(profiledConfiguration, substitutions.asMap());
 		List<String> plugins = List.of();
 		if (this.plugins != null) {
 			plugins = this.plugins.stream().map(this::normalizePluginName).toList();
 		}
-		return new OpenBBTContext(contextProject, Config.ofMap(flattenMap(profiledConfiguration, "")), contextTestSuites, profile, plugins);
+		return new OpenBBTContext(
+			contextProject,
+			Config.ofMap(flattenMap(profiledConfiguration, "")).append(inputParameters),
+			contextTestSuites,
+			profile,
+			plugins
+		);
 	}
 
 

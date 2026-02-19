@@ -17,12 +17,14 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 
 	protected abstract void execute();
 
-	protected Config getConfig(OpenBBTContext context) {
-		return context.configuration().append(Config.ofMap(parent.params)).append(Config.env());
-	}
 
 	protected OpenBBTContext getContext() {
-		return readConfigurationFile().createContext(List.of(),"", Config.env());
+		return readConfigurationFile().createContext(
+			Config.ofMap(parent.params),
+			List.of(),
+			parent.profile,
+			Config.ofMap(parent.params).append(Config.env())
+		);
 	}
 
 	protected OpenBBTFile readConfigurationFile() {

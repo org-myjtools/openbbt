@@ -16,12 +16,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GherkinSuiteAssemblerTest {
 
 	@Test
-	void testEmptySuite() throws IOException {
-		OpenBBTDependencyInjection di = new OpenBBTDependencyInjection(Config.ofMap(Map.of(
-			OpenBBTConfig.PATH, "src/test/resources/test-empty-suite",
-			OpenBBTConfig.REPOSITORY_MODE, OpenBBTConfig.REPOSITORY_MODE_MEMORY
+	void testEmptySuite() {
+		OpenBBTContextManager cm = new OpenBBTContextManager(Config.ofMap(Map.of(
+			OpenBBTConfig.ENV_PATH, "target/.openbbt",
+			OpenBBTConfig.RESOURCE_PATH, "src/test/resources/test-empty-suite",
+			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_MEMORY
 		)));
-		var planAssembler = di.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
+		var planAssembler = cm.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
 		TestSuite testSuite = new TestSuite("Test Suite", "Test Suite", TagExpression.EMPTY);
 		assertThat(planAssembler.assembleSuite(testSuite)).isEmpty();
 	}
@@ -158,14 +159,15 @@ class GherkinSuiteAssemblerTest {
 	}
 
 	private String assembleSuite(String path) throws IOException {
-		OpenBBTDependencyInjection di = new OpenBBTDependencyInjection(Config.ofMap(Map.of(
-				OpenBBTConfig.PATH, path,
-				OpenBBTConfig.REPOSITORY_MODE, OpenBBTConfig.REPOSITORY_MODE_MEMORY
+		OpenBBTContextManager cm = new OpenBBTContextManager(Config.ofMap(Map.of(
+			OpenBBTConfig.ENV_PATH, "target/.openbbt",
+			OpenBBTConfig.RESOURCE_PATH, path,
+			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_MEMORY
 		)));
-		var planAssembler = di.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
+		var planAssembler = cm.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
 		TestSuite testSuite = new TestSuite("Test Suite", "Test Suite", TagExpression.EMPTY);
 		PlanNodeID planID = planAssembler.assembleSuite(testSuite).orElseThrow();
-		var repository = di.getPlanNodeRepository();
+		var repository = cm.getPlanNodeRepository();
 		PlanNodeRepositoryWriter writer = new PlanNodeRepositoryWriter(repository);
 		Writer string = new StringWriter();
 		writer.write(planID, string);

@@ -46,6 +46,14 @@ public class MainCommand implements Runnable {
 	)
 	Map<String, String> params;
 
+	@CommandLine.Option(
+		names = {"-p","--profile"},
+		description = "Profile name",
+		scope = CommandLine.ScopeType.INHERIT,
+		defaultValue = ""
+	)
+	String profile;
+
 
 	public static void main(String[] args) {
 		int exitCode = new CommandLine(new MainCommand()).execute(args);

@@ -1,6 +1,5 @@
 package org.myjtools.openbbt.core.cli;
 
-import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.util.Log;
@@ -20,8 +19,7 @@ public final class PurgeCommand extends AbstractCommand {
 	protected void execute() {
 		log.info("Purging OpenBBT data...");
 		OpenBBTContext context = getContext();
-		Config config = getConfig(context);
-		Path envPath = config.get(OpenBBTConfig.ENV_PATH, Path::of).orElseThrow();
+		Path envPath = context.configuration().get(OpenBBTConfig.ENV_PATH, Path::of).orElseThrow();
 		Util.deleteDirectory(envPath);
 	}
 

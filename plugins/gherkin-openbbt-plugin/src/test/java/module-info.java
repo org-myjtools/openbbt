@@ -9,6 +9,8 @@ module org.myjtools.openbbt.plugins.gherkin.test {
 	requires junit5.memory.check;
 	requires org.myjtools.jexten;
 	requires org.myjtools.imconfig;
+	requires org.myjtools.jexten.maven.artifact.store;
+
 
 	opens org.myjtools.openbbt.plugins.gherkin.test to org.junit.platform.commons;
 

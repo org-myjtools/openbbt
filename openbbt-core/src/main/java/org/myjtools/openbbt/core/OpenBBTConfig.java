@@ -7,7 +7,7 @@ import java.nio.file.Path;
  */
 public class OpenBBTConfig {
 
-	public static final String PATH = "path";
+	public static final String RESOURCE_PATH = "resourcePath";
 	public static final String ENV_PATH = "environmentPath";
 
 	public static final String PERSISTENCE_MODE = "persistence.mode";

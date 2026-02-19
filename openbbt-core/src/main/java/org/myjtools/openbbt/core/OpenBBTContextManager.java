@@ -3,15 +3,17 @@ package org.myjtools.openbbt.core;
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
+import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
 import org.myjtools.openbbt.core.contributors.PlanNodeRepositoryFactory;
 import org.myjtools.openbbt.core.util.Lazy;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class OpenBBTDependencyInjection implements InjectionProvider {
+public class OpenBBTContextManager implements InjectionProvider {
 
 	private final ExtensionManager extensionManager;
+	private final OpenBBTPluginManager pluginManager;
 	private final Config config;
 	private final ResourceFinder resourceFinder;
 	private final PlanNodeRepositoryFactory planNodeRepositoryFactory;
@@ -20,16 +22,19 @@ public class OpenBBTDependencyInjection implements InjectionProvider {
 
 
 
-	public OpenBBTDependencyInjection(Config configuration) {
-		this.extensionManager = ExtensionManager.create().withInjectionProvider(this);
+	public OpenBBTContextManager(Config configuration) {
+		this.pluginManager = new OpenBBTPluginManager(configuration);
+		this.extensionManager = ExtensionManager
+			.create(ModuleLayerProvider.compose(ModuleLayerProvider.boot(),pluginManager.moduleLayerProvider()))
+			.withInjectionProvider(this);
 		this.config = extensionManager.getExtensions(ConfigProvider.class)
 			.map(ConfigProvider::config)
 			.reduce(Config.empty(), Config::append)
 			.append(configuration);
 		this.planNodeRepositoryFactory = extensionManager.getExtension(PlanNodeRepositoryFactory.class)
 			.orElse(null);
-		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.PATH, Path::of).orElseThrow(
-			()-> new OpenBBTException("Resource path not configured {}: ",OpenBBTConfig.PATH)
+		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
+			()-> new OpenBBTException("Resource path not configured {}: ",OpenBBTConfig.RESOURCE_PATH)
 		));
 	}
 

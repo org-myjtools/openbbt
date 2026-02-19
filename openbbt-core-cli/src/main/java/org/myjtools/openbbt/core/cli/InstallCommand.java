@@ -1,6 +1,5 @@
 package org.myjtools.openbbt.core.cli;
 
-import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTException;
@@ -30,10 +29,8 @@ public final class InstallCommand extends AbstractCommand {
 
 		OpenBBTContext context = getContext();
 
-		Config config = getConfig(context);
-
 		if (clean) {
-			Path envPath = config.get(OpenBBTConfig.ENV_PATH, Path::of).orElseThrow();
+			Path envPath = context.configuration().get(OpenBBTConfig.ENV_PATH, Path::of).orElseThrow();
 			Path pluginsPath = envPath.resolve(OpenBBTConfig.PLUGINS_PATH);
 			Util.deleteDirectory(pluginsPath);
 			log.info("Existing plugins cleaned.");
@@ -45,7 +42,7 @@ public final class InstallCommand extends AbstractCommand {
 			return;
 		}
 
-		OpenBBTPluginManager pluginManager = new OpenBBTPluginManager(config);
+		OpenBBTPluginManager pluginManager = new OpenBBTPluginManager(context.configuration());
 		for (String plugin : context.plugins()) {
 			try {
 				boolean result = pluginManager.installPlugin(plugin);

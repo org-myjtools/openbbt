@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.imconfig.Config;
+import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.jexten.Version;
 import org.myjtools.jexten.maven.artifactstore.MavenArtifactStore;
 import org.myjtools.jexten.plugin.PluginID;
@@ -29,6 +30,9 @@ public class OpenBBTPluginManager {
 		this.pluginManager.setArtifactStore(new MavenArtifactStore().configure(mavenFetcherProperties));
 	}
 
+	public ModuleLayerProvider moduleLayerProvider() {
+		return pluginManager;
+	}
 
 	public boolean installPlugin(String pluginName) {
 		if (!pluginName.contains(":")) {
