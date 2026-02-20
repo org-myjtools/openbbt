@@ -56,8 +56,10 @@
                 </executions>
                 <configuration>
                     <application>org.myjtools.openbbt</application>
-                    <hostModule>org.myjtools.openbbt</hostModule>
-                    <hostArtifact>org.myjtools.openbbt:openbbt-core</hostArtifact>
+                    <hostModule>org.myjtools.openbbt.core</hostModule>
+                    <excludedDependencies>
+                        <excludedDependency>org.myjtools.openbbt:openbbt-core</excludedDependency>
+                    </excludedDependencies>
                 </configuration>
             </plugin>
         </plugins>

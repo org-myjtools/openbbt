@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 public abstract sealed class AbstractCommand implements Callable<Integer> permits InstallCommand, PlanCommand, PurgeCommand, ShowConfigCommand {
@@ -20,11 +21,12 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 
 
 	protected OpenBBTContext getContext() {
+		Map<String, String> params = parent.params == null ? Map.of() : parent.params;
 		return readConfigurationFile().createContext(
-			Config.ofMap(parent.params),
+			Config.ofMap(params),
 			parent.suites == null ? List.of() : parent.suites,
 			parent.profile,
-			Config.ofMap(parent.params).append(Config.env())
+			Config.ofMap(params).append(Config.env())
 		);
 	}
 
@@ -47,7 +49,8 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 				var cl = Thread.currentThread().getContextClassLoader();
 				var levelClass = Class.forName("ch.qos.logback.classic.Level", true, cl);
 				var debugLevel = levelClass.getField("DEBUG").get(null);
-				var root = LoggerFactory.getLogger("org.myjtools.openbbt");
+				// Set debug for org.myjtools (includes jexten and openbbt)
+				var root = LoggerFactory.getLogger("org.myjtools");
 				root.getClass().getMethod("setLevel", levelClass).invoke(root, debugLevel);
 			} catch (ReflectiveOperationException ignored) {}
 		}
@@ -60,6 +63,7 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 			return 0;
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
+			e.printStackTrace(System.err);
 			return 1;
 		}
 	}

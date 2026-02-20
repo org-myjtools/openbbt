@@ -65,11 +65,11 @@ public class OpenBBTFile {
 	}
 
 	public Map<String, Object> configuration() {
-		return Map.copyOf(configuration);
+		return configuration != null ? Map.copyOf(configuration) : Map.of();
 	}
 
 	public Map<String, Map<String,String>> profiles() {
-		return Map.copyOf(profiles);
+		return profiles != null ? Map.copyOf(profiles) : Map.of();
 	}
 
 
@@ -93,12 +93,13 @@ public class OpenBBTFile {
 			}
 			contextTestSuites.add(testSuite.map(TestSuite::name).orElseThrow());
 		}
-		Map<String,Object> profiledConfiguration = this.configuration;
+		Map<String,Object> profiledConfiguration = this.configuration != null ? this.configuration : new HashMap<>();
 		if (!profile.isBlank()) {
-			if (!this.profiles.containsKey(profile)) {
+			Map<String, Map<String, String>> profiles = this.profiles != null ? this.profiles : Map.of();
+			if (!profiles.containsKey(profile)) {
 				throw new OpenBBTException("Profile '" + profile + "' not found in project file");
 			}
-			profiledConfiguration = applyProfile(this.configuration, this.profiles.get(profile));
+			profiledConfiguration = applyProfile(this.configuration, profiles.get(profile));
 		}
 		profiledConfiguration = applyProfile(profiledConfiguration, substitutions.asMap());
 		List<String> plugins = List.of();

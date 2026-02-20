@@ -19,6 +19,7 @@ public class OpenBBTConfig {
 	public static final String PERSISTENCE_DB_USERNAME = "persistence.db.username";
 	public static final String PERSISTENCE_DB_PASSWORD = "persistence.db.password";
 
+	public static final String ARTIFACTS_LOCAL_REPOSITORY = "artifacts.local.repository";
 	public static final String ARTIFACTS_REPOSITORY_URL = "artifacts.repository.url";
 	public static final String ARTIFACTS_REPOSITORY_USERNAME = "artifacts.repository.username";
 	public static final String ARTIFACTS_REPOSITORY_PASSWORD = "artifacts.repository.password";

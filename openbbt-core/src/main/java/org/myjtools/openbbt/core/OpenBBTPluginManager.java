@@ -62,10 +62,9 @@ public class OpenBBTPluginManager {
 
 	private static Properties computeMavenFetcherProperties(Config config, Path envPath) {
 		Properties artifactStoreProperties = new Properties();
-		artifactStoreProperties.setProperty(
-			MavenFetcherProperties.LOCAL_REPOSITORY,
-			envPath.resolve(OpenBBTConfig.ARTIFACTS_PATH).toAbsolutePath().toString()
-		);
+		String localRepository = config.getString(OpenBBTConfig.ARTIFACTS_LOCAL_REPOSITORY)
+			.orElseGet(() -> Path.of(System.getProperty("user.home"), ".m2", "repository").toAbsolutePath().toString());
+		artifactStoreProperties.setProperty(MavenFetcherProperties.LOCAL_REPOSITORY, localRepository);
 		config.getString(OpenBBTConfig.ARTIFACTS_REPOSITORY_PROXY_URL).ifPresent(
 			url -> artifactStoreProperties.setProperty(MavenFetcherProperties.PROXY_URL, url)
 		);
