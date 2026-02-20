@@ -22,12 +22,12 @@
 		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
-			<version>3.2.2</version>
+			<version>3.2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.myjtools</groupId>
 			<artifactId>imconfig</artifactId>
-			<version>1.1.0</version>
+			<version>1.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.f4b6a3</groupId>
@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.38</version>
+			<version>1.18.42</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -75,7 +75,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.38</version>
+							<version>1.18.42</version>
 						</path>
 						<path>
 							<groupId>org.myjtools.jexten</groupId>
