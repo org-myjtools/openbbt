@@ -92,7 +92,8 @@ project:
 plugins:
   - gherkin
 
-
+configuration:
+  core.resourcePath: src/test/resources/features
 ```
 
 ### Full reference
@@ -112,14 +113,17 @@ plugins:
   - org.example:my-plugin       # Or full group:artifact coordinate
 
 configuration:
-  resourcePath: path/to/features          # Where test resources live (relative to CWD)
-  environmentPath: .openbbt               # Plugin/data cache directory (default: .openbbt)
-  artifacts.local.repository: ~/.m2/repository   # Local Maven cache (default: ~/.m2/repository)
-  artifacts.repository.url: https://repo.example.com/maven2  # Custom Maven repo (optional)
-  artifacts.repository.username: user    # Credentials for custom repo (optional)
-  artifacts.repository.password: secret
-  persistence.mode: in-memory            # in-memory | file | remote (default: in-memory)
-  persistence.file: .openbbt/data/db     # Path when mode=file
+  core.resourcePath: path/to/features           # Where test resources live (relative to CWD)
+  core.environmentPath: .openbbt                # Plugin/data cache directory (default: .openbbt)
+  core.artifacts.local.repository: ~/.m2/repository  # Local Maven cache (default: ~/.m2/repository)
+  core.artifacts.repository.url: https://repo.example.com/maven2  # Custom Maven repo (optional)
+  core.artifacts.repository.username: user      # Credentials for custom repo (optional)
+  core.artifacts.repository.password: secret
+  core.persistence.mode: in-memory             # in-memory | file | remote (default: in-memory)
+  core.persistence.file: .openbbt/data/db      # Path when mode=file
+  core.idTagPattern: "ID-(\\w+)"               # Regex to extract IDs from Gherkin tags (optional)
+  core.definitionTag: definition               # Tag marking a node as a definition (optional)
+  core.implementationTag: implementation       # Tag marking a node as an implementation (optional)
 
 profiles:                       # Named sets of placeholder values
   staging:
@@ -147,9 +151,9 @@ openbbt plan -p staging -s smoke
 
 ## 4. Install plugins
 
-Plugins provide components such as the test format support (e.g., Gherkin), executable steps, hooks, and reports, 
-among other things. Run the `install` command once per project, or whenever you add a new plugin to `openbbt.yaml`. 
-Artifacts are downloaded from Maven Central and cached locally under the `environmentPath` directory 
+Plugins provide components such as the test format support (e.g., Gherkin), executable steps, hooks, and reports,
+among other things. Run the `install` command once per project, or whenever you add a new plugin to `openbbt.yaml`.
+Artifacts are downloaded from Maven Central and cached locally under the `core.environmentPath` directory
 (`.openbbt/` by default).
 
 ```bash
@@ -292,8 +296,8 @@ openbbt plan -s smoke -p staging
 | `No SuiteAssembler found` | Plugin not installed or incompatible | Run `openbbt install` and verify the plugin name in `openbbt.yaml` |
 | `Test suite 'X' not found` | Suite name mismatch | Check the `test-suites[].name` values in `openbbt.yaml` |
 | `Failed to read configuration file` | Wrong path or missing file | Pass the correct path with `-f` |
-| `No test plan nodes assembled` | Tag expression matches nothing | Verify the `tag-expression` and that resources exist at `resourcePath` |
-| Artifact download fails | Network or repository config | Check `artifacts.repository.url` and proxy settings |
+| `No test plan nodes assembled` | Tag expression matches nothing | Verify the `tag-expression` and that resources exist at `core.resourcePath` |
+| Artifact download fails | Network or repository config | Check `core.artifacts.repository.url` and proxy settings |
 
 Enable debug logging with `-d` to get detailed output for any issue:
 
