@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>org.myjtools</groupId>
 			<artifactId>imconfig</artifactId>
-			<version>1.1.0</version>
+			<version>1.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.f4b6a3</groupId>
@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>org.myjtools</groupId>
 			<artifactId>maven-fetcher</artifactId>
-			<version>1.1.1</version>
+			<version>1.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.myjtools.jexten</groupId>
