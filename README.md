@@ -32,15 +32,19 @@ openbbt/
 		└── org.myjtools.openbbt.plugins.gherkin/
 ```
 
+## Getting Started
+
+See the **[Getting Started guide](docs/getting-started.md)** for step-by-step instructions on installation, PATH setup, plugin installation, and running a test plan.
+
 ## Requirements
 
-- Java 11 or higher
+- Java 21 or higher
 - Maven 3.x
 
 ## Building
 
 ```bash
-./mvnw clean install
+mvn install
 ```
 
 ## Core Concepts
