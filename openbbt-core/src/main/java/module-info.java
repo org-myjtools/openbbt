@@ -38,5 +38,8 @@ module org.myjtools.openbbt.core {
 	uses SuiteAssembler;
 	uses org.myjtools.openbbt.core.step.StepContributor;
 	uses PlanNodeRepositoryFactory;
+	uses StepProvider;
+
+	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 
 }
