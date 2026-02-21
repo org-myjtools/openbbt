@@ -4,10 +4,10 @@ import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.DataType;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.core.contributors.StepProvider;
 import org.myjtools.openbbt.core.plan.DataTable;
 import org.myjtools.openbbt.core.plan.Document;
-import org.myjtools.openbbt.core.step.Step;
-import org.myjtools.openbbt.core.step.StepContributor;
+import org.myjtools.openbbt.core.contributors.Step;
 import org.myjtools.openbbt.core.util.Pair;
 
 import java.lang.reflect.InvocationTargetException;
@@ -19,7 +19,7 @@ import java.util.*;
  */
 public class RunnableStep {
 
-	private StepContributor stepContributor;
+	private StepProvider stepProvider;
 	private String stepKey;
 	private Method method;
 	private List<Pair<String, DataType>> expectedArguments;
@@ -31,8 +31,8 @@ public class RunnableStep {
 
 
 
-	public RunnableStep(StepContributor stepContributor, Method method, DataTypes dataTypes) {
-		this.stepContributor = stepContributor;
+	public RunnableStep(StepProvider stepProvider, Method method, DataTypes dataTypes) {
+		this.stepProvider = stepProvider;
 		var annotation = method.getAnnotation(Step.class);
 		this.stepKey = annotation.value();
 		this.method = method;
@@ -80,19 +80,13 @@ public class RunnableStep {
 		}
 
 		try {
-			method.invoke(stepContributor, args);
+			method.invoke(stepProvider, args);
 		} catch (IllegalAccessException e) {
 			throw new OpenBBTException(e);
 		} catch (InvocationTargetException e) {
 			throw e.getCause();
 		}
 	}
-
-
-
-
-
-
 
 
 	private LinkedHashMap<String, DataType> checkStepArgs(DataTypes datatypes, Step step, Method method) {
@@ -115,7 +109,6 @@ public class RunnableStep {
 		if (lastParameterType != LastParameterType.REGULAR) {
 			lastParameterIndex--;
 		}
-
 
 		for (int i = 0; i < lastParameterIndex; i++) {
 			Class<?> methodParameterType = method.getParameterTypes()[i];
@@ -179,7 +172,7 @@ public class RunnableStep {
 	private void throwError(Step step, Method method, String message, Object... args) {
 		Object[] messageArgs = new Object[args.length + 3];
 		messageArgs[0] = step.value();
-		messageArgs[1] = stepContributor.getClass().getSimpleName();
+		messageArgs[1] = stepProvider.getClass().getSimpleName();
 		messageArgs[2] = method.getName();
 		System.arraycopy(args, 0, messageArgs, 3, args.length);
 		throw new OpenBBTException("Error in step '{}' ({}.{}): " + message, messageArgs);

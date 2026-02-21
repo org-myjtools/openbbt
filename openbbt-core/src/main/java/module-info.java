@@ -19,14 +19,12 @@ module org.myjtools.openbbt.core {
 	exports org.myjtools.openbbt.core.util;
 	exports org.myjtools.openbbt.core.plan;
 	exports org.myjtools.openbbt.core.messages;
-	exports org.myjtools.openbbt.core.step;
 	exports org.myjtools.openbbt.core.backend;
 	exports org.myjtools.openbbt.core.project;
 
 	opens org.myjtools.openbbt.core to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.messages to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.plan to org.myjtools.jexten;
-	opens org.myjtools.openbbt.core.step to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.contributors;
 	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
 
@@ -36,9 +34,8 @@ module org.myjtools.openbbt.core {
 	uses ConfigProvider;
 	uses org.myjtools.openbbt.core.messages.MessageProvider;
 	uses SuiteAssembler;
-	uses org.myjtools.openbbt.core.step.StepContributor;
+	uses org.myjtools.openbbt.core.contributors.StepProvider;
 	uses PlanNodeRepositoryFactory;
-	uses StepProvider;
 
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 
