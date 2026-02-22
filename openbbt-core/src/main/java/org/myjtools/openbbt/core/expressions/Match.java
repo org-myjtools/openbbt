@@ -45,7 +45,7 @@ public record Match (
 			if (argument instanceof LiteralValue literalValue) {
 				args.put(literalValue.name(),literalValue.value());
 			} else if (argument instanceof VariableValue variableValue) {
-				args.put(variableValue.name(), variableValues.get(variableValue.name()));
+				args.put(variableValue.name(), variableValues.get(variableValue.variable()));
 			}
 		}
 		return args;
