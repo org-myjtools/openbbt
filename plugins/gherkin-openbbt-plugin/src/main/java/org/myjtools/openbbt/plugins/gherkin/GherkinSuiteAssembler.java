@@ -49,7 +49,6 @@ import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
  *
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  * @see FeaturePlanAssembler
- * @see GherkinConfig
  */
 @Extension
 public class GherkinSuiteAssembler implements SuiteAssembler {
@@ -83,9 +82,9 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	public void init() {
 		this.keywordMapProvider = new DefaultKeywordMapProvider();
 		this.parser = new GherkinParser(keywordMapProvider);
-		this.idTagPattern = config.getString(GherkinConfig.ID_TAG_PATTERN).orElseThrow();
-		this.definitionTag = config.getString(GherkinConfig.DEFINITION_TAG).orElseThrow();
-		this.implementationTag = config.getString(GherkinConfig.IMPLEMENTATION_TAG).orElseThrow();
+		this.idTagPattern = config.getString(OpenBBTConfig.ID_TAG_PATTERN).orElseThrow();
+		this.definitionTag = config.getString(OpenBBTConfig.DEFINITION_TAG).orElseThrow();
+		this.implementationTag = config.getString(OpenBBTConfig.IMPLEMENTATION_TAG).orElseThrow();
 	}
 
 
@@ -180,16 +179,6 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private Optional<PlanNodeID> normalize(PlanNodeID root) {
-		if (repository.countNodeChildren(root) == 1) {
-			var child = repository.getNodeChildren(root).findFirst().orElseThrow();
-			repository.detachChildNode(root, child);
-			repository.deleteNode(root);
-			return Optional.of(child);
-		} else {
-			return Optional.of(root);
-		}
-	}
 
 
 	private PlanNodeID assembleStandaloneFeatures(ResourceSet resourceSet, TestSuite testSuite) {

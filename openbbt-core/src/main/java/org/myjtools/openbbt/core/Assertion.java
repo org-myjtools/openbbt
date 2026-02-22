@@ -41,6 +41,4 @@ public interface Assertion {
 	String describeFailure(Object actualValue);
 
 
-	String name();
-
 }

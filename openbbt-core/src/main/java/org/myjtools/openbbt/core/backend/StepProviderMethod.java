@@ -17,7 +17,7 @@ import java.util.*;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-public class RunnableStep {
+public class StepProviderMethod {
 
 	private StepProvider stepProvider;
 	private String stepKey;
@@ -31,7 +31,7 @@ public class RunnableStep {
 
 
 
-	public RunnableStep(StepProvider stepProvider, Method method, DataTypes dataTypes) {
+	public StepProviderMethod(StepProvider stepProvider, Method method, DataTypes dataTypes) {
 		this.stepProvider = stepProvider;
 		var annotation = method.getAnnotation(Step.class);
 		this.stepKey = annotation.value();
@@ -67,11 +67,38 @@ public class RunnableStep {
 	public void run(Map<String,Object> arguments, Object additionalData) throws Throwable {
 
 		Object[] args = new Object[method.getParameterCount()];
+
+		if (arguments.size() != expectedArguments.size()) {
+			throw new OpenBBTException(
+				"Step '{}' expects {} arguments, but {} were provided",
+				stepKey,
+				expectedArguments.size(),
+				arguments.size()
+			);
+		}
+
+		if (lastParameterType == LastParameterType.REGULAR && additionalData != null) {
+			throw new OpenBBTException(
+				"Step '{}' does not expect additional data, but it was provided",
+				stepKey
+			);
+		}
+
 		for (int i = 0; i < this.expectedArguments.size(); i++) {
 			Pair<String, DataType> arg = this.expectedArguments.get(i);
 			Object value = arguments.get(arg.left());
+			Class<?> type = value.getClass();
+			if (type != method.getParameterTypes()[i]) {
+				throw new OpenBBTException(
+					"Argument '{}' has type {}, but expected type is {}",
+					arg.left(),
+					value.getClass().getSimpleName(),
+					method.getParameterTypes()[i].getSimpleName()
+				);
+			}
 			args[i] = value;
 		}
+
 		if (lastParameterType != LastParameterType.REGULAR) {
 			args[args.length - 1] = Objects.requireNonNull(
 				additionalData,
@@ -84,7 +111,7 @@ public class RunnableStep {
 		} catch (IllegalAccessException e) {
 			throw new OpenBBTException(e);
 		} catch (InvocationTargetException e) {
-			throw e.getCause();
+			throw new OpenBBTException(e.getCause());
 		}
 	}
 
@@ -111,7 +138,6 @@ public class RunnableStep {
 		}
 
 		for (int i = 0; i < lastParameterIndex; i++) {
-			Class<?> methodParameterType = method.getParameterTypes()[i];
 			DataType type = dataTypes.byJavaType(method.getParameterTypes()[i]);
 			if (result.containsKey(type.name())) {
 				throwError(step, method, "Duplicate data type '{}'. Declare arguments explicitly.",type.name());

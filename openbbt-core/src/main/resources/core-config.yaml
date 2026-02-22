@@ -1,0 +1,24 @@
+core.idTagPattern:
+  description: |
+    Regex for tags used as identifier. If it contains a regex group, 
+    only the group value would be used as identifier.
+  type: text
+  defaultValue: ID-(\w+)
+
+
+core.definitionTag:
+  description: |
+    Tag used to annotate a node aggregator as a definition node
+  type: text
+  constraints:
+    pattern: "[\\w\\-\\_]+"
+  defaultValue: definition
+
+
+core.implementationTag:
+  description: |
+    Tag used to annotate a node as an implementation node
+  type: text
+  constraints:
+    pattern: "[\\w\\-\\_]+"
+  defaultValue: implementation

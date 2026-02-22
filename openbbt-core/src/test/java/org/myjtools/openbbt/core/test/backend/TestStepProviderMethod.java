@@ -29,10 +29,6 @@ class TestStepProviderMethod {
 		public String describeFailure(Object actualValue) {
 			return "";
 		}
-		@Override
-		public String name() {
-			return "";
-		}
 	};
 
 	private static final Assertion assertion = new Assertion() {
@@ -42,10 +38,6 @@ class TestStepProviderMethod {
 		}
 		@Override
 		public String describeFailure(Object actualValue) {
-			return "";
-		}
-		@Override
-		public String name() {
 			return "";
 		}
 	};
