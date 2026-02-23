@@ -39,15 +39,27 @@ public abstract class MessageAdapter implements MessageProvider {
 
 
 	private final String resourceName;
+	private final String category;
 
 	private final LoadingCache<Locale, LocaleMessages> messages = Caffeine.newBuilder()
 		.maximumSize(10) // max number of messages to cache
 		.build(this::createMessages);
 
-	protected MessageAdapter(String resourceName) {
+
+	protected MessageAdapter(String category, String resourceName) {
+		this.category = category;
 		this.resourceName = resourceName;
 	}
 
+	protected MessageAdapter(String category) {
+		this(category, category);
+	}
+
+
+	@Override
+	public boolean providerFor(String category) {
+		return this.category.equalsIgnoreCase(category);
+	}
 
 
 	private LocaleMessages createMessages(Locale locale) {

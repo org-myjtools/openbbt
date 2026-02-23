@@ -10,10 +10,15 @@ public class Messages {
 
 	private final List<MessageProvider> providers;
 
+	public static Messages of(List<MessageProvider> list) {
+		return new Messages(list);
+	}
 
-	public Messages(List<MessageProvider> providers) {
+	protected Messages(List<MessageProvider> providers) {
 		this.providers = providers;
 	}
+
+
 
 
 	public LocaleMessages forLocale(java.util.Locale locale) {

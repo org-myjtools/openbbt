@@ -17,7 +17,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-class TestStepContributorBackend {
+class TestStepProviderService {
 
 
     static final DataTypes dataTypes = DataTypes.of(CoreDataTypes.ALL);

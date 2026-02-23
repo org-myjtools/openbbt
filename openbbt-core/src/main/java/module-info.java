@@ -1,4 +1,5 @@
 import org.myjtools.openbbt.core.contributors.*;
+import org.myjtools.openbbt.core.messages.MessageProvider;
 
 module org.myjtools.openbbt.core {
 
@@ -15,6 +16,7 @@ module org.myjtools.openbbt.core {
 	requires org.jspecify;
 	requires org.yaml.snakeyaml;
 	requires org.hamcrest;
+	requires com.google.guice;
 
 	exports org.myjtools.openbbt.core;
 	exports org.myjtools.openbbt.core.util;
@@ -30,8 +32,9 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.messages to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.plan to org.myjtools.jexten;
-
 	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
+	opens org.myjtools.openbbt.core.backend to org.myjtools.jexten;
+	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;
 
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;
@@ -43,8 +46,8 @@ module org.myjtools.openbbt.core {
 	uses PlanNodeRepositoryFactory;
 
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
-	provides org.myjtools.openbbt.core.contributors.DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;
-	provides org.myjtools.openbbt.core.messages.MessageProvider with org.myjtools.openbbt.core.assertions.AssertionMessageProvider;
-	provides org.myjtools.openbbt.core.contributors.AssertionFactoryProvider with org.myjtools.openbbt.core.assertions.CoreAssertionFactories;
+	provides DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;
+	provides MessageProvider with org.myjtools.openbbt.core.assertions.AssertionMessageProvider;
+	provides AssertionFactoryProvider with org.myjtools.openbbt.core.assertions.CoreAssertionFactories;
 
 }

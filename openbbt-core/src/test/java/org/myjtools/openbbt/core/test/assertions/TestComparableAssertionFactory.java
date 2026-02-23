@@ -138,7 +138,7 @@ class TestComparableAssertionFactory {
 	}
 
 	private String createInputForPattern(String patternKey, String value) {
-		// These inputs match the patterns defined in assertions_en.properties
+		// These inputs match the patterns defined in AssertionFactoryProvider_en.properties
 		return switch (patternKey) {
 			case ComparableAssertionFactory.ASSERTION_NUMBER_EQUALS -> "is equal to " + value;
 			case ComparableAssertionFactory.ASSERTION_NUMBER_GREATER -> "is greater than " + value;

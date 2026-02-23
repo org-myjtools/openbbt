@@ -10,7 +10,7 @@ import org.myjtools.openbbt.core.messages.MessageProvider;
 @Extension(name = AssertionMessageProvider.NAME)
 public class AssertionMessageProvider extends MessageAdapter implements MessageProvider {
 
-	public static final String NAME = "assertions";
+	public static final String NAME = "AssertionFactoryProvider";
 
 	public AssertionMessageProvider() {
 		super(NAME);

@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.core.test.backend;
 
 import org.myjtools.jexten.Extension;
+import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.contributors.StepProvider;
 import org.myjtools.openbbt.core.plan.DataTable;
@@ -9,7 +10,7 @@ import org.myjtools.openbbt.core.contributors.SetUp;
 import org.myjtools.openbbt.core.contributors.Step;
 import org.myjtools.openbbt.core.contributors.TearDown;
 
-@Extension
+@Extension(scope = Scope.TRANSIENT)
 public class TestStepProvider implements StepProvider  {
 
 

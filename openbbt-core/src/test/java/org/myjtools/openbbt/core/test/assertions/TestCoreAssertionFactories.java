@@ -15,7 +15,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_shouldReturnAllCoreFactories() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();
@@ -25,7 +25,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_shouldContainNumberAssertion() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();
@@ -37,7 +37,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_shouldContainDecimalAssertion() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();
@@ -49,7 +49,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_shouldContainDateAssertion() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();
@@ -61,7 +61,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_shouldContainTimeAssertion() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();
@@ -73,7 +73,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_shouldContainDatetimeAssertion() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();
@@ -85,7 +85,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_shouldContainTextAssertion() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();
@@ -97,7 +97,7 @@ class TestCoreAssertionFactories {
 
 	@Test
 	void assertionFactories_allFactoriesHaveNames() {
-		Messages messages = new Messages(List.of(new AssertionMessageProvider()));
+		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
 		List<AssertionFactory<?>> factories = provider.assertionFactories().toList();

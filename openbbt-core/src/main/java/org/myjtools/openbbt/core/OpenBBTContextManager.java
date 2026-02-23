@@ -7,6 +7,8 @@ import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
 import org.myjtools.openbbt.core.contributors.PlanNodeRepositoryFactory;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
+import org.myjtools.openbbt.core.messages.MessageProvider;
+import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.plan.NodeType;
 import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
@@ -101,6 +103,10 @@ public class OpenBBTContextManager implements InjectionProvider {
 				return Stream.empty();
 			}
 			return Stream.of(planNodeRepository.get());
+		} else if (type == Messages.class) {
+			return Stream.of(Messages.of(
+				getExtensions(MessageProvider.class).filter(it -> it.providerFor(name)).toList()
+			));
 		}
 		return Stream.empty();
 	}

@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 public class CoreAssertionFactories implements AssertionFactoryProvider {
 
 	/** Message provider for localized assertion patterns. */
-	@Inject("assertions")
+	@Inject("AssertionFactoryProvider")
 	Messages messages;
 
 	/**
@@ -86,7 +86,7 @@ public class CoreAssertionFactories implements AssertionFactoryProvider {
 	 * Array of all core assertion factories for easy access.
 	 */
 	public static final AssertionFactory<?>[] ALL = new CoreAssertionFactories(
-			new Messages(List.of(new AssertionMessageProvider()))
+			Messages.of(List.of(new AssertionMessageProvider()))
 		).assertionFactories().toArray(AssertionFactory[]::new);
 
 

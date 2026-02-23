@@ -16,17 +16,25 @@ public class TestMessages extends Messages {
 	}
 
 	private static MessageProvider createMessageProvider(Map<Locale, Map<String,String>> messages) {
-		return locale -> {
-			Map<String, String> localizedMessages = messages.get(locale);
-			if (localizedMessages != null) {
-				return Optional.of(new LocaleMessages() {
-					@Override
-					public String get(String key) {
-						return localizedMessages.getOrDefault(key, key);
-					}
-				});
+		return new MessageProvider() {
+			@Override
+			public Optional<LocaleMessages> messages(Locale locale) {
+				Map<String, String> localizedMessages = messages.get(locale);
+				if (localizedMessages != null) {
+					return Optional.of(new LocaleMessages() {
+						@Override
+						public String get(String key) {
+							return localizedMessages.getOrDefault(key, key);
+						}
+					});
+				}
+				return Optional.empty();
 			}
-			return Optional.empty();
+
+			@Override
+			public boolean providerFor(String category) {
+				return true;
+			}
 		};
 	}
 }

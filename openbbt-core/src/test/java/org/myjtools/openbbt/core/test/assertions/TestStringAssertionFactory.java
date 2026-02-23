@@ -156,7 +156,7 @@ class TestStringAssertionFactory {
 	}
 
 	private String createInputForPattern(String patternKey, String value) {
-		// These inputs match the patterns defined in assertions_en.properties
+		// These inputs match the patterns defined in AssertionFactoryProvider_en.properties
 		return switch (patternKey) {
 			case StringAssertionFactory.ASSERTION_STRING_EQUALS -> "is equal to " + value;
 			case StringAssertionFactory.ASSERTION_STRING_NOT_EQUALS -> "is not equal to " + value;
