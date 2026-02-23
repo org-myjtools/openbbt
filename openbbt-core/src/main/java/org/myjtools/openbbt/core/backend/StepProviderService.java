@@ -24,8 +24,6 @@ public class StepProviderService {
 
     private static final Log log = Log.of();
 
-    private final DataTypes dataTypes;
-    private final AssertionFactories assertionFactories;
     private final Messages messages;
     private final StepProvider stepProvider;
     private final Map<String, StepProviderMethod> runnableMethods = new LinkedHashMap<>();
@@ -41,8 +39,6 @@ public class StepProviderService {
         Messages messages
     ) {
 
-        this.dataTypes = dataTypes;
-        this.assertionFactories = assertionFactories;
         this.stepProvider = stepProvider;
         this.messages = messages;
         this.matcherBuilder = new ExpressionMatcherBuilder(dataTypes, assertionFactories);
@@ -56,6 +52,18 @@ public class StepProviderService {
         }
     }
 
+
+    public List<String> stepStringsForLocale(Locale locale) {
+        try {
+            var localeMessages = messages.forLocale(locale);
+            return runnableMethods.keySet().stream()
+                .map(localeMessages::get)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        } catch (IllegalArgumentException e) {
+            return List.of();
+        }
+    }
 
     public Optional<Pair<StepProviderMethod, Match>> matchingStep(String step, Locale locale) {
         for (var entry : runnableMethods.entrySet()) {
@@ -88,7 +96,7 @@ public class StepProviderService {
     public void setUp()  {
         try  {
             for (Method setupMethod : setupMethods) {
-                setupMethod.invoke(stepProvider, new Object[0]);
+                setupMethod.invoke(stepProvider);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new OpenBBTException(e);
@@ -98,7 +106,7 @@ public class StepProviderService {
     public void tearDown() {
         try {
             for (Method tearDownMethod : teardownMethods) {
-                tearDownMethod.invoke(stepProvider, new Object[0]);
+                tearDownMethod.invoke(stepProvider);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new OpenBBTException(e);
