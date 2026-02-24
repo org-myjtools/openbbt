@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.cli;
 
 import org.myjtools.openbbt.core.OpenBBTContext;
+import org.myjtools.openbbt.core.OpenBBTContextManager;
 import org.myjtools.openbbt.core.util.Log;
 import picocli.CommandLine;
 
@@ -17,8 +18,10 @@ public final class ShowConfigCommand extends AbstractCommand {
 	protected void execute() {
 		log.debug("Showing configuration options...");
 		OpenBBTContext context = getContext();
-		log.info(context.configuration().toString());
-		log.info(context.configuration().getDefinitionsToString());
+		OpenBBTContextManager cm = new OpenBBTContextManager(context.configuration());
+		log.info(cm.configuration().toString());
+		log.info("Available configuration options:\n");
+		log.info(cm.configuration().getDefinitionsToString());
 
 	}
 

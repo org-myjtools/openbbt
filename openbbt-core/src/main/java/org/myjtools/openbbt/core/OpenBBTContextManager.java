@@ -53,6 +53,11 @@ public class OpenBBTContextManager implements InjectionProvider {
 	}
 
 
+	public Config configuration() {
+		return config;
+	}
+
+
 
 	public Optional<PlanNodeID> assembleTestPlan(OpenBBTContext context) {
 

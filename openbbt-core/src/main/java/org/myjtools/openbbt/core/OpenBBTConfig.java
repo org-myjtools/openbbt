@@ -36,8 +36,8 @@ public class OpenBBTConfig extends ConfigAdapter implements ConfigProvider {
 	public static final String ARTIFACTS_REPOSITORY_USERNAME = "core.artifacts.repository.username";
 	public static final String ARTIFACTS_REPOSITORY_PASSWORD = "core.artifacts.repository.password";
 	public static final String ARTIFACTS_REPOSITORY_PROXY_URL = "core.artifacts.repository.proxy.url";
-	public static final String ARTIFACTS_REPOSITORY_PROXY_USERNAME= "core.artifacts.repository.proxy.host";
-	public static final String ARTIFACTS_REPOSITORY_PROXY_PASSWORD= "core.artifacts.repository.proxy.host";
+	public static final String ARTIFACTS_REPOSITORY_PROXY_USERNAME= "core.artifacts.repository.proxy.username";
+	public static final String ARTIFACTS_REPOSITORY_PROXY_PASSWORD= "core.artifacts.repository.proxy.password";
 
 	public static final Path ENV_DEFAULT_PATH = Path.of(".openbbt");
 	public static final Path PLUGINS_PATH = Path.of("plugins");
