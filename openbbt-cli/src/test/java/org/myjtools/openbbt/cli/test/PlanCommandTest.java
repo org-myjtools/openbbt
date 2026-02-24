@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.cli.test;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.cli.MainCommand;
@@ -7,6 +8,15 @@ import picocli.CommandLine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PlanCommandTest {
+
+	@BeforeAll
+	static void installPlugins() {
+		new CommandLine(new MainCommand()).execute(
+			"install",
+			"-f", "src/test/resources/openbbt.yaml",
+			"-D" + OpenBBTConfig.ENV_PATH + "=target/.openbbt"
+		);
+	}
 
 	@Test
 	void showHelp() {
