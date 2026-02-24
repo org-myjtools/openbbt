@@ -17,7 +17,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 class TestStepProviderBackend {
 
 	static final Config TEST_CONFIG = Config.ofMap(Map.of(
-			OpenBBTConfig.RESOURCE_PATH, "src/test/resources"
+			OpenBBTConfig.RESOURCE_PATH, "src/test/resources",
+			OpenBBTConfig.ENV_PATH, "target/.openbbt"
 	));
 
 	@Nested
