@@ -28,10 +28,10 @@ openbbt-<version>/
 ```bash
 git clone https://github.com/org-myjtools/openbbt.git
 cd openbbt
-mvn package -pl openbbt-core-cli -am -DskipTests
+mvn package -pl openbbt-cli -am -DskipTests
 ```
 
-The distribution ZIP will be at `openbbt-core-cli/target/openbbt-core-cli-<version>-dist.zip`. Extract it to the directory of your choice.
+The distribution ZIP will be at `openbbt-cli/target/openbbt-cli-<version>-dist.zip`. Extract it to the directory of your choice.
 
 ---
 

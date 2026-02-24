@@ -5,7 +5,7 @@ module org.myjtools.openbbt.plugins.gherkin.test {
 	requires org.assertj.core;
 	requires org.myjtools.openbbt.plugins.gherkin;
 	requires org.myjtools.gherkinparser;
-	requires org.myjtools.openbbt.core.persistence;
+	requires org.myjtools.openbbt.persistence;
 	requires junit5.memory.check;
 	requires org.myjtools.jexten;
 	requires org.myjtools.imconfig;

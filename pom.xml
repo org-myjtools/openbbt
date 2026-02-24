@@ -35,9 +35,9 @@
 
 	<modules>
 		<module>openbbt-core</module>
-		<module>openbbt-core-persistence</module>
+		<module>openbbt-persistence</module>
 		<module>openbbt-plugin-starter</module>
-		<module>openbbt-core-cli</module>
+		<module>openbbt-cli</module>
 	</modules>
 
 	<build>

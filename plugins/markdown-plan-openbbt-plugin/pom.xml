@@ -42,7 +42,7 @@
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.myjtools.openbbt</groupId>
-            <artifactId>openbbt-core-persistence</artifactId>
+            <artifactId>openbbt-persistence</artifactId>
             <version>1.0.0-alpha1</version>
             <scope>test</scope>
         </dependency>
