@@ -1,6 +1,6 @@
 package org.myjtools.openbbt.core.project;
 
-import org.myjtools.openbbt.core.plan.TagExpression;
+import org.myjtools.openbbt.core.plannode.TagExpression;
 
 public record TestSuite (
 	String name,

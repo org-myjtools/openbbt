@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.plugins.gherkin;
 
 /**
- * Property keys and values used to annotate {@link org.myjtools.openbbt.core.plan.PlanNode}
+ * Property keys and values used to annotate {@link org.myjtools.openbbt.core.plannode.PlanNode}
  * elements with their originating Gherkin type. These constants are stored as node properties
  * so that downstream processors can identify the Gherkin origin of each plan node.
  *

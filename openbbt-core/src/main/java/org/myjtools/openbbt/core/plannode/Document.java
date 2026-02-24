@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.plan;
+package org.myjtools.openbbt.core.plannode;
 
 import lombok.*;
 import java.util.function.UnaryOperator;

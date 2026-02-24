@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.persistence.test;
+package org.myjtools.openbbt.persistence.test.project;
 
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
@@ -9,7 +9,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @EnabledIf("isDockerAvailable")
-class PostgresqlRepositoryTest extends AbstractRepositoryTest {
+class PostgresqlProjectRepositoryTest extends AbstractProjectRepositoryTest {
 
 	static boolean isDockerAvailable() {
 		try {

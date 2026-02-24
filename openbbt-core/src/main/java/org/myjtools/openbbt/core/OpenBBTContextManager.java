@@ -5,13 +5,14 @@ import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
-import org.myjtools.openbbt.core.contributors.PlanNodeRepositoryFactory;
+import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
-import org.myjtools.openbbt.core.plan.NodeType;
-import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
+import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
+import org.myjtools.openbbt.core.plannode.NodeType;
+import org.myjtools.openbbt.core.plannode.PlanNode;
+import org.myjtools.openbbt.core.plannode.PlanNodeID;
 import org.myjtools.openbbt.core.project.TestSuite;
 import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
@@ -30,7 +31,7 @@ public class OpenBBTContextManager implements InjectionProvider {
 	private final OpenBBTPluginManager pluginManager;
 	private final Config config;
 	private final ResourceFinder resourceFinder;
-	private final PlanNodeRepositoryFactory planNodeRepositoryFactory;
+	private final RepositoryFactory planNodeRepositoryFactory;
 	private final Lazy<PlanNodeRepository> planNodeRepository = Lazy.of(this::createPlanNodeRepository);
 
 
@@ -45,7 +46,7 @@ public class OpenBBTContextManager implements InjectionProvider {
 			.map(ConfigProvider::config)
 			.reduce(Config.empty(), Config::append)
 			.append(configuration);
-		this.planNodeRepositoryFactory = extensionManager.getExtension(PlanNodeRepositoryFactory.class)
+		this.planNodeRepositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
 			.orElse(null);
 		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
 			()-> new OpenBBTException("Resource path not configured {}: ",OpenBBTConfig.RESOURCE_PATH)

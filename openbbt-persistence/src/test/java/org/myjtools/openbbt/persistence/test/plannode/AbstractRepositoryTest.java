@@ -1,19 +1,20 @@
-package org.myjtools.openbbt.persistence.test;
+package org.myjtools.openbbt.persistence.test.plannode;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
-import org.myjtools.openbbt.persistence.JooqRepository;
-import org.myjtools.openbbt.core.plan.*;
+import org.myjtools.openbbt.persistence.plannode.JooqPlanNodeRepository;
+import org.myjtools.openbbt.core.plannode.*;
 import javax.sql.DataSource;
 import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 abstract class AbstractRepositoryTest {
 
-	protected JooqRepository repo;
+	protected JooqPlanNodeRepository repo;
 	private DataSource dataSource;
 
 	protected abstract DataSourceProvider dataSourceProvider();
@@ -22,7 +23,7 @@ abstract class AbstractRepositoryTest {
 	void setUp() {
 		DataSourceProvider provider = dataSourceProvider();
 		dataSource = provider.obtainDataSource();
-		repo = new JooqRepository(dataSource, provider.dialect());
+		repo = new JooqPlanNodeRepository(dataSource, provider.dialect());
 		repo.clearAllData();
 	}
 
@@ -402,7 +403,7 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("step"));
 
 		List<PlanNodeID> results = repo.searchNodes(
-			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
+			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
 		).toList();
 		assertThat(results).hasSize(2);
 	}
@@ -416,7 +417,7 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(untagged);
 
 		List<PlanNodeID> results = repo.searchNodes(
-			org.myjtools.openbbt.core.PlanNodeCriteria.withTag("smoke")
+			PlanNodeCriteria.withTag("smoke")
 		).toList();
 		assertThat(results).hasSize(1);
 	}
@@ -429,9 +430,9 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(withProp);
 		repo.persistNode(without);
 
-		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withProperty("env", "prod")).toList()).hasSize(1);
-		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withProperty("env", null)).toList()).hasSize(1);
-		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withProperty("env", "dev")).toList()).isEmpty();
+		assertThat(repo.searchNodes(PlanNodeCriteria.withProperty("env", "prod")).toList()).hasSize(1);
+		assertThat(repo.searchNodes(PlanNodeCriteria.withProperty("env", null)).toList()).hasSize(1);
+		assertThat(repo.searchNodes(PlanNodeCriteria.withProperty("env", "dev")).toList()).isEmpty();
 	}
 
 	@Test
@@ -439,8 +440,8 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("with lang").language("en"));
 		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("no lang"));
 
-		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withField("language", "en")).toList()).hasSize(1);
-		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withField("language")).toList()).hasSize(1);
+		assertThat(repo.searchNodes(PlanNodeCriteria.withField("language", "en")).toList()).hasSize(1);
+		assertThat(repo.searchNodes(PlanNodeCriteria.withField("language")).toList()).hasSize(1);
 	}
 
 	@Test
@@ -451,20 +452,20 @@ abstract class AbstractRepositoryTest {
 			.tags(new HashSet<>(Set.of("smoke"))));
 		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case2"));
 
-		List<PlanNodeID> andResult = repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.and(
-			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
-			org.myjtools.openbbt.core.PlanNodeCriteria.withTag("smoke")
+		List<PlanNodeID> andResult = repo.searchNodes(PlanNodeCriteria.and(
+			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			PlanNodeCriteria.withTag("smoke")
 		)).toList();
 		assertThat(andResult).hasSize(1);
 
-		List<PlanNodeID> orResult = repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.or(
-			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
-			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.STEP)
+		List<PlanNodeID> orResult = repo.searchNodes(PlanNodeCriteria.or(
+			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			PlanNodeCriteria.withNodeType(NodeType.STEP)
 		)).toList();
 		assertThat(orResult).hasSize(3);
 
-		List<PlanNodeID> notResult = repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.not(
-			org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
+		List<PlanNodeID> notResult = repo.searchNodes(PlanNodeCriteria.not(
+			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
 		)).toList();
 		assertThat(notResult).hasSize(1);
 	}
@@ -474,7 +475,7 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("a"));
 		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("b"));
 
-		assertThat(repo.searchNodes(org.myjtools.openbbt.core.PlanNodeCriteria.all()).toList()).hasSize(2);
+		assertThat(repo.searchNodes(PlanNodeCriteria.all()).toList()).hasSize(2);
 	}
 
 	@Test
@@ -483,9 +484,9 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case2"));
 		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("step"));
 
-		assertThat(repo.countNodes(org.myjtools.openbbt.core.PlanNodeCriteria.all())).isEqualTo(3);
-		assertThat(repo.countNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.TEST_CASE))).isEqualTo(2);
-		assertThat(repo.countNodes(org.myjtools.openbbt.core.PlanNodeCriteria.withNodeType(NodeType.STEP))).isEqualTo(1);
+		assertThat(repo.countNodes(PlanNodeCriteria.all())).isEqualTo(3);
+		assertThat(repo.countNodes(PlanNodeCriteria.withNodeType(NodeType.TEST_CASE))).isEqualTo(2);
+		assertThat(repo.countNodes(PlanNodeCriteria.withNodeType(NodeType.STEP))).isEqualTo(1);
 	}
 
 

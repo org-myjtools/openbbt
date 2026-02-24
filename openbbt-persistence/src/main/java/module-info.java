@@ -1,3 +1,6 @@
+import org.myjtools.openbbt.core.contributors.RepositoryFactory;
+import org.myjtools.openbbt.persistence.JooqRepositoryFactory;
+
 module org.myjtools.openbbt.persistence {
 	requires org.myjtools.openbbt.core;
 	requires java.sql;
@@ -7,13 +10,18 @@ module org.myjtools.openbbt.persistence {
 	requires com.zaxxer.hikari;
 	requires flyway.core;
 	requires org.myjtools.imconfig;
+	requires org.jspecify;
 
 	exports org.myjtools.openbbt.persistence;
 
 	opens org.myjtools.openbbt.persistence;
 	opens org.myjtools.openbbt.persistence.migration.hsqldb;
 	opens org.myjtools.openbbt.persistence.migration.postgresql;
+	exports org.myjtools.openbbt.persistence.plannode;
+	opens org.myjtools.openbbt.persistence.plannode;
+	exports org.myjtools.openbbt.persistence.project;
+	opens org.myjtools.openbbt.persistence.project;
 
-	provides org.myjtools.openbbt.core.contributors.PlanNodeRepositoryFactory
-			with org.myjtools.openbbt.persistence.JooqPlanNodeRepositoryFactory;
+	provides RepositoryFactory
+			with JooqRepositoryFactory;
 }

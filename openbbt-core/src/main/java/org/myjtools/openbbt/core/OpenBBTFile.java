@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.imconfig.Config;
-import org.myjtools.openbbt.core.plan.TagExpression;
+import org.myjtools.openbbt.core.plannode.TagExpression;
 import org.myjtools.openbbt.core.project.Project;
 import org.myjtools.openbbt.core.project.TestSuite;
 import org.yaml.snakeyaml.Yaml;
