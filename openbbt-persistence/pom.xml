@@ -11,6 +11,7 @@
 	</parent>
 
 	<artifactId>openbbt-persistence</artifactId>
+	<name>Open BBT Persistence Layer</name>
 
 
 	<dependencies>
