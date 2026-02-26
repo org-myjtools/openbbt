@@ -11,6 +11,7 @@ import java.nio.file.Path;
 public class OpenBBTConfig extends ConfigAdapter implements ConfigProvider {
 
 	public static final String RESOURCE_PATH = "core.resourcePath";
+	public static final String RESOURCE_FILTER = "core.resourceFilter";
 	public static final String ENV_PATH = "core.environmentPath";
 
 	/** Configuration key for the regex pattern used to extract identifiers from Gherkin tags. */

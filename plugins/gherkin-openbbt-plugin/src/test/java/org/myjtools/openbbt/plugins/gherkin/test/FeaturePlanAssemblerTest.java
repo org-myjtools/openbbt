@@ -3,10 +3,10 @@ package org.myjtools.openbbt.plugins.gherkin.test;
 import org.junit.jupiter.api.Test;
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
-import org.myjtools.openbbt.core.PlanNodeRepository;
-import org.myjtools.openbbt.core.PlanNodeRepositoryWriter;
+import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanNodeRepositoryWriter;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
-import org.myjtools.openbbt.persistence.JooqRepository;
+import org.myjtools.openbbt.persistence.plannode.JooqPlanNodeRepository;
 import org.myjtools.openbbt.core.plannode.PlanNodeID;
 import org.myjtools.openbbt.core.plannode.TagExpression;
 import org.myjtools.openbbt.plugins.gherkin.FeaturePlanAssembler;
@@ -21,7 +21,7 @@ class FeaturePlanAssemblerTest {
 	@Test
 	void testAssemble() throws IOException {
 
-		PlanNodeRepository repository = new JooqRepository(DataSourceProvider.hsqldb());
+		PlanNodeRepository repository = new JooqPlanNodeRepository(DataSourceProvider.hsqldb());
 		var writer = new PlanNodeRepositoryWriter(repository);
 		Optional<PlanNodeID> testPlan = assembleFeature(repository,"");
 		assertThat(testPlan).isPresent();
@@ -56,7 +56,7 @@ class FeaturePlanAssemblerTest {
 	@Test
 	void testAssembleScenarioWithTags() throws IOException {
 
-		PlanNodeRepository repository = new JooqRepository(DataSourceProvider.hsqldb());
+		PlanNodeRepository repository = new JooqPlanNodeRepository(DataSourceProvider.hsqldb());
 		var writer = new PlanNodeRepositoryWriter(repository);
 		Optional<PlanNodeID> testPlan = assembleFeature(repository,"ScenarioA");
 		assertThat(testPlan).isPresent();
@@ -79,7 +79,7 @@ class FeaturePlanAssemblerTest {
 	@Test
 	void testAssembleScenarioOutlineWithTags() throws IOException {
 
-		PlanNodeRepository repository = new JooqRepository(DataSourceProvider.hsqldb());
+		PlanNodeRepository repository = new JooqPlanNodeRepository(DataSourceProvider.hsqldb());
 		var writer = new PlanNodeRepositoryWriter(repository);
 		Optional<PlanNodeID> testPlan = assembleFeature(repository,"ScenarioB");
 		assertThat(testPlan).isPresent();
@@ -107,7 +107,7 @@ class FeaturePlanAssemblerTest {
 
 	@Test
 	void testAssembleScenarioWithInvalidTags() throws IOException {
-		PlanNodeRepository repository = new JooqRepository(DataSourceProvider.hsqldb());
+		PlanNodeRepository repository = new JooqPlanNodeRepository(DataSourceProvider.hsqldb());
 		Optional<PlanNodeID> testPlan = assembleFeature(repository,"InvalidTag");
 		assertThat(testPlan).isEmpty();
 	}

@@ -7,7 +7,7 @@ import org.myjtools.openbbt.core.project.TestSuite;
 import java.util.List;
 import java.util.Optional;
 
-public interface ProjectRepository {
+public interface ProjectRepository extends Repository{
 
 	void persistProject(Project project) ;
 
@@ -31,5 +31,5 @@ public interface ProjectRepository {
 
 	void deleteTestSuite(PlanID planID, String testSuiteName);
 
-
+	void deleteTestSuites(PlanID planID);
 }

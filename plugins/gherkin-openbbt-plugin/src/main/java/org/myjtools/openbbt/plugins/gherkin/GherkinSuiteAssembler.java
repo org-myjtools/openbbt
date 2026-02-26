@@ -11,6 +11,8 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.PostConstruct;
 import org.myjtools.openbbt.core.*;
+import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
+import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.plannode.NodeType;
 import org.myjtools.openbbt.core.plannode.PlanNode;

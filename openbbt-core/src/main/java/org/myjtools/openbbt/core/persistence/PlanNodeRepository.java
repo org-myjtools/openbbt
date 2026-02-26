@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  * allowing for flexibility in how plan nodes are stored (e.g., in-memory, database, etc.).
  *
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
-public interface PlanNodeRepository  {
+public interface PlanNodeRepository extends Repository {
 
 
 	/**

@@ -205,6 +205,13 @@ public class JooqProjectRepository implements ProjectRepository {
 			.execute();
 	}
 
+	@Override
+	public void deleteTestSuites(PlanID planID) {
+		dsl.deleteFrom(TABLE_SUITE)
+			.where(FIELD_PLAN_ID.eq(planID.UUID()))
+			.execute();
+	}
+
 
 	private Plan mapPlan(Record rec) {
 		UUID planNodeRootUUID = rec.get(FIELD_PLAN_NODE_ROOT);

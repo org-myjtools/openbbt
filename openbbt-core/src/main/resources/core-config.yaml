@@ -4,6 +4,13 @@ core.resourcePath:
   type: text
   defaultValue: '.'
 
+core.resourceFilter:
+  description: |
+    Filter to apply when loading resources. It can be used to exclude certain files or directories.
+    It supports glob patterns (e.g., `**/test/**` to exclude all files in any `test` directory).
+  type: text
+  defaultValue: '**/.*'
+
 core.environmentPath:
     description: |
         Path to the environment directory.

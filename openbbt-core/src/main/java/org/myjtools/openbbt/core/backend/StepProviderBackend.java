@@ -18,7 +18,7 @@ public class StepProviderBackend {
 	private final ConcurrentHashMap<String,Object> variables = new ConcurrentHashMap<>();
 	private final StepProviderHinter hinter;
 
-	public StepProviderBackend(OpenBBTContextManager cm) {
+	public StepProviderBackend(OpenBBTRuntime cm) {
 		var dataTypes = DataTypes.of(cm.getExtensions(DataTypeProvider.class)
 			.flatMap(DataTypeProvider::dataTypes)
 			.toList());

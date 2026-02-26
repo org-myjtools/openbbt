@@ -6,7 +6,7 @@ import org.myjtools.gherkinparser.KeywordMapProvider;
 import org.myjtools.gherkinparser.KeywordType;
 import org.myjtools.gherkinparser.elements.*;
 import org.myjtools.gherkinparser.elements.DataTable;
-import org.myjtools.openbbt.core.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
 import org.myjtools.openbbt.core.plannode.*;
 import org.myjtools.openbbt.core.util.Patterns;
 import java.util.*;

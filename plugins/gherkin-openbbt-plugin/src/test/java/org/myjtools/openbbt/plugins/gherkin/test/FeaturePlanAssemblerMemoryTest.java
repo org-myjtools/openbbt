@@ -8,9 +8,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
 import org.myjtools.junit5.memorycheck.MemoryExtension;
-import org.myjtools.openbbt.core.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
-import org.myjtools.openbbt.persistence.JooqRepository;
+import org.myjtools.openbbt.persistence.plannode.JooqPlanNodeRepository;
 import org.myjtools.openbbt.core.plannode.TagExpression;
 import org.myjtools.openbbt.plugins.gherkin.FeaturePlanAssembler;
 import java.io.IOException;
@@ -53,7 +53,7 @@ class FeaturePlanAssemblerMemoryTest {
 
 		@BeforeEach
 		void setUp() {
-			repository = new JooqRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
+			repository = new JooqPlanNodeRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
 		}
 
 		@Test
