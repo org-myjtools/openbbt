@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.plugins.gherkin;
 
 
+import java.util.UUID;
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
 import org.myjtools.gherkinparser.elements.Examples;
@@ -16,7 +17,6 @@ import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.plan.NodeType;
 import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.TagExpression;
 import org.myjtools.openbbt.core.plan.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
@@ -72,7 +72,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	private String idTagPattern;
 	private String definitionTag;
 	private String implementationTag;
-	private final Map<PlanNodeID,Object> underlyingModels = new HashMap<>();
+	private final Map<UUID,Object> underlyingModels = new HashMap<>();
 
 
 	/**
@@ -99,7 +99,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	 * applied before producing the final suite.</p>
 	 */
 	@Override
-	public Optional<PlanNodeID> assembleSuite(TestSuite testSuite) {
+	public Optional<UUID> assembleSuite(TestSuite testSuite) {
 		ResourceSet resourceSet = resourceFinder.findResources("*.feature");
 		TagExpression tagExpression = testSuite.tagExpression();
 		if (resourceSet.size() == 1) {
@@ -111,7 +111,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private Optional<PlanNodeID> wrapTestSuite(PlanNodeID feature, TestSuite testSuite) {
+	private Optional<UUID> wrapTestSuite(UUID feature, TestSuite testSuite) {
 		PlanNode root = new PlanNode(NodeType.TEST_SUITE);
 		root.name(testSuite.name());
 		var id = repository.persistNode(root);
@@ -120,7 +120,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private Optional<PlanNodeID> assembleMultipleFeature(ResourceSet resourceSet, TestSuite testSuite) {
+	private Optional<UUID> assembleMultipleFeature(ResourceSet resourceSet, TestSuite testSuite) {
 
 		var root = assembleStandaloneFeatures(resourceSet, testSuite);
 
@@ -168,7 +168,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private void deleteImplementationScenarioOutlineContent(PlanNodeID root) {
+	private void deleteImplementationScenarioOutlineContent(UUID root) {
 		log.trace("deleteImplementationScenarioOutlineContent");
 		repository.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.descendantOf(root),
@@ -183,7 +183,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 
-	private PlanNodeID assembleStandaloneFeatures(ResourceSet resourceSet, TestSuite testSuite) {
+	private UUID assembleStandaloneFeatures(ResourceSet resourceSet, TestSuite testSuite) {
 		log.trace("provideStandaloneFeatures");
 		var id = repository.persistNode(new PlanNode(NodeType.TEST_FEATURE));
 		for (Resource resource : resourceSet) {
@@ -199,7 +199,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private void deleteDefinitionTestCasesWithoutId(PlanNodeID root) {
+	private void deleteDefinitionTestCasesWithoutId(UUID root) {
 		repository.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.descendantOf(root),
 			PlanNodeCriteria.withTag(definitionTag),
@@ -209,7 +209,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private void fillImplementationScenarioOutlines(PlanNodeID root, TagExpression tagExpression) {
+	private void fillImplementationScenarioOutlines(UUID root, TagExpression tagExpression) {
 		log.trace("fillImplementationScenarioOutlines");
 		repository.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.descendantOf(root),
@@ -220,12 +220,12 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 
-	private void fillImplementationScenarioOutline(PlanNodeID root, PlanNodeID impScenarioOutline, TagExpression tagExpression) {
+	private void fillImplementationScenarioOutline(UUID root, UUID impScenarioOutline, TagExpression tagExpression) {
 
-		PlanNodeID impFeature = repository.getParentNode(impScenarioOutline).orElseThrow();
+		UUID impFeature = repository.getParentNode(impScenarioOutline).orElseThrow();
 		String identifier = repository.getNodeField(impScenarioOutline, "identifier").orElseThrow().toString();
 
-		PlanNodeID defScenarioOutline = repository.searchNodes(PlanNodeCriteria.and(
+		UUID defScenarioOutline = repository.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.descendantOf(root),
 			PlanNodeCriteria.withNodeType(NodeType.TEST_FEATURE),
 			PlanNodeCriteria.withTag(definitionTag),
@@ -261,7 +261,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 
-	private void redefine(PlanNodeID root, PlanNodeID defTestCase) {
+	private void redefine(UUID root, UUID defTestCase) {
 		log.trace("redefine {}",defTestCase);
 		implementationTestCase(root, defTestCase).ifPresentOrElse(
 			impTestCase -> redefineTestCase(defTestCase, impTestCase),
@@ -270,7 +270,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private void redefineTestCase(PlanNodeID defTestCase, PlanNodeID impTestCase) {
+	private void redefineTestCase(UUID defTestCase, UUID impTestCase) {
 
 		// definition background is ignored
 		deleteBackground(defTestCase);
@@ -286,9 +286,9 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 		int defStepCount = 0;
 		int impStepCount = 0;
 
-		for (PlanNodeID defStep : repository.getNodeChildren(defTestCase).toList()) {
+		for (UUID defStep : repository.getNodeChildren(defTestCase).toList()) {
 			for (int i = 0; i < stepMap[defStepCount]; i++) {
-				PlanNodeID impStep = impSteps.get(impStepCount);
+				UUID impStep = impSteps.get(impStepCount);
 				repository.getParentNode(impStep).ifPresent(impStepParent -> repository.detachChildNode(impStepParent, impStep));
 				repository.attachChildNodeLast(defStep,impStep);
 				impStepCount++;
@@ -303,7 +303,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 
-	private void redefineStepNodeType(int[] stepMap, int defStepCount, PlanNodeID defStep) {
+	private void redefineStepNodeType(int[] stepMap, int defStepCount, UUID defStep) {
 		if (stepMap[defStepCount] == 0) {
 			repository.updateNodeField(defStep, "nodeType", NodeType.VIRTUAL_STEP.value);
 		} else {
@@ -312,7 +312,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private void moveBackgroundToOtherTestCase(PlanNodeID origin, PlanNodeID target) {
+	private void moveBackgroundToOtherTestCase(UUID origin, UUID target) {
 		repository.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.childOf(origin),
 			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND)
@@ -325,7 +325,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private int[] extractStepMap(PlanNodeID defTestCase, PlanNodeID impTestCase) {
+	private int[] extractStepMap(UUID defTestCase, UUID impTestCase) {
 		// step map is in form: x-x-x-x...
 		String stepMapProperty = repository.getNodeProperty(impTestCase, STEP_MAP).orElse(null);
 		if (stepMapProperty == null || stepMapProperty.isBlank()) {
@@ -337,14 +337,14 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private void deleteBackground(PlanNodeID defTestCase) {
+	private void deleteBackground(UUID defTestCase) {
 		repository.getNodeChildren(defTestCase)
 			.filter(child -> repository.existsNodeProperty(child, GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND))
 			.forEach( child -> repository.deleteNode(child) );
 	}
 
 
-	private Optional<PlanNodeID> implementationTestCase(PlanNodeID root, PlanNodeID definitionTestCase) {
+	private Optional<UUID> implementationTestCase(UUID root, UUID definitionTestCase) {
 		return repository.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.descendantOf(root),
 			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
@@ -355,7 +355,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 
-	private Optional<PlanNodeID> assembleFeatureNode(
+	private Optional<UUID> assembleFeatureNode(
 		DefaultKeywordMapProvider keywordMapProvider,
 		GherkinParser parser,
 		String idTagPattern,

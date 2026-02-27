@@ -1,8 +1,8 @@
 package org.myjtools.openbbt.core.persistence;
 
+import java.util.UUID;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +27,7 @@ public interface PlanRepository extends Repository {
 	 * @param id the node ID
 	 * @return the plan node data, or empty if the node does not exist
 	 */
-	Optional<PlanNode> getNodeData(PlanNodeID id);
+	Optional<PlanNode> getNodeData(UUID id);
 
 	/**
 	 * Update a specific field of a plan node. The field name and value are determined by the caller,
@@ -37,7 +37,7 @@ public interface PlanRepository extends Repository {
 	 * @param fieldValue the new value for the field
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	<T> void updateNodeField(PlanNodeID id, String fieldName, T fieldValue);
+	<T> void updateNodeField(UUID id, String fieldName, T fieldValue);
 
 
 	/**
@@ -47,7 +47,7 @@ public interface PlanRepository extends Repository {
 	 * @return the value of the field, or empty if the node or field does not exist
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	<T> Optional<T> getNodeField(PlanNodeID id, String fieldName);
+	<T> Optional<T> getNodeField(UUID id, String fieldName);
 
 
 	/**
@@ -55,7 +55,7 @@ public interface PlanRepository extends Repository {
 	 * @param id the node ID
 	 * @return {@code true} if the node exists, {@code false} otherwise
 	 */
-	boolean existsNode(PlanNodeID id);
+	boolean existsNode(UUID id);
 
 	/**
 	 * Retrieve the parent node of a given node.
@@ -63,14 +63,14 @@ public interface PlanRepository extends Repository {
 	 * @return the parent node ID, or empty if the node is a root node
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	Optional<PlanNodeID> getParentNode(PlanNodeID id);
+	Optional<UUID> getParentNode(UUID id);
 
 	/**
 	 * Delete completely a plan node, including its child nodes.
 	 * If the node was a child of another node, it will be detached.
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	void deleteNode(PlanNodeID id);
+	void deleteNode(UUID id);
 
 
 	/**
@@ -78,14 +78,14 @@ public interface PlanRepository extends Repository {
 	 * If the child node was already in the child list, this operation will have no effect.
 	 * @throws OpenBBTException if either the parent UUID or the child UUID do not exist in the repository
 	 */
-	void attachChildNodeLast(PlanNodeID parent, PlanNodeID child);
+	void attachChildNodeLast(UUID parent, UUID child);
 
 	/**
 	 * Attach a plan node as child of another node, at the beginning of the existing child list.
 	 * If the child node was already in the child list, this operation will have no effect.
 	 * @throws OpenBBTException if either the parent UUID or the child UUID do not exist in the repository
 	 */
-	void attachChildNodeFirst(PlanNodeID parent, PlanNodeID child);
+	void attachChildNodeFirst(UUID parent, UUID child);
 
 
 	/**
@@ -93,7 +93,7 @@ public interface PlanRepository extends Repository {
 	 * If the child node was not already in the child list, this operation will have no effect.
 	 * @throws OpenBBTException if either the parent UUID or the child UUID do not exist in the repository
 	 */
-	void detachChildNode(PlanNodeID parent, PlanNodeID child);
+	void detachChildNode(UUID parent, UUID child);
 
 
 
@@ -103,7 +103,7 @@ public interface PlanRepository extends Repository {
 	 * @return a stream of child node IDs in order
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	Stream<PlanNodeID> getNodeChildren(PlanNodeID id);
+	Stream<UUID> getNodeChildren(UUID id);
 
 	/**
 	 * Retrieve all descendants of a node (children, grandchildren, etc.) recursively.
@@ -111,7 +111,7 @@ public interface PlanRepository extends Repository {
 	 * @return a stream of descendant node IDs
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	Stream<PlanNodeID> getNodeDescendants(PlanNodeID id);
+	Stream<UUID> getNodeDescendants(UUID id);
 
 	/**
 	 * Retrieve all ancestors of a node (parent, grandparent, etc.) up to the root.
@@ -119,7 +119,7 @@ public interface PlanRepository extends Repository {
 	 * @return a stream of ancestor node IDs
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	Stream<PlanNodeID> getNodeAncestors(PlanNodeID id);
+	Stream<UUID> getNodeAncestors(UUID id);
 
 	/**
 	 * Count the direct children of a node.
@@ -127,7 +127,7 @@ public interface PlanRepository extends Repository {
 	 * @return the number of direct children
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	int countNodeChildren(PlanNodeID id);
+	int countNodeChildren(UUID id);
 
 	/**
 	 * Count all descendants of a node recursively.
@@ -135,7 +135,7 @@ public interface PlanRepository extends Repository {
 	 * @return the total number of descendants
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	int countNodeDescendants(PlanNodeID id);
+	int countNodeDescendants(UUID id);
 
 	/**
 	 * Count all ancestors of a node up to the root.
@@ -143,7 +143,7 @@ public interface PlanRepository extends Repository {
 	 * @return the total number of ancestors
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
-	int countNodeAncestors(PlanNodeID id);
+	int countNodeAncestors(UUID id);
 
 	/**
 	 * Persist a plan node in the repository. If the node UUID did exist previously, it
@@ -152,14 +152,14 @@ public interface PlanRepository extends Repository {
 	 * @param node the plan node to persist
 	 * @return the assigned node UUID
 	 */
-	PlanNodeID persistNode(PlanNode node);
+	UUID persistNode(PlanNode node);
 
 	/**
 	 * Search for nodes matching the given criteria.
 	 * @param criteria the search criteria
 	 * @return a stream of matching node IDs
 	 */
-	Stream<PlanNodeID> searchNodes(PlanNodeCriteria criteria);
+	Stream<UUID> searchNodes(PlanNodeCriteria criteria);
 
 	/**
 	 * Count nodes matching the given criteria.
@@ -174,28 +174,28 @@ public interface PlanRepository extends Repository {
 	 * @param tag the tag to check
 	 * @return {@code true} if the tag exists on the node, {@code false} otherwise
 	 */
-	boolean existsNodeTag(PlanNodeID nodeID, String tag);
+	boolean existsNodeTag(UUID nodeID, String tag);
 
 	/**
 	 * Retrieve all tags of a node.
 	 * @param nodeID the node ID
 	 * @return a stream of tags associated with the node, or an empty stream if the node has no tags
 	 */
-	void addNodeTag(PlanNodeID nodeID, String tag);
+	void addNodeTag(UUID nodeID, String tag);
 
 	/**
 	 * Remove a specific tag from a node. If the tag does not exist on the node, this operation will have no effect.
 	 * @param nodeID the node ID
 	 * @param tag the tag to remove
 	 */
-	void removeNodeTag(PlanNodeID nodeID, String tag);
+	void removeNodeTag(UUID nodeID, String tag);
 
 	/**
 	 * Retrieve all tags of a node as a list.
 	 * @param nodeID the node ID
 	 * @return a list of tags associated with the node, or an empty list if the node has no tags
 	 */
-	List<String> getNodeTags(PlanNodeID nodeID);
+	List<String> getNodeTags(UUID nodeID);
 
 	/**
 	 * Check whether a node has a specific property. If {@code propertyValue} is {@code null},
@@ -205,10 +205,10 @@ public interface PlanRepository extends Repository {
 	 * @param propertyValue the expected value, or {@code null} to match any value
 	 * @return {@code true} if the property exists (and matches the value if provided)
 	 */
-	boolean existsNodeProperty(PlanNodeID nodeID, String propertyKey, String propertyValue);
+	boolean existsNodeProperty(UUID nodeID, String propertyKey, String propertyValue);
 
-	void addNodeProperty(PlanNodeID nodeID, String propertyKey, String propertyValue);
-	void removeNodeProperty(PlanNodeID nodeID, String propertyKey);
+	void addNodeProperty(UUID nodeID, String propertyKey, String propertyValue);
+	void removeNodeProperty(UUID nodeID, String propertyKey);
 
 	/**
 	 * Retrieve the value of a specific property of a node.
@@ -216,13 +216,13 @@ public interface PlanRepository extends Repository {
 	 * @param propertyKey the property key
 	 * @return the property value, or empty if the property does not exist
 	 */
-	Optional<String> getNodeProperty(PlanNodeID nodeID, String propertyKey);
+	Optional<String> getNodeProperty(UUID nodeID, String propertyKey);
 
 	/**
 	 * Retrieve all properties of a node as a map of key-value pairs.
 	 * @param nodeID the node ID
 	 * @return a map containing all properties of the node, or an empty map if the node has no properties
 	 */
-	Map<String, String> getNodeProperties(PlanNodeID nodeID);
+	Map<String, String> getNodeProperties(UUID nodeID);
 
 }

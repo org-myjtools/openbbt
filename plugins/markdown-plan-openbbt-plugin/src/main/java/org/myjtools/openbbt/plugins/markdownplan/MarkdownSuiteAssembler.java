@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.plugins.markdownplan;
 
+import java.util.UUID;
 import org.commonmark.ext.gfm.tables.TableBlock;
 import org.commonmark.ext.gfm.tables.TableCell;
 import org.commonmark.ext.gfm.tables.TableRow;
@@ -17,7 +18,6 @@ import org.myjtools.openbbt.core.plan.DataTable;
 import org.myjtools.openbbt.core.plan.Document;
 import org.myjtools.openbbt.core.plan.NodeType;
 import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.TagExpression;
 import org.myjtools.openbbt.core.plan.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
@@ -80,12 +80,12 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
     }
 
     @Override
-    public Optional<PlanNodeID> assembleSuite(TestSuite testSuite) {
+    public Optional<UUID> assembleSuite(TestSuite testSuite) {
         ResourceSet resourceSet = resourceFinder.findResources("*.md");
         if (resourceSet.isEmpty()) return Optional.empty();
 
         PlanNode suiteNode = new PlanNode(NodeType.TEST_SUITE).name(testSuite.name());
-        PlanNodeID suiteId = repository.persistNode(suiteNode);
+        UUID suiteId = repository.persistNode(suiteNode);
 
         for (Resource resource : resourceSet) {
             assembleMarkdownFile(resource, testSuite)
@@ -100,7 +100,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
     }
 
 
-    private Optional<PlanNodeID> assembleMarkdownFile(Resource resource, TestSuite testSuite) {
+    private Optional<UUID> assembleMarkdownFile(Resource resource, TestSuite testSuite) {
         try (var inputStream = resource.open()) {
             String content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             String relativePath = resource.relativePath().toString();
@@ -116,7 +116,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
             PlanNode fileNode = new PlanNode(NodeType.TEST_FEATURE)
                 .name(resource.relativePath().getFileName().toString())
                 .source(relativePath);
-            PlanNodeID fileId = repository.persistNode(fileNode);
+            UUID fileId = repository.persistNode(fileNode);
             for (MarkdownFeature section : sections) {
                 buildFeatureNode(section, relativePath, testSuite.tagExpression())
                     .ifPresent(id -> repository.attachChildNodeLast(fileId, id));
@@ -134,7 +134,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
     }
 
 
-    private Optional<PlanNodeID> buildFeatureNode(
+    private Optional<UUID> buildFeatureNode(
         MarkdownFeature feature,
         String relativePath,
         TagExpression tagExpression
@@ -150,7 +150,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
             .addProperties(feature.properties)
             .addProperty(MARKDOWN_TYPE, MARKDOWN_TYPE_FEATURE);
 
-        PlanNodeID featureId = repository.persistNode(featureData);
+        UUID featureId = repository.persistNode(featureData);
 
         for (MarkdownTestCase testCase : feature.testCases) {
             Set<String> testCaseTags = new HashSet<>(featureTags);
@@ -167,7 +167,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
                 .source(relativePath)
                 .addProperty(MARKDOWN_TYPE, MARKDOWN_TYPE_TESTCASE);
 
-            PlanNodeID testCaseId = repository.persistNode(testCaseData);
+            UUID testCaseId = repository.persistNode(testCaseData);
 
             for (MarkdownStepGroup group : testCase.stepGroups) {
                 for (MarkdownStep step : group.steps) {

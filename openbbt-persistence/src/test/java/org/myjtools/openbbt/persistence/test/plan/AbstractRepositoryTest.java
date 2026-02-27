@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.persistence.test.plan;
 
+import java.util.UUID;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +57,7 @@ abstract class AbstractRepositoryTest {
 			.tags(new HashSet<>(Set.of("smoke", "regression")))
 			.properties(new TreeMap<>(Map.of("priority", "high", "author", "tester")));
 
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 
 		assertThat(id).isNotNull();
 		assertThat(repo.existsNode(id)).isTrue();
@@ -85,7 +86,7 @@ abstract class AbstractRepositoryTest {
 			.nodeType(NodeType.STEP)
 			.name("minimal node");
 
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 
 		assertThat(id).isNotNull();
 		PlanNode retrieved = repo.getNodeData(id).orElseThrow();
@@ -103,7 +104,7 @@ abstract class AbstractRepositoryTest {
 			.name("original name")
 			.description("original description");
 
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 
 		String retrievedName = repo.getNodeField(id, "name").orElseThrow().toString();
 		assertThat(retrievedName).isEqualTo("original name");
@@ -119,7 +120,7 @@ abstract class AbstractRepositoryTest {
 			.name("original name")
 			.description("original description");
 
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 
 		PlanNode toUpdate = repo.getNodeData(id).orElseThrow();
 		toUpdate.name("updated name");
@@ -140,7 +141,7 @@ abstract class AbstractRepositoryTest {
 			.nodeType(NodeType.STEP)
 			.name("to delete");
 
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 		assertThat(repo.existsNode(id)).isTrue();
 
 		repo.deleteNode(id);
@@ -151,16 +152,16 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void attachChildNodeLast_buildsTreeHierarchy() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
-		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
-		PlanNodeID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		UUID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		UUID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
 
 		repo.attachChildNodeLast(root, child1);
 		repo.attachChildNodeLast(root, child2);
 		repo.attachChildNodeLast(root, child3);
 
-		List<PlanNodeID> children = repo.getNodeChildren(root).toList();
+		List<UUID> children = repo.getNodeChildren(root).toList();
 		assertThat(children).containsExactly(child1, child2, child3);
 
 		assertThat(repo.getParentNode(child1)).contains(root);
@@ -171,42 +172,42 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void attachChildNodeFirst_insertsAtBeginning() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
-		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
-		PlanNodeID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		UUID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		UUID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
 
 		repo.attachChildNodeFirst(root, child1);
 		repo.attachChildNodeFirst(root, child2);
 		repo.attachChildNodeFirst(root, child3);
 
-		List<PlanNodeID> children = repo.getNodeChildren(root).toList();
+		List<UUID> children = repo.getNodeChildren(root).toList();
 		assertThat(children).containsExactly(child3, child2, child1);
 	}
 
 	@Test
 	void detachChildNode_removesFromParent() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
-		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		UUID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
 
 		repo.attachChildNodeLast(root, child1);
 		repo.attachChildNodeLast(root, child2);
 
 		repo.detachChildNode(root, child1);
 
-		List<PlanNodeID> children = repo.getNodeChildren(root).toList();
+		List<UUID> children = repo.getNodeChildren(root).toList();
 		assertThat(children).containsExactly(child2);
 		assertThat(repo.getParentNode(child1)).isEmpty();
 	}
 
 	@Test
 	void deepTreeHierarchy_threeLevels() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID level1a = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("level1a"));
-		PlanNodeID level1b = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("level1b"));
-		PlanNodeID level2a = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("level2a"));
-		PlanNodeID level2b = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("level2b"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID level1a = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("level1a"));
+		UUID level1b = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("level1b"));
+		UUID level2a = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("level2a"));
+		UUID level2b = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("level2b"));
 
 		repo.attachChildNodeLast(root, level1a);
 		repo.attachChildNodeLast(root, level1b);
@@ -222,10 +223,10 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void moveNodeBetweenParents() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID parent1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("parent1"));
-		PlanNodeID parent2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("parent2"));
-		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("child"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID parent1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("parent1"));
+		UUID parent2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("parent2"));
+		UUID child = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("child"));
 
 		repo.attachChildNodeLast(root, parent1);
 		repo.attachChildNodeLast(root, parent2);
@@ -244,26 +245,26 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void mixedAttachOperations_maintainsCorrectOrder() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
-		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
-		PlanNodeID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
-		PlanNodeID child4 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child4"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		UUID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		UUID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
+		UUID child4 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child4"));
 
 		repo.attachChildNodeLast(root, child1);
 		repo.attachChildNodeFirst(root, child2);
 		repo.attachChildNodeLast(root, child3);
 		repo.attachChildNodeFirst(root, child4);
 
-		List<PlanNodeID> children = repo.getNodeChildren(root).toList();
+		List<UUID> children = repo.getNodeChildren(root).toList();
 		assertThat(children).containsExactly(child4, child2, child1, child3);
 	}
 
 	@Test
 	void deleteNodeWithChildren_cascadesDeletion() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
-		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		UUID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
 
 		repo.attachChildNodeLast(root, child1);
 		repo.attachChildNodeLast(root, child2);
@@ -277,9 +278,9 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void deleteNodeWithMultipleParents_doesNotDeleteSharedNode() {
-		PlanNodeID root1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root1"));
-		PlanNodeID root2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root2"));
-		PlanNodeID sharedChild = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("sharedChild"));
+		UUID root1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root1"));
+		UUID root2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root2"));
+		UUID sharedChild = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("sharedChild"));
 
 		repo.attachChildNodeLast(root1, sharedChild);
 		repo.attachChildNodeLast(root2, sharedChild);
@@ -293,11 +294,11 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void countNodeChildren_returnsCorrectCount() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
 		assertThat(repo.countNodeChildren(root)).isZero();
 
-		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
-		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		UUID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		UUID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
 		repo.attachChildNodeLast(root, child1);
 		repo.attachChildNodeLast(root, child2);
 
@@ -306,28 +307,28 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void getNodeDescendants_returnsAllDescendants() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
-		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		UUID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
 
 		repo.attachChildNodeLast(root, child);
 		repo.attachChildNodeLast(child, grandchild);
 
-		List<PlanNodeID> descendants = repo.getNodeDescendants(root).toList();
+		List<UUID> descendants = repo.getNodeDescendants(root).toList();
 		assertThat(descendants).containsExactlyInAnyOrder(child, grandchild);
 	}
 
 	@Test
 	void getNodeDescendants_emptyForLeafNode() {
-		PlanNodeID leaf = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("leaf"));
+		UUID leaf = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("leaf"));
 		assertThat(repo.getNodeDescendants(leaf).toList()).isEmpty();
 	}
 
 	@Test
 	void countNodeDescendants_returnsCorrectCount() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
-		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		UUID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
 
 		repo.attachChildNodeLast(root, child);
 		repo.attachChildNodeLast(child, grandchild);
@@ -339,20 +340,20 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void getNodeAncestors_returnsAllAncestors() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
-		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		UUID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
 
 		repo.attachChildNodeLast(root, child);
 		repo.attachChildNodeLast(child, grandchild);
 
-		List<PlanNodeID> ancestors = repo.getNodeAncestors(grandchild).toList();
+		List<UUID> ancestors = repo.getNodeAncestors(grandchild).toList();
 		assertThat(ancestors).containsExactlyInAnyOrder(child, root);
 	}
 
 	@Test
 	void getNodeAncestors_emptyForRootNode() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
 		assertThat(repo.getNodeAncestors(root).toList()).isEmpty();
 	}
 
@@ -362,7 +363,7 @@ abstract class AbstractRepositoryTest {
 			.nodeType(NodeType.TEST_CASE)
 			.name("tagged")
 			.tags(new HashSet<>(Set.of("smoke", "regression")));
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 
 		assertThat(repo.existsNodeTag(id, "smoke")).isTrue();
 		assertThat(repo.existsNodeTag(id, "regression")).isTrue();
@@ -375,7 +376,7 @@ abstract class AbstractRepositoryTest {
 			.nodeType(NodeType.TEST_CASE)
 			.name("with props")
 			.properties(new TreeMap<>(Map.of("priority", "high", "author", "tester")));
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 
 		assertThat(repo.existsNodeProperty(id, "priority", "high")).isTrue();
 		assertThat(repo.existsNodeProperty(id, "priority", "low")).isFalse();
@@ -389,7 +390,7 @@ abstract class AbstractRepositoryTest {
 			.nodeType(NodeType.TEST_CASE)
 			.name("with props")
 			.properties(new TreeMap<>(Map.of("priority", "high")));
-		PlanNodeID id = repo.persistNode(node);
+		UUID id = repo.persistNode(node);
 
 		assertThat(repo.getNodeProperty(id, "priority")).contains("high");
 		assertThat(repo.getNodeProperty(id, "missing")).isEmpty();
@@ -402,7 +403,7 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case2"));
 		repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("step"));
 
-		List<PlanNodeID> results = repo.searchNodes(
+		List<UUID> results = repo.searchNodes(
 			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
 		).toList();
 		assertThat(results).hasSize(2);
@@ -416,7 +417,7 @@ abstract class AbstractRepositoryTest {
 		repo.persistNode(tagged);
 		repo.persistNode(untagged);
 
-		List<PlanNodeID> results = repo.searchNodes(
+		List<UUID> results = repo.searchNodes(
 			PlanNodeCriteria.withTag("smoke")
 		).toList();
 		assertThat(results).hasSize(1);
@@ -452,19 +453,19 @@ abstract class AbstractRepositoryTest {
 			.tags(new HashSet<>(Set.of("smoke"))));
 		repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("case2"));
 
-		List<PlanNodeID> andResult = repo.searchNodes(PlanNodeCriteria.and(
+		List<UUID> andResult = repo.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
 			PlanNodeCriteria.withTag("smoke")
 		)).toList();
 		assertThat(andResult).hasSize(1);
 
-		List<PlanNodeID> orResult = repo.searchNodes(PlanNodeCriteria.or(
+		List<UUID> orResult = repo.searchNodes(PlanNodeCriteria.or(
 			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
 			PlanNodeCriteria.withNodeType(NodeType.STEP)
 		)).toList();
 		assertThat(orResult).hasSize(3);
 
-		List<PlanNodeID> notResult = repo.searchNodes(PlanNodeCriteria.not(
+		List<UUID> notResult = repo.searchNodes(PlanNodeCriteria.not(
 			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
 		)).toList();
 		assertThat(notResult).hasSize(1);
@@ -493,10 +494,10 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void moveSubtreeBetweenRoots_updatesAllDescendantRootNodes() {
-		PlanNodeID root1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root1"));
-		PlanNodeID root2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root2"));
-		PlanNodeID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
-		PlanNodeID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
+		UUID root1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root1"));
+		UUID root2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root2"));
+		UUID child = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child"));
+		UUID grandchild = repo.persistNode(new PlanNode().nodeType(NodeType.STEP).name("grandchild"));
 
 		repo.attachChildNodeLast(root1, child);
 		repo.attachChildNodeLast(child, grandchild);
@@ -512,10 +513,10 @@ abstract class AbstractRepositoryTest {
 
 	@Test
 	void reattachNodeToSameParent_maintainsOrder() {
-		PlanNodeID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
-		PlanNodeID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
-		PlanNodeID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
-		PlanNodeID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		UUID child1 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child1"));
+		UUID child2 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child2"));
+		UUID child3 = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_CASE).name("child3"));
 
 		repo.attachChildNodeLast(root, child1);
 		repo.attachChildNodeLast(root, child2);
@@ -524,7 +525,7 @@ abstract class AbstractRepositoryTest {
 		repo.detachChildNode(root, child2);
 		repo.attachChildNodeLast(root, child2);
 
-		List<PlanNodeID> children = repo.getNodeChildren(root).toList();
+		List<UUID> children = repo.getNodeChildren(root).toList();
 		assertThat(children).containsExactly(child1, child3, child2);
 	}
 

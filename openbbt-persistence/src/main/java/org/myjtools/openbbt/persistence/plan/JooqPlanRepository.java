@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.persistence.plan;
 
+import java.util.UUID;
 import com.github.f4b6a3.ulid.UlidCreator;
 import org.jooq.*;
 import org.jooq.Record;
@@ -61,7 +62,7 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	public Optional<PlanNode> getNodeData(PlanNodeID id) {
+	public Optional<PlanNode> getNodeData(UUID id) {
 		return dsl.select(
 				FIELD_NODE_ID, FIELD_PARENT_NODE, FIELD_NODE_POSITION,
 				FIELD_TYPE, FIELD_NAME, FIELD_IDENTIFIER, FIELD_LANGUAGE, FIELD_SOURCE,
@@ -69,119 +70,119 @@ public class JooqPlanRepository implements PlanRepository {
 				FIELD_DOCUMENT, FIELD_DOCUMENT_MIME_TYPE
 			)
 			.from(TABLE_PLAN_NODE)
-			.where(FIELD_NODE_ID.eq(id.UUID()))
+			.where(FIELD_NODE_ID.eq(id))
 			.fetchOptional()
 			.map(this::mapPlanNode);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> void updateNodeField(PlanNodeID id, String fieldName, T fieldValue) {
+	public <T> void updateNodeField(UUID id, String fieldName, T fieldValue) {
 		Field<T> field = (Field<T>) resolveField(fieldName);
 		dsl.update(TABLE_PLAN_NODE)
 		   .set(field, fieldValue)
-		   .where(FIELD_NODE_ID.eq(id.UUID()))
+		   .where(FIELD_NODE_ID.eq(id))
 		   .execute();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Optional<T> getNodeField(PlanNodeID id, String fieldName) {
+	public <T> Optional<T> getNodeField(UUID id, String fieldName) {
 		Field<T> field = (Field<T>) resolveField(fieldName);
 		return dsl.select(field)
 		   .from(TABLE_PLAN_NODE)
-		   .where(FIELD_NODE_ID.eq(id.UUID()))
+		   .where(FIELD_NODE_ID.eq(id))
 		   .fetchOptional(field);
 	}
 
 
 
-	public boolean existsNode(PlanNodeID id) {
+	public boolean existsNode(UUID id) {
 		return dsl.fetchExists(
 			dsl.selectOne()
 			   .from(TABLE_PLAN_NODE)
-			   .where(FIELD_NODE_ID.eq(id.UUID()))
+			   .where(FIELD_NODE_ID.eq(id))
 		);
 	}
 
 
-	public Optional<PlanNodeID> getParentNode(PlanNodeID id) {
+	public Optional<UUID> getParentNode(UUID id) {
 		assertExistsNode(id);
 		return dsl.select(FIELD_PARENT_NODE)
 			.from(TABLE_PLAN_NODE)
-			.where(FIELD_NODE_ID.eq(id.UUID()))
+			.where(FIELD_NODE_ID.eq(id))
 			.fetchOptional()
 			.map(record1 -> record1.get(FIELD_PARENT_NODE))
-			.map(PlanNodeID::new);
+			;
 	}
 
 
-	public void deleteNode(PlanNodeID id) {
+	public void deleteNode(UUID id) {
 		// first detach from parent if exists
 		getParentNode(id).ifPresent(parent -> detachChildNode(parent, id));
 		// delete node (cascade should handle hierarchy, tags, properties)
 		dsl.deleteFrom(TABLE_PLAN_NODE)
-		   .where(FIELD_NODE_ID.eq(id.UUID()))
+		   .where(FIELD_NODE_ID.eq(id))
 		   .execute();
 	}
 
 
-	public void attachChildNodeLast(PlanNodeID parent, PlanNodeID child) {
+	public void attachChildNodeLast(UUID parent, UUID child) {
 		assertExistsNode(parent);
 		assertExistsNode(child);
 		dsl.update(TABLE_PLAN_NODE)
-		   .set(FIELD_PARENT_NODE, parent.UUID())
+		   .set(FIELD_PARENT_NODE, parent)
 		   .set(FIELD_NODE_POSITION, maxNodePosition(parent) + 1)
-		   .where(FIELD_NODE_ID.eq(child.UUID()))
+		   .where(FIELD_NODE_ID.eq(child))
 		   .execute();
 	}
 
 
-	public void attachChildNodeFirst(PlanNodeID parent, PlanNodeID child) {
+	public void attachChildNodeFirst(UUID parent, UUID child) {
 		assertExistsNode(parent);
 		assertExistsNode(child);
 		// increment position of existing child nodes
 		dsl.update(TABLE_PLAN_NODE)
 			.set(FIELD_NODE_POSITION, FIELD_NODE_POSITION.add(1))
-			.where(FIELD_PARENT_NODE.eq(parent.UUID()))
+			.where(FIELD_PARENT_NODE.eq(parent))
 			.execute();
 		// set child node as first
 		dsl.update(TABLE_PLAN_NODE)
-			.set(FIELD_PARENT_NODE, parent.UUID())
+			.set(FIELD_PARENT_NODE, parent)
 			.set(FIELD_NODE_POSITION, 1)
-			.where(FIELD_NODE_ID.eq(child.UUID()))
+			.where(FIELD_NODE_ID.eq(child))
 			.execute();
 	}
 
 
-	public void detachChildNode(PlanNodeID parent, PlanNodeID child) {
+	public void detachChildNode(UUID parent, UUID child) {
 		assertExistsNode(parent);
 		assertExistsNode(child);
 		dsl.update(TABLE_PLAN_NODE)
 			.set(FIELD_PARENT_NODE, (UUID) null)
-			.where(FIELD_NODE_ID.eq(child.UUID()))
+			.where(FIELD_NODE_ID.eq(child))
 			.execute();
 	}
 
 
 
 
-	public Stream<PlanNodeID> getNodeChildren(PlanNodeID id) {
+	public Stream<UUID> getNodeChildren(UUID id) {
 		assertExistsNode(id);
 		return dsl.select(FIELD_NODE_ID)
 			.from(TABLE_PLAN_NODE)
-			.where(FIELD_PARENT_NODE.eq(id.UUID()))
+			.where(FIELD_PARENT_NODE.eq(id))
 			.orderBy(FIELD_NODE_POSITION)
 			.fetch().stream()
-			.map(record1 -> mapPlanNodeID(record1, FIELD_NODE_ID));
+			.map(record1 -> mapUUID(record1, FIELD_NODE_ID));
 	}
 
 
-	public int countNodeChildren(PlanNodeID id) {
+	public int countNodeChildren(UUID id) {
 		assertExistsNode(id);
 		Integer count = dsl.selectCount()
 			.from(TABLE_PLAN_NODE)
-			.where(FIELD_PARENT_NODE.eq(id.UUID()))
+			.where(FIELD_PARENT_NODE.eq(id))
 			.fetchOne(0, int.class);
 		return count != null ? count : 0;
 	}
@@ -192,12 +193,12 @@ public class JooqPlanRepository implements PlanRepository {
 	private static final Field<UUID> CTE_NID = DSL.field(DSL.unquotedName("nid"), UUID.class);
 	private static final Field<UUID> CTE_PID = DSL.field(DSL.unquotedName("pid"), UUID.class);
 
-	public Stream<PlanNodeID> getNodeDescendants(PlanNodeID id) {
+	public Stream<UUID> getNodeDescendants(UUID id) {
 		assertExistsNode(id);
 		return dsl.withRecursive(DSL.unquotedName("descendants"), DSL.unquotedName("nid")).as(
 			   DSL.select(FIELD_NODE_ID)
 				   .from(TABLE_PLAN_NODE)
-				   .where(FIELD_PARENT_NODE.eq(id.UUID()))
+				   .where(FIELD_PARENT_NODE.eq(id))
 			   .unionAll(
 				   DSL.select(FIELD_NODE_ID)
 					   .from(TABLE_PLAN_NODE)
@@ -208,16 +209,16 @@ public class JooqPlanRepository implements PlanRepository {
 		   .select(CTE_NID)
 		   .from(CTE_DESC)
 		   .fetch().stream()
-		   .map(rec -> new PlanNodeID(rec.get(CTE_NID)));
+		   .map(rec -> rec.get(CTE_NID));
 	}
 
 
-	public int countNodeDescendants(PlanNodeID id) {
+	public int countNodeDescendants(UUID id) {
 		assertExistsNode(id);
 		Integer count = dsl.withRecursive(DSL.unquotedName("descendants"), DSL.unquotedName("nid")).as(
 			   DSL.select(FIELD_NODE_ID)
 				   .from(TABLE_PLAN_NODE)
-				   .where(FIELD_PARENT_NODE.eq(id.UUID()))
+				   .where(FIELD_PARENT_NODE.eq(id))
 			   .unionAll(
 				   DSL.select(FIELD_NODE_ID)
 					   .from(TABLE_PLAN_NODE)
@@ -232,12 +233,12 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	public int countNodeAncestors(PlanNodeID id) {
+	public int countNodeAncestors(UUID id) {
 		assertExistsNode(id);
 		Integer count = dsl.withRecursive(DSL.unquotedName("ancestors"), DSL.unquotedName("pid")).as(
 			   DSL.select(FIELD_PARENT_NODE)
 				   .from(TABLE_PLAN_NODE)
-				   .where(FIELD_NODE_ID.eq(id.UUID()))
+				   .where(FIELD_NODE_ID.eq(id))
 			   .unionAll(
 				   DSL.select(FIELD_PARENT_NODE)
 					   .from(TABLE_PLAN_NODE)
@@ -253,12 +254,12 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	public Stream<PlanNodeID> getNodeAncestors(PlanNodeID id) {
+	public Stream<UUID> getNodeAncestors(UUID id) {
 		assertExistsNode(id);
 		return dsl.withRecursive(DSL.unquotedName("ancestors"), DSL.unquotedName("pid")).as(
 			   DSL.select(FIELD_PARENT_NODE)
 				   .from(TABLE_PLAN_NODE)
-				   .where(FIELD_NODE_ID.eq(id.UUID()))
+				   .where(FIELD_NODE_ID.eq(id))
 			   .unionAll(
 				   DSL.select(FIELD_PARENT_NODE)
 					   .from(TABLE_PLAN_NODE)
@@ -270,19 +271,19 @@ public class JooqPlanRepository implements PlanRepository {
 		   .from(CTE_ANCS)
 		   .where(CTE_PID.isNotNull())
 		   .fetch().stream()
-		   .map(rec -> new PlanNodeID(rec.get(CTE_PID)));
+		   .map(rec -> rec.get(CTE_PID));
 	}
 
 
-	public PlanNodeID persistNode(PlanNode node) {
+	public UUID persistNode(PlanNode node) {
 		boolean isUpdate = node.nodeID() != null;
-		PlanNodeID id;
+		UUID id;
 		if (isUpdate) {
 			id = node.nodeID();
 			assertExistsNode(id);
 			updateNode(node);
 		} else {
-			id = generatePlanNodeID();
+			id = generateUUID();
 			node.nodeID(id);
 			insertNode(node);
 		}
@@ -294,7 +295,7 @@ public class JooqPlanRepository implements PlanRepository {
 
 	private void insertNode(PlanNode node) {
 		dsl.insertInto(TABLE_PLAN_NODE)
-		   .set(FIELD_NODE_ID, node.nodeID().UUID())
+		   .set(FIELD_NODE_ID, node.nodeID())
 		   .set(FIELD_PARENT_NODE, (UUID) null)
 		   .set(FIELD_NODE_POSITION, 1)
 		   .set(FIELD_TYPE, node.nodeType() != null ? node.nodeType().value : null)
@@ -325,14 +326,14 @@ public class JooqPlanRepository implements PlanRepository {
 		   .set(FIELD_DATA_TABLE, node.dataTable() != null ? node.dataTable().toString() : null)
 		   .set(FIELD_DOCUMENT, node.document() != null ? node.document().content() : null)
 		   .set(FIELD_DOCUMENT_MIME_TYPE, node.document() != null ? node.document().mimeType() : null)
-		   .where(FIELD_NODE_ID.eq(node.nodeID().UUID()))
+		   .where(FIELD_NODE_ID.eq(node.nodeID()))
 		   .execute();
 	}
 
 
-	private void syncTags(PlanNodeID id, Set<String> tags) {
+	private void syncTags(UUID id, Set<String> tags) {
 		dsl.deleteFrom(TABLE_PLAN_NODE_TAG)
-		   .where(FIELD_PLAN_NODE.eq(id.UUID()))
+		   .where(FIELD_PLAN_NODE.eq(id))
 		   .execute();
 
 		if (tags == null || tags.isEmpty()) {
@@ -341,14 +342,14 @@ public class JooqPlanRepository implements PlanRepository {
 		var batch = dsl.batch(
 			dsl.insertInto(TABLE_PLAN_NODE_TAG, FIELD_PLAN_NODE, FIELD_TAG).values((UUID) null, (String) null)
 		);
-		tags.forEach(tag -> batch.bind(id.UUID(), tag));
+		tags.forEach(tag -> batch.bind(id, tag));
 		batch.execute();
 	}
 
 
-	private void syncProperties(PlanNodeID id, SortedMap<String, String> properties) {
+	private void syncProperties(UUID id, SortedMap<String, String> properties) {
 		dsl.deleteFrom(TABLE_PLAN_NODE_PROPERTY)
-		   .where(FIELD_PLAN_NODE.eq(id.UUID()))
+		   .where(FIELD_PLAN_NODE.eq(id))
 		   .execute();
 		if (properties == null || properties.isEmpty()) {
 			return;
@@ -358,19 +359,19 @@ public class JooqPlanRepository implements PlanRepository {
 			   .values((UUID) null, (String) null, (String) null)
 		);
 		for (var entry : properties.entrySet()) {
-			batch.bind(id.UUID(), entry.getKey(), entry.getValue());
+			batch.bind(id, entry.getKey(), entry.getValue());
 		}
 		batch.execute();
 	}
 
 
 	@Override
-	public Stream<PlanNodeID> searchNodes(PlanNodeCriteria criteria) {
+	public Stream<UUID> searchNodes(PlanNodeCriteria criteria) {
 		Condition condition = buildCondition(criteria);
 		return dsl.select(FIELD_NODE_ID).from(TABLE_PLAN_NODE)
 			.where(condition)
 			.fetch().stream()
-			.map(rec1 -> mapPlanNodeID(rec1, FIELD_NODE_ID));
+			.map(rec1 -> mapUUID(rec1, FIELD_NODE_ID));
 	}
 
 
@@ -385,45 +386,45 @@ public class JooqPlanRepository implements PlanRepository {
 
 
 	@Override
-	public boolean existsNodeTag(PlanNodeID nodeID, String tag) {
+	public boolean existsNodeTag(UUID nodeID, String tag) {
 		return dsl.fetchExists(
 			dsl.selectOne()
 			   .from(TABLE_PLAN_NODE_TAG)
-			   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			   .where(FIELD_PLAN_NODE.eq(nodeID))
 			   .and(FIELD_TAG.eq(tag))
 		);
 	}
 
 	@Override
-	public void addNodeTag(PlanNodeID nodeID, String tag) {
+	public void addNodeTag(UUID nodeID, String tag) {
 		dsl.insertInto(TABLE_PLAN_NODE_TAG)
-		   .set(FIELD_PLAN_NODE, nodeID.UUID())
+		   .set(FIELD_PLAN_NODE, nodeID)
 		   .set(FIELD_TAG, tag)
 		   .execute();
 	}
 
 	@Override
-	public void removeNodeTag(PlanNodeID nodeID, String tag) {
+	public void removeNodeTag(UUID nodeID, String tag) {
 		dsl.deleteFrom(TABLE_PLAN_NODE_TAG)
-		   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+		   .where(FIELD_PLAN_NODE.eq(nodeID))
 		   .and(FIELD_TAG.eq(tag))
 		   .execute();
 	}
 
-	public List<String> getNodeTags(PlanNodeID nodeID) {
+	public List<String> getNodeTags(UUID nodeID) {
 		return dsl.select(FIELD_TAG)
 		   .from(TABLE_PLAN_NODE_TAG)
-		   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+		   .where(FIELD_PLAN_NODE.eq(nodeID))
 		   .fetch().stream()
 		   .map(rec -> rec.get(FIELD_TAG)).toList();
 	}
 
 	@Override
-	public boolean existsNodeProperty(PlanNodeID nodeID, String propertyKey, String propertyValue) {
+	public boolean existsNodeProperty(UUID nodeID, String propertyKey, String propertyValue) {
 		return dsl.fetchExists(
 			dsl.selectOne()
 			   .from(TABLE_PLAN_NODE_PROPERTY)
-			   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			   .where(FIELD_PLAN_NODE.eq(nodeID))
 			   .and(FIELD_KEY.eq(propertyKey))
 			   .and(propertyValue != null ? FIELD_VALUE.eq(propertyValue) : DSL.trueCondition())
 		);
@@ -431,36 +432,36 @@ public class JooqPlanRepository implements PlanRepository {
 
 
 	@Override
-	public void addNodeProperty(PlanNodeID nodeID, String propertyKey, String propertyValue) {
+	public void addNodeProperty(UUID nodeID, String propertyKey, String propertyValue) {
 		dsl.insertInto(TABLE_PLAN_NODE_PROPERTY)
-		   .set(FIELD_PLAN_NODE, nodeID.UUID())
+		   .set(FIELD_PLAN_NODE, nodeID)
 		   .set(FIELD_KEY, propertyKey)
 		   .set(FIELD_VALUE, propertyValue)
 		   .execute();
 	}
 
 	@Override
-	public void removeNodeProperty(PlanNodeID nodeID, String propertyKey) {
+	public void removeNodeProperty(UUID nodeID, String propertyKey) {
 		dsl.deleteFrom(TABLE_PLAN_NODE_PROPERTY)
-		   .where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+		   .where(FIELD_PLAN_NODE.eq(nodeID))
 		   .and(FIELD_KEY.eq(propertyKey))
 		   .execute();
 	}
 
 	@Override
-	public Optional<String> getNodeProperty(PlanNodeID nodeID, String propertyKey) {
+	public Optional<String> getNodeProperty(UUID nodeID, String propertyKey) {
 		return dsl.select(FIELD_VALUE)
 			.from(TABLE_PLAN_NODE_PROPERTY)
-			.where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			.where(FIELD_PLAN_NODE.eq(nodeID))
 			.and(FIELD_KEY.eq(propertyKey))
 			.fetchOptional(FIELD_VALUE);
 	}
 
 
-	public Map<String, String> getNodeProperties(PlanNodeID nodeID) {
+	public Map<String, String> getNodeProperties(UUID nodeID) {
 		return dsl.select(FIELD_KEY, FIELD_VALUE)
 			.from(TABLE_PLAN_NODE_PROPERTY)
-			.where(FIELD_PLAN_NODE.eq(nodeID.UUID()))
+			.where(FIELD_PLAN_NODE.eq(nodeID))
 			.fetch().stream()
 			.collect(Collectors.toMap(
 				rec -> rec.get(FIELD_KEY),
@@ -497,10 +498,10 @@ public class JooqPlanRepository implements PlanRepository {
 			case PlanNodeCriteria.HasValuedFieldCriteria(String field) ->
 				resolveField(field).isNotNull();
 
-			case PlanNodeCriteria.IsDescendantCriteria(PlanNodeID parent, int depth) ->
+			case PlanNodeCriteria.IsDescendantCriteria(UUID parent, int depth) ->
 				buildDescendantCondition(parent, depth);
 
-			case PlanNodeCriteria.IsAscendantCriteria(PlanNodeID child, int depth) ->
+			case PlanNodeCriteria.IsAscendantCriteria(UUID child, int depth) ->
 				buildAscendantCondition(child, depth);
 
 			case PlanNodeCriteria.AndCriteria(PlanNodeCriteria[] conditions) -> {
@@ -547,10 +548,10 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private Condition buildDescendantCondition(PlanNodeID parent, int depth) {
+	private Condition buildDescendantCondition(UUID parent, int depth) {
 		if (depth == 1) {
 			// Direct children only
-			return FIELD_PARENT_NODE.eq(parent.UUID());
+			return FIELD_PARENT_NODE.eq(parent);
 		} else {
 			// All descendants (depth == -1) or up to certain depth
 			var descendants = DSL.unquotedName("descendants");
@@ -561,7 +562,7 @@ public class JooqPlanRepository implements PlanRepository {
 				DSL.withRecursive(descendants, DSL.unquotedName("node_id"), DSL.unquotedName("depth")).as(
 					DSL.select(FIELD_NODE_ID, DSL.inline(1))
 						.from(TABLE_PLAN_NODE)
-						.where(FIELD_PARENT_NODE.eq(parent.UUID()))
+						.where(FIELD_PARENT_NODE.eq(parent))
 					.unionAll(
 						DSL.select(FIELD_NODE_ID, dDepth.add(1))
 							.from(TABLE_PLAN_NODE)
@@ -577,13 +578,13 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private Condition buildAscendantCondition(PlanNodeID child, int depth) {
+	private Condition buildAscendantCondition(UUID child, int depth) {
 		if (depth == 1) {
 			// Direct parent only
 			return FIELD_NODE_ID.in(
 				DSL.select(FIELD_PARENT_NODE)
 					.from(TABLE_PLAN_NODE)
-					.where(FIELD_NODE_ID.eq(child.UUID()))
+					.where(FIELD_NODE_ID.eq(child))
 			);
 		} else {
 			// All ancestors (depth == -1) or up to certain depth
@@ -591,7 +592,7 @@ public class JooqPlanRepository implements PlanRepository {
 				DSL.withRecursive("ancestors", "node_id", "depth").as(
 					DSL.select(FIELD_PARENT_NODE, DSL.inline(1))
 						.from(TABLE_PLAN_NODE)
-						.where(FIELD_NODE_ID.eq(child.UUID()))
+						.where(FIELD_NODE_ID.eq(child))
 						.and(FIELD_PARENT_NODE.isNotNull())
 					.unionAll(
 						DSL.select(TABLE_PLAN_NODE.field(FIELD_PARENT_NODE), DSL.field("ancestors.depth", Integer.class).add(1))
@@ -609,14 +610,14 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private PlanNodeID mapPlanNodeID(Record1<UUID> record1, Field<UUID> field) {
-		return new PlanNodeID(record1.get(field));
+	private UUID mapUUID(Record1<UUID> record1, Field<UUID> field) {
+		return record1.get(field);
 	}
 
 
 	private PlanNode mapPlanNode(Record rec) {
 		PlanNode node = new PlanNode();
-		node.nodeID(new PlanNodeID(rec.get(FIELD_NODE_ID)));
+		node.nodeID(rec.get(FIELD_NODE_ID));
 		Integer typeValue = rec.get(FIELD_TYPE);
 		if (typeValue != null) {
 			node.nodeType(NodeType.of(typeValue));
@@ -645,14 +646,14 @@ public class JooqPlanRepository implements PlanRepository {
 		// fill tags
 		Set<String> tags = new HashSet<>(dsl.select(FIELD_TAG)
             .from(TABLE_PLAN_NODE_TAG)
-            .where(FIELD_PLAN_NODE.eq(planNode.nodeID().UUID()))
+            .where(FIELD_PLAN_NODE.eq(planNode.nodeID()))
             .fetch(FIELD_TAG));
 		planNode.tags(tags);
 		// fill properties
 		SortedMap<String, String> props = new TreeMap<>();
 		dsl.select(FIELD_KEY, FIELD_VALUE)
             .from(TABLE_PLAN_NODE_PROPERTY)
-            .where(FIELD_PLAN_NODE.eq(planNode.nodeID().UUID()))
+            .where(FIELD_PLAN_NODE.eq(planNode.nodeID()))
             .fetch()
             .forEach(rec -> props.put(rec.get(FIELD_KEY), rec.get(FIELD_VALUE)));
 		planNode.properties(props);
@@ -661,16 +662,16 @@ public class JooqPlanRepository implements PlanRepository {
 
 
 
-	private Integer maxNodePosition(PlanNodeID planNodeID) {
+	private Integer maxNodePosition(UUID planNodeID) {
 		Integer maxPosition = dsl.select(DSL.max(FIELD_NODE_POSITION))
 			.from(TABLE_PLAN_NODE)
-			.where(FIELD_PARENT_NODE.eq(planNodeID.UUID()))
+			.where(FIELD_PARENT_NODE.eq(planNodeID))
 			.fetchOne(DSL.max(FIELD_NODE_POSITION));
 		return maxPosition != null ? maxPosition : 0;
 	}
 
 
-	private void assertExistsNode(PlanNodeID id) {
+	private void assertExistsNode(UUID id) {
 		if (id == null) {
 			throw new OpenBBTException("Plan node ID is null!");
 		}
@@ -680,8 +681,8 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private PlanNodeID generatePlanNodeID() {
-		return new PlanNodeID(UlidCreator.getUlid().toUuid());
+	private UUID generateUUID() {
+		return UlidCreator.getUlid().toUuid();
 	}
 
 }

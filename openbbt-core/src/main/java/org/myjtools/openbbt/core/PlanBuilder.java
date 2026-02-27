@@ -1,10 +1,10 @@
 package org.myjtools.openbbt.core;
 
+import java.util.UUID;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.plan.NodeType;
 import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.Plan;
 import org.myjtools.openbbt.core.plan.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
@@ -43,14 +43,14 @@ public class PlanBuilder {
 	/*
 	 * Assembles the test plan for the given context by invoking all registered SuiteAssemblers.
 	 */
-	private Optional<PlanNodeID> assembleTestPlanNodes(OpenBBTContext context) {
+	private Optional<UUID> assembleTestPlanNodes(OpenBBTContext context) {
 		PlanRepository planNodeRepository = contextManager.getRepository(PlanRepository.class);
 		List<SuiteAssembler> assemblers = contextManager.getExtensions(SuiteAssembler.class).toList();
 		if (assemblers.isEmpty()) {
 			log.warn("No SuiteAssembler found, cannot assemble test plan");
 			return Optional.empty();
 		}
-		List<PlanNodeID> nodes = new ArrayList<>();
+		List<UUID> nodes = new ArrayList<>();
 		for (String suiteName : context.testSuites()) {
 			TestSuite testSuite = context.testSuite(suiteName).orElseThrow(
 					() -> new OpenBBTException("Test suite not found in project: {}", suiteName)
@@ -66,7 +66,7 @@ public class PlanBuilder {
 		PlanNode root = new PlanNode(NodeType.TEST_PLAN);
 		root.name("Test Plan");
 		var rootID = planNodeRepository.persistNode(root);
-		for (PlanNodeID nodeId : nodes) {
+		for (UUID nodeId : nodes) {
 			planNodeRepository.attachChildNodeLast(rootID, nodeId);
 		}
 		return Optional.ofNullable(rootID);

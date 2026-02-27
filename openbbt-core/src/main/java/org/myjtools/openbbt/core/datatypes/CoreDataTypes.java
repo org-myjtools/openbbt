@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.core.datatypes;
 
 
+import java.util.UUID;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.DataType;

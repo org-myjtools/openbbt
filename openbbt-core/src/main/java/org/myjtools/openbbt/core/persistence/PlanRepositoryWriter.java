@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core.persistence;
 
+import java.util.UUID;
 import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import java.io.IOException;
 
 public class PlanRepositoryWriter {
@@ -16,11 +16,11 @@ public class PlanRepositoryWriter {
 		this.repository = repository;
 	}
 
-	public void write(PlanNodeID rootNodeID, Appender appender) throws IOException {
+	public void write(UUID rootNodeID, Appender appender) throws IOException {
 		write(rootNodeID,appender,0);
 	}
 
-	private void write(PlanNodeID nodeID, Appender appender, int indent) throws IOException {
+	private void write(UUID nodeID, Appender appender, int indent) throws IOException {
 		PlanNode node = repository.getNodeData(nodeID).orElseThrow();
 		appender.append("  ".repeat(indent));
 		appender.append("[");
@@ -33,7 +33,7 @@ public class PlanRepositoryWriter {
 		}
 		appender.append(node.toString());
 		appender.append("\n");
-		for (PlanNodeID childID : repository.getNodeChildren(nodeID).toList()) {
+		for (UUID childID : repository.getNodeChildren(nodeID).toList()) {
 			write(childID,appender,indent+1);
 		}
 	}

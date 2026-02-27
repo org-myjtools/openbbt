@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.core.plan;
 
 
+import java.util.UUID;
 import lombok.*;
 import java.util.*;
 
@@ -10,7 +11,7 @@ import java.util.*;
 @Getter @Setter @NoArgsConstructor @EqualsAndHashCode
 public class PlanNode {
 
-	private PlanNodeID nodeID;
+	private UUID nodeID;
 	private NodeType nodeType;
 	private String name;
 	private String language;

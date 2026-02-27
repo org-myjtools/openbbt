@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.core.plan;
 
+import java.util.UUID;
 import java.time.Instant;
 
 public record Plan(
@@ -7,7 +8,7 @@ public record Plan(
 	Instant createdAt,
 	String resourceSetHash,
 	String configurationHash,
-	PlanNodeID planNodeRoot
+	UUID planNodeRoot
 ) {
 
 }

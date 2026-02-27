@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core.persistence;
 
+import java.util.UUID;
 import org.myjtools.openbbt.core.plan.NodeType;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import java.util.Objects;
 
 
@@ -24,9 +24,9 @@ public sealed interface PlanNodeCriteria {
 
 	record HasValuedFieldCriteria(String field) implements PlanNodeCriteria {}
 
-	record IsDescendantCriteria(PlanNodeID parent, int depth) implements PlanNodeCriteria {}
+	record IsDescendantCriteria(UUID parent, int depth) implements PlanNodeCriteria {}
 
-	record IsAscendantCriteria(PlanNodeID parent, int depth) implements PlanNodeCriteria {}
+	record IsAscendantCriteria(UUID parent, int depth) implements PlanNodeCriteria {}
 
 	record AndCriteria(PlanNodeCriteria... conditions) implements PlanNodeCriteria {}
 
@@ -59,27 +59,27 @@ public sealed interface PlanNodeCriteria {
 		return new HasValuedFieldCriteria(field);
 	}
 
-	static PlanNodeCriteria childOf(PlanNodeID parent) {
+	static PlanNodeCriteria childOf(UUID parent) {
 		return new IsDescendantCriteria(parent,1);
 	}
 
-	static PlanNodeCriteria descendantOf(PlanNodeID parent) {
+	static PlanNodeCriteria descendantOf(UUID parent) {
 		return new IsDescendantCriteria(parent,-1);
 	}
 
-	static PlanNodeCriteria descendantOf(PlanNodeID parent, int depth) {
+	static PlanNodeCriteria descendantOf(UUID parent, int depth) {
 		return new IsDescendantCriteria(parent,depth);
 	}
 
-	static PlanNodeCriteria parentOf(PlanNodeID child) {
+	static PlanNodeCriteria parentOf(UUID child) {
 		return new IsAscendantCriteria(child,1);
 	}
 
-	static PlanNodeCriteria ascendantOf(PlanNodeID child) {
+	static PlanNodeCriteria ascendantOf(UUID child) {
 		return new IsAscendantCriteria(child,-1);
 	}
 
-	static PlanNodeCriteria ascendantOf(PlanNodeID child, int depth) {
+	static PlanNodeCriteria ascendantOf(UUID child, int depth) {
 		return new IsAscendantCriteria(child,depth);
 	}
 

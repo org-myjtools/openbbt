@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.plugins.gherkin;
 
 
+import java.util.UUID;
 import org.myjtools.gherkinparser.GherkinDialectFactory;
 import org.myjtools.gherkinparser.KeywordMapProvider;
 import org.myjtools.gherkinparser.KeywordType;
@@ -53,7 +54,7 @@ public class FeaturePlanAssembler {
 	private final Pattern idTagPattern;
 	private final TagExpression tagExpression;
 	private final PlanRepository repository;
-	private final Map<PlanNodeID, Object> underlyingModels = new HashMap<>();
+	private final Map<UUID, Object> underlyingModels = new HashMap<>();
 
 
 
@@ -98,12 +99,12 @@ public class FeaturePlanAssembler {
 	 * @return the persisted root node ID, or empty if the feature produced no scenarios
 	 *         (e.g. all scenarios were filtered out by the tag expression)
 	 */
-	public Optional<PlanNodeID> createTestPlan() {
+	public Optional<UUID> createTestPlan() {
 		return featureNode();
 	}
 
 
-	private Optional<PlanNodeID> featureNode() {
+	private Optional<UUID> featureNode() {
 
 		var nodeData = new PlanNode(NodeType.TEST_FEATURE)
 			.identifier(idFromTags(feature))
@@ -143,12 +144,12 @@ public class FeaturePlanAssembler {
 
 
 
-	private Optional<PlanNodeID> scenarioNode(Scenario scenario, PlanNodeID parent) {
+	private Optional<UUID> scenarioNode(Scenario scenario, UUID parent) {
 		return scenarioNode(scenario, scenario.name(), idFromTags(scenario), scenario.keyword(), parent);
 	}
 
 
-	private Optional<PlanNodeID> scenarioNode(ScenarioOutline scenarioOutline, int example, PlanNodeID parent) {
+	private Optional<UUID> scenarioNode(ScenarioOutline scenarioOutline, int example, UUID parent) {
 		return scenarioNode(
 			scenarioOutline,
 			"%s [%s]".formatted(scenarioOutline.name(), example),
@@ -159,12 +160,12 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private Optional<PlanNodeID> scenarioNode(
+	private Optional<UUID> scenarioNode(
 		ScenarioDefinition scenarioDefinition,
 		String name,
 		String identifier,
 		String keyword,
-		PlanNodeID parent
+		UUID parent
 	) {
 		boolean include = tagExpression.evaluate(tags(parent, scenarioDefinition));
 		if (!include) {
@@ -195,7 +196,7 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private Optional<PlanNodeID> scenarioOutlineNode(ScenarioOutline scenarioOutline, PlanNodeID parent) {
+	private Optional<UUID> scenarioOutlineNode(ScenarioOutline scenarioOutline, UUID parent) {
 
 		boolean include = tagExpression.evaluate(tags(parent, scenarioOutline));
 		if (!include) {
@@ -226,7 +227,7 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private PlanNodeID stepNode(Step step) {
+	private UUID stepNode(Step step) {
 		var node = new PlanNode(NodeType.STEP)
 			.name(step.text())
 			.language(feature.language())
@@ -251,7 +252,7 @@ public class FeaturePlanAssembler {
 	 *               name is used
 	 * @return the persisted background node ID, or {@code null} if the feature has no background
 	 */
-	public PlanNodeID createBackgroundStepsNode(PlanNodeID parent, String name) {
+	public UUID createBackgroundStepsNode(UUID parent, String name) {
 		if (background == null) {
 			return null;
 		}
@@ -282,10 +283,10 @@ public class FeaturePlanAssembler {
 	 * @param parent          the parent node ID for the generated scenarios
 	 * @return list of persisted scenario node IDs
 	 */
-	public List<PlanNodeID> createScenariosFromExamples(
+	public List<UUID> createScenariosFromExamples(
 		ScenarioOutline scenarioOutline,
 		Examples examples,
-		PlanNodeID parent
+		UUID parent
 	) {
 		return indexMapped(substitutions(examples), (number, substitution) -> {
 			var scenarioID = scenarioNode(scenarioOutline, number+1, parent);
@@ -309,7 +310,7 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private Map<String,String> propertiesFromComments(Commented node, PlanNodeID nodeID) {
+	private Map<String,String> propertiesFromComments(Commented node, UUID nodeID) {
 		SortedMap<String,String> properties = new TreeMap<>(repository.getNodeProperties(nodeID));
 		properties.putAll(propertiesFromComments(node));
 		return properties;
@@ -333,7 +334,7 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private Set<String> tags(PlanNodeID nodeID, Tagged node) {
+	private Set<String> tags(UUID nodeID, Tagged node) {
 		Set<String> result = new HashSet<>(repository.getNodeTags(nodeID));
 		result.addAll(tags(node));
 		return result;
@@ -403,7 +404,7 @@ public class FeaturePlanAssembler {
 	 *
 	 * @return an unmodifiable view would be safer, but currently returns the internal mutable map
 	 */
-	public Map<PlanNodeID,Object> underlyingModels() {
+	public Map<UUID,Object> underlyingModels() {
 		return underlyingModels;
 	}
 

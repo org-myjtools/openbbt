@@ -1,12 +1,12 @@
 package org.myjtools.openbbt.plugins.gherkin.test;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.*;
 import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.persistence.PlanRepositoryWriter;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.TagExpression;
 import org.myjtools.openbbt.core.plan.TestSuite;
 import java.io.IOException;
@@ -22,7 +22,7 @@ class GherkinSuiteAssemblerTest {
 		OpenBBTRuntime cm = new OpenBBTRuntime(Config.ofMap(Map.of(
 			OpenBBTConfig.ENV_PATH, "target/.openbbt",
 			OpenBBTConfig.RESOURCE_PATH, "src/test/resources/test-empty-suite",
-			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_MEMORY
+			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT
 		)));
 		var planAssembler = cm.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
 		TestSuite testSuite = new TestSuite("Test Suite", "Test Suite", TagExpression.EMPTY);
@@ -164,11 +164,11 @@ class GherkinSuiteAssemblerTest {
 		OpenBBTRuntime cm = new OpenBBTRuntime(Config.ofMap(Map.of(
 			OpenBBTConfig.ENV_PATH, "target/.openbbt",
 			OpenBBTConfig.RESOURCE_PATH, path,
-			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_MEMORY
+			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT
 		)));
 		var planAssembler = cm.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
 		TestSuite testSuite = new TestSuite("Test Suite", "Test Suite", TagExpression.EMPTY);
-		PlanNodeID planID = planAssembler.assembleSuite(testSuite).orElseThrow();
+		UUID planID = planAssembler.assembleSuite(testSuite).orElseThrow();
 		PlanRepository repository = cm.getRepository(PlanRepository.class);
 		PlanRepositoryWriter writer = new PlanRepositoryWriter(repository);
 		StringBuilder output = new StringBuilder();

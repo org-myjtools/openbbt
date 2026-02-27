@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core.contributors;
 
+import java.util.UUID;
 import org.myjtools.jexten.ExtensionPoint;
-import org.myjtools.openbbt.core.plan.PlanNodeID;
 import org.myjtools.openbbt.core.plan.TestSuite;
 import java.util.Optional;
 
@@ -13,6 +13,6 @@ import java.util.Optional;
 public interface SuiteAssembler extends Contributor {
 
 
-	Optional<PlanNodeID> assembleSuite(TestSuite testSuite);
+	Optional<UUID> assembleSuite(TestSuite testSuite);
 
 }
