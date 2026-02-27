@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-@Getter @Setter @NoArgsConstructor @EqualsAndHashCode @ToString
+@Getter @Setter @NoArgsConstructor @EqualsAndHashCode
 public class PlanNode {
 
 	private PlanNodeID nodeID;

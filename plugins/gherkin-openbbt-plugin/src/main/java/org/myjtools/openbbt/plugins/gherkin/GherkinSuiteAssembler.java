@@ -185,7 +185,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 	private PlanNodeID assembleStandaloneFeatures(ResourceSet resourceSet, TestSuite testSuite) {
 		log.trace("provideStandaloneFeatures");
-		var id = repository.persistNode(new PlanNode(NodeType.TEST_AGGREGATOR));
+		var id = repository.persistNode(new PlanNode(NodeType.TEST_FEATURE));
 		for (Resource resource : resourceSet) {
 			assembleFeatureNode(
 				keywordMapProvider,
@@ -227,7 +227,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 		PlanNodeID defScenarioOutline = repository.searchNodes(PlanNodeCriteria.and(
 			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withNodeType(NodeType.TEST_AGGREGATOR),
+			PlanNodeCriteria.withNodeType(NodeType.TEST_FEATURE),
 			PlanNodeCriteria.withTag(definitionTag),
 			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE),
 			PlanNodeCriteria.withField("identifier",identifier)

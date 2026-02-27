@@ -14,7 +14,7 @@ public enum NodeType {
 	TEST_SUITE(2),
 
 	/** A test aggregator node, which can contain multiple test cases. */
-	TEST_AGGREGATOR(3),
+	TEST_FEATURE(3),
 
 	/** A test case node, which represents a single test case. */
 	TEST_CASE(4),

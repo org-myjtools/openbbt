@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  *
  * <p>Each Markdown file is parsed according to the following heading convention:</p>
  * <ul>
- *   <li>{@code #} (H1) — feature ({@link NodeType#TEST_AGGREGATOR})</li>
+ *   <li>{@code #} (H1) — feature ({@link NodeType#TEST_FEATURE})</li>
  *   <li>{@code ##} (H2) — test case ({@link NodeType#TEST_CASE})</li>
  *   <li>{@code ###} (H3) — step keyword (e.g. Given / When / Then)</li>
  * </ul>
@@ -112,7 +112,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
             }
 
             // Multiple H1 sections in one file: wrap in a file-level aggregator
-            PlanNode fileNode = new PlanNode(NodeType.TEST_AGGREGATOR)
+            PlanNode fileNode = new PlanNode(NodeType.TEST_FEATURE)
                 .name(resource.relativePath().getFileName().toString())
                 .source(relativePath);
             PlanNodeID fileId = repository.persistNode(fileNode);
@@ -139,7 +139,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
         TagExpression tagExpression
     ) {
         Set<String> featureTags = filterIdTags(feature.tags);
-        PlanNode featureData = new PlanNode(NodeType.TEST_AGGREGATOR)
+        PlanNode featureData = new PlanNode(NodeType.TEST_FEATURE)
             .name(feature.name)
             .identifier(identifierFromTags(feature.tags))
             .display("{name}")

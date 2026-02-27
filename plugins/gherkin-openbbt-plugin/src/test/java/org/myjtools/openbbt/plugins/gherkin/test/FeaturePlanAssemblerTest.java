@@ -29,14 +29,14 @@ class FeaturePlanAssemblerTest {
 		writer.write(testPlan.orElseThrow(), output::append);
 
 		assertThat(output).hasToString("""
-			[TEST_AGGREGATOR] Test 1 - Simple Scenario
+			[TEST_FEATURE] Test 1 - Simple Scenario
 			  [TEST_CASE] (Test1_Scenario1) Test Scenario
 			    [STEP_AGGREGATOR] Background
 			      [STEP] Given the set of real numbers
 			    [STEP] Given a number with value 8.02 and another number with value 9
 			    [STEP] When both numbers are multiplied
 			    [STEP] Then the matchResult is equals to 72.18
-			  [TEST_AGGREGATOR] (Test1_ScenarioOutline) Test Scenario Outline
+			  [TEST_FEATURE] (Test1_ScenarioOutline) Test Scenario Outline
 			    [TEST_CASE] (Test1_ScenarioOutline_1) Test Scenario Outline [1]
 			      [STEP_AGGREGATOR] Background
 			        [STEP] Given the set of real numbers
@@ -64,7 +64,7 @@ class FeaturePlanAssemblerTest {
 		writer.write(testPlan.orElseThrow(), output::append);
 
 		assertThat(output).hasToString("""
-			[TEST_AGGREGATOR] Test 1 - Simple Scenario
+			[TEST_FEATURE] Test 1 - Simple Scenario
 			  [TEST_CASE] (Test1_Scenario1) Test Scenario
 			    [STEP_AGGREGATOR] Background
 			      [STEP] Given the set of real numbers
@@ -87,8 +87,8 @@ class FeaturePlanAssemblerTest {
 		writer.write(testPlan.orElseThrow(), output::append);
 
 		assertThat(output).hasToString("""
-			[TEST_AGGREGATOR] Test 1 - Simple Scenario
-			  [TEST_AGGREGATOR] (Test1_ScenarioOutline) Test Scenario Outline
+			[TEST_FEATURE] Test 1 - Simple Scenario
+			  [TEST_FEATURE] (Test1_ScenarioOutline) Test Scenario Outline
 			    [TEST_CASE] (Test1_ScenarioOutline_1) Test Scenario Outline [1]
 			      [STEP_AGGREGATOR] Background
 			        [STEP] Given the set of real numbers

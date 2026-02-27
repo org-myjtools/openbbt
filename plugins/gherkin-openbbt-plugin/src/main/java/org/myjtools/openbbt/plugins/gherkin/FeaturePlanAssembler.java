@@ -25,9 +25,9 @@ import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
  *
  * <p>Each Gherkin element is mapped to a plan node type:</p>
  * <ul>
- *   <li>{@code Feature} &rarr; {@link NodeType#TEST_AGGREGATOR}</li>
+ *   <li>{@code Feature} &rarr; {@link NodeType#TEST_FEATURE}</li>
  *   <li>{@code Scenario} &rarr; {@link NodeType#TEST_CASE}</li>
- *   <li>{@code Scenario Outline} &rarr; {@link NodeType#TEST_AGGREGATOR} with child
+ *   <li>{@code Scenario Outline} &rarr; {@link NodeType#TEST_FEATURE} with child
  *       test cases expanded from its {@code Examples} table</li>
  *   <li>{@code Background} &rarr; {@link NodeType#STEP_AGGREGATOR}</li>
  *   <li>{@code Step} &rarr; {@link NodeType#STEP}</li>
@@ -105,7 +105,7 @@ public class FeaturePlanAssembler {
 
 	private Optional<PlanNodeID> featureNode() {
 
-		var nodeData = new PlanNode(NodeType.TEST_AGGREGATOR)
+		var nodeData = new PlanNode(NodeType.TEST_FEATURE)
 			.identifier(idFromTags(feature))
 			.name(feature.name())
 			.language(feature.language())
@@ -201,7 +201,7 @@ public class FeaturePlanAssembler {
 		if (!include) {
 			return Optional.empty();
 		}
-		var node = new PlanNode(NodeType.TEST_AGGREGATOR)
+		var node = new PlanNode(NodeType.TEST_FEATURE)
 			.identifier(idFromTags(scenarioOutline))
 			.name(scenarioOutline.name())
 			.display("{name}")
