@@ -35,7 +35,7 @@ class PlanCommandTest {
 			"-f","src/test/resources/openbbt.yaml",
 			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
 			"--suite", "suiteA",
-			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_MEMORY,
+			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT,
 			"-D"+OpenBBTConfig.RESOURCE_PATH+"=src/test/resources/test-features"
 		);
 		assertEquals(0, exitCode);
@@ -49,7 +49,7 @@ class PlanCommandTest {
 			"-f","src/test/resources/openbbt.yaml",
 			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
 			"--suite", "suiteA",
-			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_MEMORY,
+			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT,
 			"-D"+OpenBBTConfig.RESOURCE_PATH+"=src/test/resources/test-features"
 		);
 		assertEquals(0, exitCode);

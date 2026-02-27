@@ -8,6 +8,8 @@ import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
 import org.myjtools.openbbt.persistence.plan.JooqPlanRepository;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import static org.myjtools.openbbt.core.OpenBBTConfig.*;
@@ -22,10 +24,14 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T extends Repository> T createRepository(Class<T> type) {
-		String mode = config.get(PERSISTENCE_MODE,String.class).orElse(PERSISTENCE_MODE_MEMORY);
+		String mode = config.get(PERSISTENCE_MODE,String.class).orElse(PERSISTENCE_MODE_TRANSIENT);
 		switch (mode) {
-			case PERSISTENCE_MODE_MEMORY -> {
-				return (T) createInMemoryRepository(type);
+			case PERSISTENCE_MODE_TRANSIENT -> {
+				try {
+					return (T) createFileRepository(type, Files.createTempFile("openbbt", "db"));
+				} catch (IOException e) {
+					throw new OpenBBTException(e);
+				}
 			}
 			case PERSISTENCE_MODE_FILE -> {
 				Path filePath = config.get(PERSISTENCE_FILE, Path::of).orElseThrow(
@@ -47,7 +53,7 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 			}
 			default -> throw new OpenBBTException("Unsupported repository mode: {}, expected: {}",
 					mode,
-					List.of(PERSISTENCE_MODE_FILE, PERSISTENCE_MODE_MEMORY, PERSISTENCE_MODE_REMOTE)
+					List.of(PERSISTENCE_MODE_FILE, PERSISTENCE_MODE_TRANSIENT, PERSISTENCE_MODE_REMOTE)
 			);
 		}
 
@@ -70,12 +76,4 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 		throw new OpenBBTException("Unsupported repository type for file mode: {}", type.getName());
 	}
 
-
-	private static Object createInMemoryRepository(Class<?> type) {
-		DataSourceProvider provider = DataSourceProvider.hsqldb();
-		if (type.equals(PlanRepository.class)) {
-			return new JooqPlanRepository(provider);
-		}
-		throw new OpenBBTException("Unsupported repository type for in-memory mode: {}", type.getName());
-	}
 }

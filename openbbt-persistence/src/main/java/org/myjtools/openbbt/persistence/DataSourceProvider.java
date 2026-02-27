@@ -66,26 +66,6 @@ public class DataSourceProvider {
 	}
 
 
-	public static class HsqldbMemoryDataSource implements JdbcUrlProvider {
-
-		@Override
-		public String jdbcUrl() {
-			return "jdbc:hsqldb:mem:openbbt;DB_CLOSE_DELAY=-1;MODE=PostgreSQL";
-		}
-		@Override
-		public String username() {
-			return "sa";
-		}
-		@Override
-		public String password() {
-			return "";
-		}
-		@Override
-		public DatabaseType databaseType() {
-			return DatabaseType.HSQLDB;
-		}
-	}
-
 
 	public static class PostgresqlDataSource implements JdbcUrlProvider {
 
@@ -123,9 +103,6 @@ public class DataSourceProvider {
 	}
 
 
-	public static DataSourceProvider hsqldb() {
-		return new DataSourceProvider(new HsqldbMemoryDataSource());
-	}
 
 	public static DataSourceProvider postgresql(String jdbcUrl, String username, String password) {
 		return new DataSourceProvider(new PostgresqlDataSource(jdbcUrl, username, password));

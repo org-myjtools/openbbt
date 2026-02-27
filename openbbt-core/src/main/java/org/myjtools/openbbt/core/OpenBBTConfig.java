@@ -24,7 +24,7 @@ public class OpenBBTConfig extends ConfigAdapter implements ConfigProvider {
 	public static final String IMPLEMENTATION_TAG = "core.implementationTag";
 
 	public static final String PERSISTENCE_MODE = "core.persistence.mode";
-	public static final String PERSISTENCE_MODE_MEMORY = "in-memory";
+	public static final String PERSISTENCE_MODE_TRANSIENT = "transient";
 	public static final String PERSISTENCE_MODE_FILE = "file";
 	public static final String PERSISTENCE_MODE_REMOTE = "remote";
 	public static final String PERSISTENCE_FILE = "core.persistence.file";
