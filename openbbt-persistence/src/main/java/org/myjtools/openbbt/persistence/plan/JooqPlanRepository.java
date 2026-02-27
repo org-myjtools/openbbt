@@ -1,7 +1,5 @@
 package org.myjtools.openbbt.persistence.plan;
 
-import java.util.UUID;
-import com.github.f4b6a3.ulid.UlidCreator;
 import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
@@ -10,8 +8,11 @@ import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.plan.*;
+import org.myjtools.openbbt.core.util.UUIDGenerator;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,6 +25,8 @@ public class JooqPlanRepository implements PlanRepository {
 	private static final Table<Record> TABLE_PLAN_NODE = DSL.table("plan_node");
 	private static final Table<Record> TABLE_PLAN_NODE_TAG = DSL.table("plan_node_tag");
 	private static final Table<Record> TABLE_PLAN_NODE_PROPERTY = DSL.table("plan_node_property");
+	private static final Table<Record> TABLE_PLAN = DSL.table("plan");
+	private static final Table<Record> TABLE_PROJECT = DSL.table("project");
 
 	private static final Field<UUID> FIELD_NODE_ID = DSL.field("node_id", UUID.class);
 	private static final Field<UUID> FIELD_PARENT_NODE = DSL.field("parent_node", UUID.class);
@@ -43,6 +46,15 @@ public class JooqPlanRepository implements PlanRepository {
 	private static final Field<String> FIELD_DATA_TABLE = DSL.field("data_table", String.class);
 	private static final Field<String> FIELD_DOCUMENT = DSL.field("document", String.class);
 	private static final Field<String> FIELD_DOCUMENT_MIME_TYPE = DSL.field("document_mime_type", String.class);
+
+	private static final Field<UUID> FIELD_PLAN_ID = DSL.field("plan_id", UUID.class);
+	private static final Field<UUID> FIELD_PROJECT_ID = DSL.field("project_id", UUID.class);
+	private static final Field<String> FIELD_ORGANIZATION_NAME = DSL.field("organization_name", String.class);
+	private static final Field<String> FIELD_PROJECT_NAME = DSL.field("project_name", String.class);
+	private static final Field<LocalDateTime> FIELD_CREATED_AT = DSL.field("created_at", LocalDateTime.class);
+	private static final Field<String> FIELD_RESOURCE_SET_HASH = DSL.field("resource_set_hash", String.class);
+	private static final Field<String> FIELD_CONFIGURATION_HASH = DSL.field("configuration_hash", String.class);
+	private static final Field<UUID> FIELD_PLAN_NODE_ROOT = DSL.field("plan_node_root", UUID.class);
 
 	private final DSLContext dsl;
 
@@ -283,7 +295,7 @@ public class JooqPlanRepository implements PlanRepository {
 			assertExistsNode(id);
 			updateNode(node);
 		} else {
-			id = generateUUID();
+			id = UUIDGenerator.generateUUID();
 			node.nodeID(id);
 			insertNode(node);
 		}
@@ -682,8 +694,88 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private UUID generateUUID() {
-		return UlidCreator.getUlid().toUuid();
+	@Override
+	public UUID persistProject(Project project) {
+		Optional<UUID> existing = dsl.select(FIELD_PROJECT_ID)
+			.from(TABLE_PROJECT)
+			.where(FIELD_ORGANIZATION_NAME.eq(project.organization()))
+			.and(FIELD_PROJECT_NAME.eq(project.name()))
+			.fetchOptional()
+			.map(r -> r.get(FIELD_PROJECT_ID));
+		if (existing.isPresent()) {
+			return existing.get();
+		}
+		UUID id = UUIDGenerator.generateUUID();
+		dsl.insertInto(TABLE_PROJECT)
+			.set(FIELD_PROJECT_ID, id)
+			.set(FIELD_ORGANIZATION_NAME, project.organization())
+			.set(FIELD_PROJECT_NAME, project.name())
+			.execute();
+		return id;
+	}
+
+
+	@Override
+	public Plan persistPlan(Plan plan) {
+		UUID id = plan.planID() != null ? plan.planID() : UUIDGenerator.generateUUID();
+		dsl.insertInto(TABLE_PLAN)
+			.set(FIELD_PLAN_ID, id)
+			.set(FIELD_PROJECT_ID, plan.projectID())
+			.set(FIELD_CREATED_AT, plan.createdAt().atOffset(ZoneOffset.UTC).toLocalDateTime())
+			.set(FIELD_RESOURCE_SET_HASH, plan.resourceSetHash())
+			.set(FIELD_CONFIGURATION_HASH, plan.configurationHash())
+			.set(FIELD_PLAN_NODE_ROOT, plan.planNodeRoot())
+			.execute();
+		return new Plan(id, plan.projectID(), plan.createdAt(), plan.resourceSetHash(), plan.configurationHash(), plan.planNodeRoot());
+	}
+
+
+	@Override
+	public Optional<Plan> getPlan(Project project, String resourceSetHash, String configurationHash) {
+		return dsl.select(FIELD_PROJECT_ID)
+			.from(TABLE_PROJECT)
+			.where(FIELD_ORGANIZATION_NAME.eq(project.organization()))
+			.and(FIELD_PROJECT_NAME.eq(project.name()))
+			.fetchOptional()
+			.map(r -> r.get(FIELD_PROJECT_ID))
+			.flatMap(projectID -> dsl.select(
+					FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
+					FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+				)
+				.from(TABLE_PLAN)
+				.where(FIELD_PROJECT_ID.eq(projectID))
+				.and(FIELD_RESOURCE_SET_HASH.eq(resourceSetHash))
+				.and(FIELD_CONFIGURATION_HASH.eq(configurationHash))
+				.fetchOptional()
+				.map(rec -> new Plan(
+					rec.get(FIELD_PLAN_ID),
+					rec.get(FIELD_PROJECT_ID),
+					rec.get(FIELD_CREATED_AT).toInstant(ZoneOffset.UTC),
+					rec.get(FIELD_RESOURCE_SET_HASH),
+					rec.get(FIELD_CONFIGURATION_HASH),
+					rec.get(FIELD_PLAN_NODE_ROOT)
+				))
+			);
+	}
+
+
+	@Override
+	public Optional<Plan> getPlan(UUID planID) {
+		return dsl.select(
+				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+			)
+			.from(TABLE_PLAN)
+			.where(FIELD_PLAN_ID.eq(planID))
+			.fetchOptional()
+			.map(rec -> new Plan(
+				rec.get(FIELD_PLAN_ID),
+				rec.get(FIELD_PROJECT_ID),
+				rec.get(FIELD_CREATED_AT).toInstant(ZoneOffset.UTC),
+				rec.get(FIELD_RESOURCE_SET_HASH),
+				rec.get(FIELD_CONFIGURATION_HASH),
+				rec.get(FIELD_PLAN_NODE_ROOT)
+			));
 	}
 
 }
