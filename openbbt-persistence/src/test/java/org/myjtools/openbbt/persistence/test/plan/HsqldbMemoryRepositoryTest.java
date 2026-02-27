@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.persistence.test.plannode;
+package org.myjtools.openbbt.persistence.test.plan;
 
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 

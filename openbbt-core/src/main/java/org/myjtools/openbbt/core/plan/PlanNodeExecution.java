@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.plannode;
+package org.myjtools.openbbt.core.plan;
 
 import java.time.Instant;
 import lombok.*;

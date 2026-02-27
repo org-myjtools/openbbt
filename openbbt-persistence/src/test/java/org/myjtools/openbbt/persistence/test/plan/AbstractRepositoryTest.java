@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.persistence.test.plannode;
+package org.myjtools.openbbt.persistence.test.plan;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
-import org.myjtools.openbbt.persistence.plannode.JooqPlanNodeRepository;
-import org.myjtools.openbbt.core.plannode.*;
+import org.myjtools.openbbt.persistence.plan.JooqPlanNodeRepository;
+import org.myjtools.openbbt.core.plan.*;
 import javax.sql.DataSource;
 import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;

@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core.persistence;
 
-import org.myjtools.openbbt.core.plannode.PlanNode;
-import org.myjtools.openbbt.core.plannode.PlanNodeID;
+import org.myjtools.openbbt.core.plan.PlanNode;
+import org.myjtools.openbbt.core.plan.PlanNodeID;
 import java.io.IOException;
 
 public class PlanNodeRepositoryWriter {

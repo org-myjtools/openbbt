@@ -1,8 +1,8 @@
 package org.myjtools.openbbt.core.contributors;
 
 import org.myjtools.jexten.ExtensionPoint;
-import org.myjtools.openbbt.core.plannode.PlanNodeID;
-import org.myjtools.openbbt.core.project.TestSuite;
+import org.myjtools.openbbt.core.plan.PlanNodeID;
+import org.myjtools.openbbt.core.plan.TestSuite;
 import java.util.Optional;
 
 

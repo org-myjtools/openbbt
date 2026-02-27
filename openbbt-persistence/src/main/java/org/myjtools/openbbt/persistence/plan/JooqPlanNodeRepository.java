@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.persistence.plannode;
+package org.myjtools.openbbt.persistence.plan;
 
 import com.github.f4b6a3.ulid.UlidCreator;
 import org.jooq.*;
@@ -8,7 +8,7 @@ import org.jooq.impl.DataSourceConnectionProvider;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
-import org.myjtools.openbbt.core.plannode.*;
+import org.myjtools.openbbt.core.plan.*;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import javax.sql.DataSource;
 import java.util.*;

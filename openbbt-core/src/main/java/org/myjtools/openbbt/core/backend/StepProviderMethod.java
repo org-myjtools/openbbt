@@ -5,8 +5,8 @@ import org.myjtools.openbbt.core.DataType;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.contributors.StepProvider;
-import org.myjtools.openbbt.core.plannode.DataTable;
-import org.myjtools.openbbt.core.plannode.Document;
+import org.myjtools.openbbt.core.plan.DataTable;
+import org.myjtools.openbbt.core.plan.Document;
 import org.myjtools.openbbt.core.contributors.Step;
 import org.myjtools.openbbt.core.util.Pair;
 

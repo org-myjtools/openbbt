@@ -2,7 +2,7 @@ package org.myjtools.openbbt.core.test;
 
 
 import org.junit.jupiter.api.Test;
-import org.myjtools.openbbt.core.plannode.TagExpression;
+import org.myjtools.openbbt.core.plan.TagExpression;
 import java.util.List;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;

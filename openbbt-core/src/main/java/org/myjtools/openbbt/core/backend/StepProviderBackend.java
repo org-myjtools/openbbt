@@ -7,7 +7,7 @@ import org.myjtools.openbbt.core.contributors.StepProvider;
 import org.myjtools.openbbt.core.expressions.Match;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
-import org.myjtools.openbbt.core.plannode.NodeArgument;
+import org.myjtools.openbbt.core.plan.NodeArgument;
 import org.myjtools.openbbt.core.util.Pair;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

@@ -2,13 +2,11 @@ package org.myjtools.openbbt.core;
 
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
-import org.myjtools.openbbt.core.persistence.ProjectRepository;
-import org.myjtools.openbbt.core.plannode.NodeType;
-import org.myjtools.openbbt.core.plannode.PlanNode;
-import org.myjtools.openbbt.core.plannode.PlanNodeID;
-import org.myjtools.openbbt.core.project.Plan;
-import org.myjtools.openbbt.core.project.PlanID;
-import org.myjtools.openbbt.core.project.TestSuite;
+import org.myjtools.openbbt.core.plan.NodeType;
+import org.myjtools.openbbt.core.plan.PlanNode;
+import org.myjtools.openbbt.core.plan.PlanNodeID;
+import org.myjtools.openbbt.core.plan.Plan;
+import org.myjtools.openbbt.core.plan.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,35 +34,11 @@ public class PlanBuilder {
 		var rootNodeID = assembleTestPlanNodes(context).orElseThrow(
 			() -> new OpenBBTException("Failed to assemble test plan for project: {}", context.project().name())
 		);
-		return registerPlan(context, rootNodeID);
+		return null;//registerPlan(context, rootNodeID);
 	}
 
 
-	/*
-	 * Registers the assembled test plan in the repository and returns the generated PlanID.
-	 */
-	private Plan registerPlan(OpenBBTContext context, PlanNodeID rootNodeID) {
-		ProjectRepository projectRepository = contextManager.getRepository(ProjectRepository.class);
-		projectRepository.persistProject(context.project());
-		Plan plan = new Plan(
-			null,
-			contextManager.clock().now(),
-			contextManager.resourceSet().hash(),
-			null,
-			rootNodeID
-		);
-		PlanID planID = projectRepository.persistPlan(context.project(), plan);
-		projectRepository.deleteTestSuites(planID);
-		for (String suiteName : context.testSuites()) {
-			TestSuite testSuite = context.testSuite(suiteName).orElseThrow(
-				() -> new OpenBBTException("Test suite not found in project: {}", suiteName)
-			);
-			projectRepository.persistTestSuite(context.project(), plan, testSuite);
-		}
-		return projectRepository.getPlan(planID).orElseThrow(
-			() -> new OpenBBTException("Failed to retrieve registered plan with ID: {}", planID)
-		);
-	}
+
 
 	/*
 	 * Assembles the test plan for the given context by invoking all registered SuiteAssemblers.

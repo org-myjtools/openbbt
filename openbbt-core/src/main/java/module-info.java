@@ -21,10 +21,9 @@ module org.myjtools.openbbt.core {
 
 	exports org.myjtools.openbbt.core;
 	exports org.myjtools.openbbt.core.util;
-	exports org.myjtools.openbbt.core.plannode;
+	exports org.myjtools.openbbt.core.plan;
 	exports org.myjtools.openbbt.core.messages;
 	exports org.myjtools.openbbt.core.backend;
-	exports org.myjtools.openbbt.core.project;
 	exports org.myjtools.openbbt.core.contributors;
 	exports org.myjtools.openbbt.core.expressions;
 	exports org.myjtools.openbbt.core.datatypes;
@@ -32,7 +31,7 @@ module org.myjtools.openbbt.core {
 
 	opens org.myjtools.openbbt.core to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.messages to org.myjtools.jexten;
-	opens org.myjtools.openbbt.core.plannode to org.myjtools.jexten;
+	opens org.myjtools.openbbt.core.plan to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.backend to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;

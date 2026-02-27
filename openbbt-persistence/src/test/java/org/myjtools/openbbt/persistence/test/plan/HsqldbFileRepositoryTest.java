@@ -1,10 +1,10 @@
-package org.myjtools.openbbt.persistence.test.project;
+package org.myjtools.openbbt.persistence.test.plan;
 
 import org.junit.jupiter.api.io.TempDir;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import java.nio.file.Path;
 
-class HsqldbFileProjectRepositoryTest extends AbstractProjectRepositoryTest {
+class HsqldbFileRepositoryTest extends AbstractRepositoryTest {
 
 	@TempDir
 	private Path tempDir;

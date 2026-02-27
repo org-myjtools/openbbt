@@ -1,8 +1,8 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.imconfig.Config;
-import org.myjtools.openbbt.core.project.Project;
-import org.myjtools.openbbt.core.project.TestSuite;
+import org.myjtools.openbbt.core.plan.Project;
+import org.myjtools.openbbt.core.plan.TestSuite;
 import java.util.List;
 import java.util.Optional;
 

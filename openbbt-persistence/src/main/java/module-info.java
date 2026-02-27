@@ -17,10 +17,8 @@ module org.myjtools.openbbt.persistence {
 	opens org.myjtools.openbbt.persistence;
 	opens org.myjtools.openbbt.persistence.migration.hsqldb;
 	opens org.myjtools.openbbt.persistence.migration.postgresql;
-	exports org.myjtools.openbbt.persistence.plannode;
-	opens org.myjtools.openbbt.persistence.plannode;
-	exports org.myjtools.openbbt.persistence.project;
-	opens org.myjtools.openbbt.persistence.project;
+	exports org.myjtools.openbbt.persistence.plan;
+	opens org.myjtools.openbbt.persistence.plan;
 
 	provides RepositoryFactory
 			with JooqRepositoryFactory;

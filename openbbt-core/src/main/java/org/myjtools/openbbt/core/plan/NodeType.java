@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.plannode;
+package org.myjtools.openbbt.core.plan;
 /**
  * Represents the type of a node in the test plan.
  * Each node type has a unique symbol and a numeric value.

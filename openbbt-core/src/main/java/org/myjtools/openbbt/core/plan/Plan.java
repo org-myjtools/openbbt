@@ -1,6 +1,5 @@
-package org.myjtools.openbbt.core.project;
+package org.myjtools.openbbt.core.plan;
 
-import org.myjtools.openbbt.core.plannode.PlanNodeID;
 import java.time.Instant;
 
 public record Plan(

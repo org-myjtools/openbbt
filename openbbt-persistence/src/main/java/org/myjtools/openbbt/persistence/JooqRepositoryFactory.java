@@ -6,10 +6,8 @@ import org.myjtools.jexten.Inject;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
-import org.myjtools.openbbt.core.persistence.ProjectRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
-import org.myjtools.openbbt.persistence.plannode.JooqPlanNodeRepository;
-import org.myjtools.openbbt.persistence.project.JooqProjectRepository;
+import org.myjtools.openbbt.persistence.plan.JooqPlanNodeRepository;
 import java.nio.file.Path;
 import java.util.List;
 import static org.myjtools.openbbt.core.OpenBBTConfig.*;
@@ -60,9 +58,6 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 		if (type.equals(PlanNodeRepository.class)) {
 			return new JooqPlanNodeRepository(provider);
 		}
-		if (type.equals(ProjectRepository.class)) {
-			return new JooqProjectRepository(provider);
-		}
 		throw new OpenBBTException("Unsupported repository type for remote mode: {}", type.getName());
 	}
 
@@ -72,9 +67,6 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 		if (type.equals(PlanNodeRepository.class)) {
 			return new JooqPlanNodeRepository(provider);
 		}
-		if (type.equals(ProjectRepository.class)) {
-			return new JooqProjectRepository(provider);
-		}
 		throw new OpenBBTException("Unsupported repository type for file mode: {}", type.getName());
 	}
 
@@ -83,9 +75,6 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 		DataSourceProvider provider = DataSourceProvider.hsqldb();
 		if (type.equals(PlanNodeRepository.class)) {
 			return new JooqPlanNodeRepository(provider);
-		}
-		if (type.equals(ProjectRepository.class)) {
-			return new JooqProjectRepository(provider);
 		}
 		throw new OpenBBTException("Unsupported repository type for in-memory mode: {}", type.getName());
 	}

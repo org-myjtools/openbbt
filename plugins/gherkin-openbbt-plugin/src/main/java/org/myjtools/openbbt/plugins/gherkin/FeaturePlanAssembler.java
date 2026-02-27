@@ -7,7 +7,7 @@ import org.myjtools.gherkinparser.KeywordType;
 import org.myjtools.gherkinparser.elements.*;
 import org.myjtools.gherkinparser.elements.DataTable;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
-import org.myjtools.openbbt.core.plannode.*;
+import org.myjtools.openbbt.core.plan.*;
 import org.myjtools.openbbt.core.util.Patterns;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -20,7 +20,7 @@ import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 
 /**
  * Transforms a parsed Gherkin {@link Feature} into a tree of
- * {@link org.myjtools.openbbt.core.plannode.PlanNode} elements persisted in a
+ * {@link org.myjtools.openbbt.core.plan.PlanNode} elements persisted in a
  * {@link PlanNodeRepository}.
  *
  * <p>Each Gherkin element is mapped to a plan node type:</p>
@@ -340,15 +340,15 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private org.myjtools.openbbt.core.plannode.DataTable tableOf(DataTable dataTable) {
-		return new org.myjtools.openbbt.core.plannode.DataTable(
+	private org.myjtools.openbbt.core.plan.DataTable tableOf(DataTable dataTable) {
+		return new org.myjtools.openbbt.core.plan.DataTable(
 				mapped(dataTable.rows(), row -> mapped(row.cells(), TableCell::value))
 		);
 	}
 
 
-	private org.myjtools.openbbt.core.plannode.DataTable tableOf(Examples examples) {
-		return new org.myjtools.openbbt.core.plannode.DataTable(concat(
+	private org.myjtools.openbbt.core.plan.DataTable tableOf(Examples examples) {
+		return new org.myjtools.openbbt.core.plan.DataTable(concat(
 				List.of(mapped(examples.tableHeader().cells(),TableCell::value)),
 				mapped(examples.tableBody(), row -> mapped(row.cells(),TableCell::value))
 		));

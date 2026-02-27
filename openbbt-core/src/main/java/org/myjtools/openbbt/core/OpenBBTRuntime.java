@@ -9,9 +9,8 @@ import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
-import org.myjtools.openbbt.core.persistence.ProjectRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
-import org.myjtools.openbbt.core.project.Plan;
+import org.myjtools.openbbt.core.plan.Plan;
 import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
@@ -32,7 +31,6 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final ResourceSet resourceSet;
 	private final RepositoryFactory repositoryFactory;
 	private final Lazy<PlanNodeRepository> planNodeRepository = Lazy.of(() -> createRepository(PlanNodeRepository.class));
-	private final Lazy<ProjectRepository> projectRepository = Lazy.of(() -> createRepository(ProjectRepository.class));
 
 
 	public OpenBBTRuntime(Config configuration) {
@@ -112,8 +110,6 @@ public class OpenBBTRuntime implements InjectionProvider {
 		}
 		if (type == PlanNodeRepository.class) {
 			return (T) planNodeRepository.get();
-		} else if (type == ProjectRepository.class) {
-			return (T) projectRepository.get();
 		} else {
 			throw new OpenBBTException("Unsupported repository type requested: {}", type.getSimpleName());
 		}

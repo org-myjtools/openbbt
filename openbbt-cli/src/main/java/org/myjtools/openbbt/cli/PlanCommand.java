@@ -4,7 +4,7 @@ import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
 import org.myjtools.openbbt.core.persistence.PlanNodeRepositoryWriter;
-import org.myjtools.openbbt.core.project.Plan;
+import org.myjtools.openbbt.core.plan.Plan;
 import org.myjtools.openbbt.core.util.Log;
 import picocli.CommandLine;
 

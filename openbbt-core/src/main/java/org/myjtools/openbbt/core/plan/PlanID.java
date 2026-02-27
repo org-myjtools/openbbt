@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.project;
+package org.myjtools.openbbt.core.plan;
 
 import java.util.Objects;
 import java.util.UUID;
