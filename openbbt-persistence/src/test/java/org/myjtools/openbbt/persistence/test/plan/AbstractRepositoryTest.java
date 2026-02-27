@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.persistence.test.plan;
 
+import java.time.Instant;
 import java.util.UUID;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -509,6 +510,122 @@ abstract class AbstractRepositoryTest {
 		// Descendants query should work correctly from root2
 		assertThat(repo.getNodeDescendants(root2).toList()).containsExactlyInAnyOrder(child, grandchild);
 		assertThat(repo.getNodeDescendants(root1).toList()).isEmpty();
+	}
+
+	@Test
+	void persistProject_createsNewProject() {
+		Project project = new Project("MyProject", "desc", "MyOrg", List.of());
+
+		UUID id = repo.persistProject(project);
+
+		assertThat(id).isNotNull();
+	}
+
+	@Test
+	void persistProject_returnsExistingIdForDuplicateProject() {
+		Project project = new Project("MyProject", "desc", "MyOrg", List.of());
+
+		UUID first = repo.persistProject(project);
+		UUID second = repo.persistProject(project);
+
+		assertThat(first).isEqualTo(second);
+	}
+
+	@Test
+	void persistProject_differentOrganizationsAreDistinct() {
+		Project p1 = new Project("MyProject", "desc", "OrgA", List.of());
+		Project p2 = new Project("MyProject", "desc", "OrgB", List.of());
+
+		UUID id1 = repo.persistProject(p1);
+		UUID id2 = repo.persistProject(p2);
+
+		assertThat(id1).isNotEqualTo(id2);
+	}
+
+	@Test
+	void persistPlan_insertsAndAssignsId() {
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		Project project = new Project("MyProject", "desc", "MyOrg", List.of());
+		UUID projectID = repo.persistProject(project);
+
+		Plan plan = new Plan(null, projectID, Instant.now(), "rHash", "cHash", root);
+		Plan saved = repo.persistPlan(plan);
+
+		assertThat(saved.planID()).isNotNull();
+		assertThat(saved.projectID()).isEqualTo(projectID);
+		assertThat(saved.resourceSetHash()).isEqualTo("rHash");
+		assertThat(saved.configurationHash()).isEqualTo("cHash");
+		assertThat(saved.planNodeRoot()).isEqualTo(root);
+	}
+
+	@Test
+	void persistPlan_withExplicitId_usesProvidedId() {
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		Project project = new Project("MyProject", "desc", "MyOrg", List.of());
+		UUID projectID = repo.persistProject(project);
+		UUID explicitID = UUID.randomUUID();
+
+		Plan plan = new Plan(explicitID, projectID, Instant.now(), "rHash", "cHash", root);
+		Plan saved = repo.persistPlan(plan);
+
+		assertThat(saved.planID()).isEqualTo(explicitID);
+	}
+
+	@Test
+	void getPlan_byProjectAndHashes_returnsMatchingPlan() {
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		Project project = new Project("MyProject", "desc", "MyOrg", List.of());
+		UUID projectID = repo.persistProject(project);
+		Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+
+		Plan plan = new Plan(null, projectID, now, "rHash", "cHash", root);
+		Plan saved = repo.persistPlan(plan);
+
+		Optional<Plan> found = repo.getPlan(project, "rHash", "cHash");
+
+		assertThat(found).isPresent();
+		assertThat(found.get().planID()).isEqualTo(saved.planID());
+		assertThat(found.get().planNodeRoot()).isEqualTo(root);
+		assertThat(found.get().createdAt()).isEqualTo(now);
+	}
+
+	@Test
+	void getPlan_byProjectAndHashes_returnsEmptyWhenHashesDontMatch() {
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		Project project = new Project("MyProject", "desc", "MyOrg", List.of());
+		UUID projectID = repo.persistProject(project);
+
+		repo.persistPlan(new Plan(null, projectID, Instant.now(), "rHash", "cHash", root));
+
+		assertThat(repo.getPlan(project, "otherHash", "cHash")).isEmpty();
+		assertThat(repo.getPlan(project, "rHash", "otherHash")).isEmpty();
+	}
+
+	@Test
+	void getPlan_byProjectAndHashes_returnsEmptyWhenProjectNotFound() {
+		Project unknown = new Project("Unknown", "desc", "NoOrg", List.of());
+
+		assertThat(repo.getPlan(unknown, "rHash", "cHash")).isEmpty();
+	}
+
+	@Test
+	void getPlan_byUUID_returnsMatchingPlan() {
+		UUID root = repo.persistNode(new PlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		Project project = new Project("MyProject", "desc", "MyOrg", List.of());
+		UUID projectID = repo.persistProject(project);
+
+		Plan saved = repo.persistPlan(new Plan(null, projectID, Instant.now(), "rHash", "cHash", root));
+
+		Optional<Plan> found = repo.getPlan(saved.planID());
+
+		assertThat(found).isPresent();
+		assertThat(found.get().planID()).isEqualTo(saved.planID());
+		assertThat(found.get().planNodeRoot()).isEqualTo(root);
+	}
+
+	@Test
+	void getPlan_byUUID_returnsEmptyForUnknownId() {
+		assertThat(repo.getPlan(UUID.randomUUID())).isEmpty();
 	}
 
 	@Test
