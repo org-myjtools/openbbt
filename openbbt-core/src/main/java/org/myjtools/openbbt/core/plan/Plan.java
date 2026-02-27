@@ -4,7 +4,8 @@ import java.util.UUID;
 import java.time.Instant;
 
 public record Plan(
-	PlanID planID,
+	UUID planID,
+	UUID projectID,
 	Instant createdAt,
 	String resourceSetHash,
 	String configurationHash,
