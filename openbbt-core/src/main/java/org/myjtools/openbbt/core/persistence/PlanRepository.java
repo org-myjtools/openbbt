@@ -174,28 +174,28 @@ public interface PlanRepository extends Repository {
 	 * @param tag the tag to check
 	 * @return {@code true} if the tag exists on the node, {@code false} otherwise
 	 */
-	boolean existsTag(PlanNodeID nodeID, String tag);
+	boolean existsNodeTag(PlanNodeID nodeID, String tag);
 
 	/**
 	 * Retrieve all tags of a node.
 	 * @param nodeID the node ID
 	 * @return a stream of tags associated with the node, or an empty stream if the node has no tags
 	 */
-	void addTag(PlanNodeID nodeID, String tag);
+	void addNodeTag(PlanNodeID nodeID, String tag);
 
 	/**
 	 * Remove a specific tag from a node. If the tag does not exist on the node, this operation will have no effect.
 	 * @param nodeID the node ID
 	 * @param tag the tag to remove
 	 */
-	void removeTag(PlanNodeID nodeID, String tag);
+	void removeNodeTag(PlanNodeID nodeID, String tag);
 
 	/**
 	 * Retrieve all tags of a node as a list.
 	 * @param nodeID the node ID
 	 * @return a list of tags associated with the node, or an empty list if the node has no tags
 	 */
-	List<String> getTags(PlanNodeID nodeID);
+	List<String> getNodeTags(PlanNodeID nodeID);
 
 	/**
 	 * Check whether a node has a specific property. If {@code propertyValue} is {@code null},
@@ -205,10 +205,10 @@ public interface PlanRepository extends Repository {
 	 * @param propertyValue the expected value, or {@code null} to match any value
 	 * @return {@code true} if the property exists (and matches the value if provided)
 	 */
-	boolean existsProperty(PlanNodeID nodeID, String propertyKey, String propertyValue);
+	boolean existsNodeProperty(PlanNodeID nodeID, String propertyKey, String propertyValue);
 
-	void addProperty(PlanNodeID nodeID, String propertyKey, String propertyValue);
-	void removeProperty(PlanNodeID nodeID, String propertyKey);
+	void addNodeProperty(PlanNodeID nodeID, String propertyKey, String propertyValue);
+	void removeNodeProperty(PlanNodeID nodeID, String propertyKey);
 
 	/**
 	 * Retrieve the value of a specific property of a node.
@@ -216,13 +216,13 @@ public interface PlanRepository extends Repository {
 	 * @param propertyKey the property key
 	 * @return the property value, or empty if the property does not exist
 	 */
-	Optional<String> getProperty(PlanNodeID nodeID, String propertyKey);
+	Optional<String> getNodeProperty(PlanNodeID nodeID, String propertyKey);
 
 	/**
 	 * Retrieve all properties of a node as a map of key-value pairs.
 	 * @param nodeID the node ID
 	 * @return a map containing all properties of the node, or an empty map if the node has no properties
 	 */
-	Map<String, String> getProperties(PlanNodeID nodeID);
+	Map<String, String> getNodeProperties(PlanNodeID nodeID);
 
 }

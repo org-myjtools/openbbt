@@ -310,7 +310,7 @@ public class FeaturePlanAssembler {
 
 
 	private Map<String,String> propertiesFromComments(Commented node, PlanNodeID nodeID) {
-		SortedMap<String,String> properties = new TreeMap<>(repository.getProperties(nodeID));
+		SortedMap<String,String> properties = new TreeMap<>(repository.getNodeProperties(nodeID));
 		properties.putAll(propertiesFromComments(node));
 		return properties;
 	}
@@ -334,7 +334,7 @@ public class FeaturePlanAssembler {
 
 
 	private Set<String> tags(PlanNodeID nodeID, Tagged node) {
-		Set<String> result = new HashSet<>(repository.getTags(nodeID));
+		Set<String> result = new HashSet<>(repository.getNodeTags(nodeID));
 		result.addAll(tags(node));
 		return result;
 	}

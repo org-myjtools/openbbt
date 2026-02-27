@@ -364,9 +364,9 @@ abstract class AbstractRepositoryTest {
 			.tags(new HashSet<>(Set.of("smoke", "regression")));
 		PlanNodeID id = repo.persistNode(node);
 
-		assertThat(repo.existsTag(id, "smoke")).isTrue();
-		assertThat(repo.existsTag(id, "regression")).isTrue();
-		assertThat(repo.existsTag(id, "nonexistent")).isFalse();
+		assertThat(repo.existsNodeTag(id, "smoke")).isTrue();
+		assertThat(repo.existsNodeTag(id, "regression")).isTrue();
+		assertThat(repo.existsNodeTag(id, "nonexistent")).isFalse();
 	}
 
 	@Test
@@ -377,10 +377,10 @@ abstract class AbstractRepositoryTest {
 			.properties(new TreeMap<>(Map.of("priority", "high", "author", "tester")));
 		PlanNodeID id = repo.persistNode(node);
 
-		assertThat(repo.existsProperty(id, "priority", "high")).isTrue();
-		assertThat(repo.existsProperty(id, "priority", "low")).isFalse();
-		assertThat(repo.existsProperty(id, "priority", null)).isTrue();
-		assertThat(repo.existsProperty(id, "missing", null)).isFalse();
+		assertThat(repo.existsNodeProperty(id, "priority", "high")).isTrue();
+		assertThat(repo.existsNodeProperty(id, "priority", "low")).isFalse();
+		assertThat(repo.existsNodeProperty(id, "priority", null)).isTrue();
+		assertThat(repo.existsNodeProperty(id, "missing", null)).isFalse();
 	}
 
 	@Test
@@ -391,8 +391,8 @@ abstract class AbstractRepositoryTest {
 			.properties(new TreeMap<>(Map.of("priority", "high")));
 		PlanNodeID id = repo.persistNode(node);
 
-		assertThat(repo.getProperty(id, "priority")).contains("high");
-		assertThat(repo.getProperty(id, "missing")).isEmpty();
+		assertThat(repo.getNodeProperty(id, "priority")).contains("high");
+		assertThat(repo.getNodeProperty(id, "missing")).isEmpty();
 	}
 
 	@Test

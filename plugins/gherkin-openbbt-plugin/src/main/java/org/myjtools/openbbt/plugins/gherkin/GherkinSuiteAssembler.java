@@ -148,8 +148,8 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 				PlanNodeCriteria.withTag(implementationTag)
 			)
 		)).forEach(it -> {
-			repository.removeTag(it, implementationTag);
-			repository.removeTag(it, definitionTag);
+			repository.removeNodeTag(it, implementationTag);
+			repository.removeNodeTag(it, definitionTag);
 		});
 
 		if (repository.countNodeChildren(root) == 0) {
@@ -327,7 +327,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 	private int[] extractStepMap(PlanNodeID defTestCase, PlanNodeID impTestCase) {
 		// step map is in form: x-x-x-x...
-		String stepMapProperty = repository.getProperty(impTestCase, STEP_MAP).orElse(null);
+		String stepMapProperty = repository.getNodeProperty(impTestCase, STEP_MAP).orElse(null);
 		if (stepMapProperty == null || stepMapProperty.isBlank()) {
 			// if not defiend, map 1-to-1 for each step
 			int defTestCaseChildren = repository.countNodeChildren(defTestCase);
@@ -339,7 +339,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 	private void deleteBackground(PlanNodeID defTestCase) {
 		repository.getNodeChildren(defTestCase)
-			.filter(child -> repository.existsProperty(child, GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND))
+			.filter(child -> repository.existsNodeProperty(child, GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND))
 			.forEach( child -> repository.deleteNode(child) );
 	}
 
