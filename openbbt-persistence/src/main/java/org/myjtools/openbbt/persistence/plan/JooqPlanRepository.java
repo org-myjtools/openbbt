@@ -370,6 +370,7 @@ public class JooqPlanRepository implements PlanRepository {
 		Condition condition = buildCondition(criteria);
 		return dsl.select(FIELD_NODE_ID).from(TABLE_PLAN_NODE)
 			.where(condition)
+			.orderBy(FIELD_NODE_ID)
 			.fetch().stream()
 			.map(rec1 -> mapUUID(rec1, FIELD_NODE_ID));
 	}
