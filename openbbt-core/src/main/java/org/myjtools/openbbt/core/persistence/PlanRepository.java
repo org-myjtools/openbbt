@@ -1,11 +1,13 @@
 package org.myjtools.openbbt.core.persistence;
 
-import java.util.UUID;
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.core.plan.Plan;
 import org.myjtools.openbbt.core.plan.PlanNode;
+import org.myjtools.openbbt.core.plan.Project;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 
@@ -224,5 +226,16 @@ public interface PlanRepository extends Repository {
 	 * @return a map containing all properties of the node, or an empty map if the node has no properties
 	 */
 	Map<String, String> getNodeProperties(UUID nodeID);
+
+
+	Optional<Plan> getPlan(Project project, String resourceSetHash, String configurationHash);
+
+	Optional<Plan> getPlan(UUID planID);
+
+	Plan persistPlan(Plan plan);
+
+	UUID persistProject(Project project);
+
+
 
 }

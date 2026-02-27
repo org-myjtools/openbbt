@@ -14,6 +14,7 @@ import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -747,15 +748,19 @@ public class JooqPlanRepository implements PlanRepository {
 				.and(FIELD_RESOURCE_SET_HASH.eq(resourceSetHash))
 				.and(FIELD_CONFIGURATION_HASH.eq(configurationHash))
 				.fetchOptional()
-				.map(rec -> new Plan(
-					rec.get(FIELD_PLAN_ID),
-					rec.get(FIELD_PROJECT_ID),
-					rec.get(FIELD_CREATED_AT).toInstant(ZoneOffset.UTC),
-					rec.get(FIELD_RESOURCE_SET_HASH),
-					rec.get(FIELD_CONFIGURATION_HASH),
-					rec.get(FIELD_PLAN_NODE_ROOT)
-				))
+				.map(mapPlan())
 			);
+	}
+
+	private static Function<Record6<UUID, UUID, LocalDateTime, String, String, UUID>, Plan> mapPlan() {
+		return rec -> new Plan(
+				rec.get(FIELD_PLAN_ID),
+				rec.get(FIELD_PROJECT_ID),
+				rec.get(FIELD_CREATED_AT).toInstant(ZoneOffset.UTC),
+				rec.get(FIELD_RESOURCE_SET_HASH),
+				rec.get(FIELD_CONFIGURATION_HASH),
+				rec.get(FIELD_PLAN_NODE_ROOT)
+		);
 	}
 
 
@@ -768,14 +773,7 @@ public class JooqPlanRepository implements PlanRepository {
 			.from(TABLE_PLAN)
 			.where(FIELD_PLAN_ID.eq(planID))
 			.fetchOptional()
-			.map(rec -> new Plan(
-				rec.get(FIELD_PLAN_ID),
-				rec.get(FIELD_PROJECT_ID),
-				rec.get(FIELD_CREATED_AT).toInstant(ZoneOffset.UTC),
-				rec.get(FIELD_RESOURCE_SET_HASH),
-				rec.get(FIELD_CONFIGURATION_HASH),
-				rec.get(FIELD_PLAN_NODE_ROOT)
-			));
+			.map(mapPlan());
 	}
 
 }
