@@ -277,10 +277,11 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 		int[] stepMap = extractStepMap(defTestCase, impTestCase);
 
-		var impSteps = repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.childOf(impTestCase),
-			PlanNodeCriteria.withNodeType(NodeType.STEP)
-		)).toList();
+		var impSteps = repository.getNodeChildren(impTestCase)
+			.filter(id -> repository.getNodeData(id)
+				.map(n -> n.nodeType() == NodeType.STEP)
+				.orElse(false))
+			.toList();
 
 
 		int defStepCount = 0;
