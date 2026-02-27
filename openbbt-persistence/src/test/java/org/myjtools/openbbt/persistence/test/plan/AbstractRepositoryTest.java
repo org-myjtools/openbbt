@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
-import org.myjtools.openbbt.persistence.plan.JooqPlanNodeRepository;
+import org.myjtools.openbbt.persistence.plan.JooqPlanRepository;
 import org.myjtools.openbbt.core.plan.*;
 import javax.sql.DataSource;
 import java.util.*;
@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 abstract class AbstractRepositoryTest {
 
-	protected JooqPlanNodeRepository repo;
+	protected JooqPlanRepository repo;
 	private DataSource dataSource;
 
 	protected abstract DataSourceProvider dataSourceProvider();
@@ -23,7 +23,7 @@ abstract class AbstractRepositoryTest {
 	void setUp() {
 		DataSourceProvider provider = dataSourceProvider();
 		dataSource = provider.obtainDataSource();
-		repo = new JooqPlanNodeRepository(dataSource, provider.dialect());
+		repo = new JooqPlanRepository(dataSource, provider.dialect());
 		repo.clearAllData();
 	}
 

@@ -6,7 +6,7 @@ import org.myjtools.gherkinparser.KeywordMapProvider;
 import org.myjtools.gherkinparser.KeywordType;
 import org.myjtools.gherkinparser.elements.*;
 import org.myjtools.gherkinparser.elements.DataTable;
-import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.plan.*;
 import org.myjtools.openbbt.core.util.Patterns;
 import java.util.*;
@@ -21,7 +21,7 @@ import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 /**
  * Transforms a parsed Gherkin {@link Feature} into a tree of
  * {@link org.myjtools.openbbt.core.plan.PlanNode} elements persisted in a
- * {@link PlanNodeRepository}.
+ * {@link PlanRepository}.
  *
  * <p>Each Gherkin element is mapped to a plan node type:</p>
  * <ul>
@@ -52,7 +52,7 @@ public class FeaturePlanAssembler {
 	private final Background background;
 	private final Pattern idTagPattern;
 	private final TagExpression tagExpression;
-	private final PlanNodeRepository repository;
+	private final PlanRepository repository;
 	private final Map<PlanNodeID, Object> underlyingModels = new HashMap<>();
 
 
@@ -73,7 +73,7 @@ public class FeaturePlanAssembler {
 		String relativePath,
 		KeywordMapProvider keywordMapProvider,
 		String idTagPattern,
-		PlanNodeRepository repository,
+		PlanRepository repository,
 		TagExpression tagExpression
 	) {
 		this.feature = feature;

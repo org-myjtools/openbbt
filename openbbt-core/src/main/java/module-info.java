@@ -1,6 +1,6 @@
 import org.myjtools.openbbt.core.contributors.*;
 import org.myjtools.openbbt.core.messages.MessageProvider;
-import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanRepository;
 
 module org.myjtools.openbbt.core {
 
@@ -40,7 +40,7 @@ module org.myjtools.openbbt.core {
 
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;
-	uses PlanNodeRepository;
+	uses PlanRepository;
 	uses ConfigProvider;
 	uses org.myjtools.openbbt.core.messages.MessageProvider;
 	uses SuiteAssembler;

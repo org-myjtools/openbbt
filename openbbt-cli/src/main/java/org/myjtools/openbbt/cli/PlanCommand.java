@@ -2,8 +2,8 @@ package org.myjtools.openbbt.cli;
 
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
-import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
-import org.myjtools.openbbt.core.persistence.PlanNodeRepositoryWriter;
+import org.myjtools.openbbt.core.persistence.PlanRepository;
+import org.myjtools.openbbt.core.persistence.PlanRepositoryWriter;
 import org.myjtools.openbbt.core.plan.Plan;
 import org.myjtools.openbbt.core.util.Log;
 import picocli.CommandLine;
@@ -33,8 +33,8 @@ public final class PlanCommand extends AbstractCommand {
 			Plan plan = runtime.buildTestPlan(context);
 			log.info("{}",plan.planID());
 			if (detail) {
-				PlanNodeRepositoryWriter writer = new PlanNodeRepositoryWriter(
-						runtime.getRepository(PlanNodeRepository.class)
+				PlanRepositoryWriter writer = new PlanRepositoryWriter(
+						runtime.getRepository(PlanRepository.class)
 				);
 				writer.write(plan.planNodeRoot(), System.out::print);
 			}

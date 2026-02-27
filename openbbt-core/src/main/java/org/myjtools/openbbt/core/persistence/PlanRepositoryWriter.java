@@ -4,15 +4,15 @@ import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
 import java.io.IOException;
 
-public class PlanNodeRepositoryWriter {
+public class PlanRepositoryWriter {
 
 	public interface Appender {
 		void append(String string) throws IOException;
 	}
 
-	private final PlanNodeRepository repository;
+	private final PlanRepository repository;
 
-	public PlanNodeRepositoryWriter(PlanNodeRepository repository) {
+	public PlanRepositoryWriter(PlanRepository repository) {
 		this.repository = repository;
 	}
 

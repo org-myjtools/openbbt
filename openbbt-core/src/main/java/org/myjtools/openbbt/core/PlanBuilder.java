@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
-import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.plan.NodeType;
 import org.myjtools.openbbt.core.plan.PlanNode;
 import org.myjtools.openbbt.core.plan.PlanNodeID;
@@ -44,7 +44,7 @@ public class PlanBuilder {
 	 * Assembles the test plan for the given context by invoking all registered SuiteAssemblers.
 	 */
 	private Optional<PlanNodeID> assembleTestPlanNodes(OpenBBTContext context) {
-		PlanNodeRepository planNodeRepository = contextManager.getRepository(PlanNodeRepository.class);
+		PlanRepository planNodeRepository = contextManager.getRepository(PlanRepository.class);
 		List<SuiteAssembler> assemblers = contextManager.getExtensions(SuiteAssembler.class).toList();
 		if (assemblers.isEmpty()) {
 			log.warn("No SuiteAssembler found, cannot assemble test plan");

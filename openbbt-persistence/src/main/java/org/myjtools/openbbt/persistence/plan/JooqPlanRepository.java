@@ -7,7 +7,7 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
-import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.plan.*;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import javax.sql.DataSource;
@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-public class JooqPlanNodeRepository implements PlanNodeRepository {
+public class JooqPlanRepository implements PlanRepository {
 
 	private static final Table<Record> TABLE_PLAN_NODE = DSL.table("plan_node");
 	private static final Table<Record> TABLE_PLAN_NODE_TAG = DSL.table("plan_node_tag");
@@ -46,11 +46,11 @@ public class JooqPlanNodeRepository implements PlanNodeRepository {
 	private final DSLContext dsl;
 
 
-	public JooqPlanNodeRepository(DataSourceProvider dataSourceProvider) {
+	public JooqPlanRepository(DataSourceProvider dataSourceProvider) {
 		this(dataSourceProvider.obtainDataSource(), dataSourceProvider.dialect());
 	}
 
-	public JooqPlanNodeRepository(DataSource dataSource, SQLDialect dialect) {
+	public JooqPlanRepository(DataSource dataSource, SQLDialect dialect) {
 		this.dsl = DSL.using(new DataSourceConnectionProvider(dataSource), dialect);
 	}
 

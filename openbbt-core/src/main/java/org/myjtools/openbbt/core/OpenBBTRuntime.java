@@ -8,7 +8,7 @@ import org.myjtools.openbbt.core.contributors.ConfigProvider;
 import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
-import org.myjtools.openbbt.core.persistence.PlanNodeRepository;
+import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
 import org.myjtools.openbbt.core.plan.Plan;
 import org.myjtools.openbbt.core.util.Lazy;
@@ -30,7 +30,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final ResourceFinder resourceFinder;
 	private final ResourceSet resourceSet;
 	private final RepositoryFactory repositoryFactory;
-	private final Lazy<PlanNodeRepository> planNodeRepository = Lazy.of(() -> createRepository(PlanNodeRepository.class));
+	private final Lazy<PlanRepository> planNodeRepository = Lazy.of(() -> createRepository(PlanRepository.class));
 
 
 	public OpenBBTRuntime(Config configuration) {
@@ -81,7 +81,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 			}
 		} else if (type == ResourceFinder.class) {
 			return Stream.of(resourceFinder);
-		} else if (type == PlanNodeRepository.class) {
+		} else if (type == PlanRepository.class) {
 			if (repositoryFactory == null) {
 				return Stream.empty();
 			}
@@ -106,9 +106,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 	public <T extends Repository> T getRepository(Class<?> type) {
 		if (repositoryFactory == null) {
-			throw new OpenBBTException("No PlanNodeRepositoryFactory found, cannot create PlanNodeRepository");
+			throw new OpenBBTException("No PlanRepositoryFactory found, cannot create PlanRepository");
 		}
-		if (type == PlanNodeRepository.class) {
+		if (type == PlanRepository.class) {
 			return (T) planNodeRepository.get();
 		} else {
 			throw new OpenBBTException("Unsupported repository type requested: {}", type.getSimpleName());
