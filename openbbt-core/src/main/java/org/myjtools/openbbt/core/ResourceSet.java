@@ -1,8 +1,15 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.openbbt.core.util.Hash;
-import java.util.*;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class ResourceSet implements Iterable<Resource>{
 
@@ -16,6 +23,15 @@ public class ResourceSet implements Iterable<Resource>{
 
 	public List<Resource> resources() {
 		return resources;
+	}
+
+	public Stream<Resource> filter(Predicate<Resource> predicate) {
+		return resources.stream().filter(predicate);
+	}
+
+	public Stream<Resource> filter(String globPattern) {
+		PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:"+globPattern);
+		return resources.stream().filter(resource -> pathMatcher.matches(resource.relativePath()));
 	}
 
 	public int size() {

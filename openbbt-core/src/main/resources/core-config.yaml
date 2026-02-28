@@ -7,7 +7,7 @@ core.resourcePath:
 core.resourceFilter:
   description: |
     Filter to apply when loading resources. It can be used to exclude certain files or directories.
-    It supports glob patterns (e.g., `**/test/**` to exclude all files in any `test` directory).
+    It supports glob patterns applied to full paths (e.g., `**/*.feature` to include only feature files).
   type: text
   defaultValue: '**/*'
 

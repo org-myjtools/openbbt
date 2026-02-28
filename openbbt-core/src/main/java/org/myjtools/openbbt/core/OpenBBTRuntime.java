@@ -27,7 +27,6 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final OpenBBTPluginManager pluginManager;
 	private final Config config;
 	private final PlanBuilder planBuilder;
-	private final ResourceFinder resourceFinder;
 	private final ResourceSet resourceSet;
 	private final RepositoryFactory repositoryFactory;
 	private final Lazy<PlanRepository> planNodeRepository = Lazy.of(() -> createRepository(PlanRepository.class));
@@ -50,7 +49,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 			.append(configuration);
 		this.repositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
 			.orElse(null);
-		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
+		var resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
 			()-> new OpenBBTException("Resource path not configured {}: ",OpenBBTConfig.RESOURCE_PATH)
 		));
 		this.resourceSet = resourceFinder.findResources(configuration().getString(OpenBBTConfig.RESOURCE_FILTER).orElseThrow(
@@ -79,8 +78,6 @@ public class OpenBBTRuntime implements InjectionProvider {
 			} else {
 				return Stream.of(config.inner(name));
 			}
-		} else if (type == ResourceFinder.class) {
-			return Stream.of(resourceFinder);
 		} else if (type == PlanRepository.class) {
 			if (repositoryFactory == null) {
 				return Stream.empty();

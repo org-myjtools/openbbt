@@ -64,7 +64,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
     PlanRepository repository;
 
     @Inject
-    ResourceFinder resourceFinder;
+    ResourceSet resourceSet;
 
     private Parser markdownParser;
     private Pattern idTagPattern;
@@ -81,13 +81,15 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
 
     @Override
     public Optional<UUID> assembleSuite(TestSuite testSuite) {
-        ResourceSet resourceSet = resourceFinder.findResources("*.md");
-        if (resourceSet.isEmpty()) return Optional.empty();
+        var resources = resourceSet.filter(resource -> "md".equals(resource.extension())).toList();
+        if (resources.isEmpty()) {
+            return Optional.empty();
+        }
 
         PlanNode suiteNode = new PlanNode(NodeType.TEST_SUITE).name(testSuite.name());
         UUID suiteId = repository.persistNode(suiteNode);
 
-        for (Resource resource : resourceSet) {
+        for (Resource resource : resources) {
             assembleMarkdownFile(resource, testSuite)
                 .ifPresent(id -> repository.attachChildNodeLast(suiteId, id));
         }

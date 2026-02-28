@@ -24,7 +24,7 @@ public class ResourceFinder {
 		PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:"+globPattern);
 		try (var stream = Files.walk(startingPath)) {
 			var resources = stream.filter(Files::isRegularFile)
-				.filter(path -> pathMatcher.matches(path.getFileName()))
+				.filter(path -> pathMatcher.matches(path))
 				.map(file -> new Resource(file.toUri(), file, ()->newReader(file)))
 				.toList();
 			return new ResourceSet(resources);

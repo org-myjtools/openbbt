@@ -22,6 +22,7 @@ class GherkinSuiteAssemblerTest {
 		OpenBBTRuntime cm = new OpenBBTRuntime(Config.ofMap(Map.of(
 			OpenBBTConfig.ENV_PATH, "target/.openbbt",
 			OpenBBTConfig.RESOURCE_PATH, "src/test/resources/test-empty-suite",
+			OpenBBTConfig.RESOURCE_FILTER, "**/*.feature",
 			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT
 		)));
 		var planAssembler = cm.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
@@ -164,6 +165,7 @@ class GherkinSuiteAssemblerTest {
 		OpenBBTRuntime cm = new OpenBBTRuntime(Config.ofMap(Map.of(
 			OpenBBTConfig.ENV_PATH, "target/.openbbt",
 			OpenBBTConfig.RESOURCE_PATH, path,
+			OpenBBTConfig.RESOURCE_FILTER, "**/*.feature",
 			OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT
 		)));
 		var planAssembler = cm.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();

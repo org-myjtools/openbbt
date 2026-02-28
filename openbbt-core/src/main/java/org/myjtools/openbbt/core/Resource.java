@@ -44,6 +44,12 @@ public class Resource implements Comparable<Resource> {
 		return relativePath;
 	}
 
+	public String extension() {
+		String name = relativePath.getFileName().toString();
+		int dotIndex = name.lastIndexOf('.');
+		return (dotIndex != -1) ? name.substring(dotIndex + 1) : "";
+	}
+
 	@Override
 	public int compareTo(Resource other) {
 		return this.relativePath.compareTo(other.relativePath);

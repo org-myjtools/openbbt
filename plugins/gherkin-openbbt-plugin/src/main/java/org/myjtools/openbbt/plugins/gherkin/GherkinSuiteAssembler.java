@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.plugins.gherkin;
 
 
-import java.util.UUID;
+import java.util.*;
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
 import org.myjtools.gherkinparser.elements.Examples;
@@ -21,9 +21,6 @@ import org.myjtools.openbbt.core.plan.TagExpression;
 import org.myjtools.openbbt.core.plan.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 
@@ -65,7 +62,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	PlanRepository repository;
 
 	@Inject
-	ResourceFinder resourceFinder;
+	ResourceSet resourceSet;
 
 	private DefaultKeywordMapProvider keywordMapProvider;
 	private GherkinParser parser;
@@ -100,13 +97,12 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	 */
 	@Override
 	public Optional<UUID> assembleSuite(TestSuite testSuite) {
-		ResourceSet resourceSet = resourceFinder.findResources("*.feature");
-		TagExpression tagExpression = testSuite.tagExpression();
-		if (resourceSet.size() == 1) {
-			var feature = assembleFeatureNode(keywordMapProvider, parser, idTagPattern, resourceSet.get(0), testSuite);
+		var resources = resourceSet.filter(resource -> "feature".equals(resource.extension())).toList();
+		if (resources.size() == 1) {
+			var feature = assembleFeatureNode(keywordMapProvider, parser, idTagPattern, resources.get(0), testSuite);
 			return feature.flatMap(it -> wrapTestSuite(it, testSuite));
 		} else {
-			return assembleMultipleFeature(resourceSet, testSuite);
+			return assembleMultipleFeature(resources, testSuite);
 		}
 	}
 
@@ -120,9 +116,9 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	}
 
 
-	private Optional<UUID> assembleMultipleFeature(ResourceSet resourceSet, TestSuite testSuite) {
+	private Optional<UUID> assembleMultipleFeature(List<Resource> resources, TestSuite testSuite) {
 
-		var root = assembleStandaloneFeatures(resourceSet, testSuite);
+		var root = assembleStandaloneFeatures(resources, testSuite);
 
 		deleteDefinitionTestCasesWithoutId(root);
 		deleteImplementationScenarioOutlineContent(root);
@@ -183,10 +179,10 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 
-	private UUID assembleStandaloneFeatures(ResourceSet resourceSet, TestSuite testSuite) {
+	private UUID assembleStandaloneFeatures(List<Resource> resources, TestSuite testSuite) {
 		log.trace("provideStandaloneFeatures");
 		var id = repository.persistNode(new PlanNode(NodeType.TEST_FEATURE));
-		for (Resource resource : resourceSet) {
+		for (Resource resource : resources) {
 			assembleFeatureNode(
 				keywordMapProvider,
 				parser,
