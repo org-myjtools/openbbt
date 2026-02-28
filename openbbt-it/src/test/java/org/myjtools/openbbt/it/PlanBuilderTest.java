@@ -1,15 +1,14 @@
-package org.myjtools.openbbt.cli.test;
+package org.myjtools.openbbt.it;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.myjtools.imconfig.Config;
-import org.myjtools.openbbt.cli.MainCommand;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTFile;
+import org.myjtools.openbbt.core.OpenBBTPluginManager;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.plan.Plan;
-import picocli.CommandLine;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -22,12 +21,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PlanBuilderTest {
 
 	@BeforeAll
-	static void installPlugins() {
-		new CommandLine(new MainCommand()).execute(
-			"install",
-			"-f", "src/test/resources/openbbt.yaml",
-			"-D" + OpenBBTConfig.ENV_PATH + "=target/.openbbt"
+	static void installPlugins() throws IOException {
+		OpenBBTFile file = OpenBBTFile.read(new FileReader("src/test/resources/openbbt.yaml"));
+		var context = file.createContext(
+			Config.ofMap(Map.of(OpenBBTConfig.ENV_PATH, "target/.openbbt")),
+			List.of(),
+			"",
+			Config.empty()
 		);
+		OpenBBTPluginManager pluginManager = new OpenBBTPluginManager(context.configuration());
+		for (String plugin : context.plugins()) {
+			pluginManager.installPlugin(plugin);
+		}
 	}
 
 	@Test
