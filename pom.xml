@@ -40,6 +40,7 @@
 		<module>openbbt-cli</module>
 		<module>openbbt-it</module>
 		<module>openbbt-docgen-maven-plugin</module>
+		<module>openbbt-tui</module>
 	</modules>
 
 	<build>
