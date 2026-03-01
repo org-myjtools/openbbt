@@ -146,6 +146,15 @@ public class MainWindow extends BasicWindow {
         viewport.addComponent(panel, LinearLayout.createLayoutData(LinearLayout.Alignment.Fill));
         updateTabBar();
         updateStatusBar();
+        // After removing the old panel, the previously focused component is detached from the
+        // window but still referenced as "focused" in the base pane. Any subsequent key that
+        // triggers findNextUp/Down calls toBasePane() on that stale component, whose parent
+        // chain is now broken (null), causing an NPE inside AbstractBorder.toBasePane.
+        // Calling takeFocus() on the new mode's primary component traverses parent pointers
+        // (not positions) to reach the BasePane and registers the new focused interactable,
+        // clearing the stale reference before the next input event is dispatched.
+        if (mode == ViewMode.PLAN) treeComponent.takeFocus();
+        else                        fileList.takeFocus();
     }
 
     private void updateTabBar() {
