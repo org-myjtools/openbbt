@@ -1,12 +1,9 @@
 package org.myjtools.openbbt.docgen;
 
 import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 class StepDocLoaderTest {
@@ -18,7 +15,7 @@ class StepDocLoaderTest {
     @Test
     void load_parsesAllEntries() throws IOException, URISyntaxException {
         var steps = StepDocLoader.load(testResource("step-doc.yaml"));
-        assertThat(steps).hasSize(12);
+        assertThat(steps).hasSize(13);
     }
 
     @Test
@@ -75,8 +72,8 @@ class StepDocLoaderTest {
         var steps = StepDocLoader.load(testResource("step-doc.yaml"));
         var additionalData = steps.get("rest.request.POST").additionalData();
         assertThat(additionalData).isNotNull();
-        assertThat(additionalData.get("document"))
-            .isEqualTo("The body of the POST request, provided as a multi-line text input");
+        assertThat(additionalData)
+            .hasToString("The body of the POST request, provided as a multi-line text input");
     }
 
     @Test

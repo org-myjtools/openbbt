@@ -16,38 +16,40 @@ class ConfigDocMarkdownGenerator {
     }
 
     private void appendEntry(StringBuilder sb, String key, ConfigDocEntry entry) {
-        sb.append("### `").append(key).append("`\n\n");
+        sb.append("---\n\n");
+        sb.append("## `").append(key).append("`\n\n");
 
         if (entry.description() != null && !entry.description().isBlank()) {
             sb.append(entry.description().stripTrailing()).append("\n\n");
         }
 
-        sb.append("| | |\n");
-        sb.append("|---|---|\n");
-        sb.append("| **Type** | `").append(entry.type()).append("` |\n");
+        sb.append("**Type** ").append(entry.type()).append("\n\n");
 
-        if (entry.required()) {
-            sb.append("| **Required** | yes |\n");
+         if (entry.required()) {
+            sb.append("**Required**\n\n");
         }
         if (entry.defaultValue() != null) {
-            sb.append("| **Default** | `").append(entry.defaultValue()).append("` |\n");
+            sb.append("**Default value** `").append(entry.defaultValue()).append("`\n\n");
         }
         if (entry.constraintPattern() != null) {
-            sb.append("| **Pattern** | `").append(entry.constraintPattern()).append("` |\n");
+            sb.append("**Pattern** `").append(entry.constraintPattern()).append("`\n\n");
         }
         if (entry.constraintMin() != null) {
-            sb.append("| **Min** | `").append(entry.constraintMin()).append("` |\n");
+            sb.append("**Min** `").append(entry.constraintMin()).append("` ");
         }
         if (entry.constraintMax() != null) {
-            sb.append("| **Max** | `").append(entry.constraintMax()).append("` |\n");
+            sb.append("**Max** `").append(entry.constraintMax()).append("` ");
+        }
+        if (entry.constraintMin() != null || entry.constraintMax() != null) {
+            sb.append("\n\n");
         }
         if (entry.constraintValues() != null && !entry.constraintValues().isEmpty()) {
             String values = entry.constraintValues().stream()
                 .map(v -> "`" + v + "`")
                 .collect(Collectors.joining(", "));
-            sb.append("| **Values** | ").append(values).append(" |\n");
+            sb.append("**Values**  ").append(values).append(" \n\n");
         }
 
-        sb.append("\n");
+        sb.append("\n\n");
     }
 }

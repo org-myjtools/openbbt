@@ -4,11 +4,6 @@ import java.util.Map;
 
 class StepDocMarkdownGenerator {
 
-    private static final Map<String, String> LANG_LABELS = Map.of(
-        "en", "English",
-        "es", "Español"
-    );
-
     String generate(String title, String inputFileName, Map<String, StepDocEntry> steps) {
         var sb = new StringBuilder();
 
@@ -23,21 +18,22 @@ class StepDocMarkdownGenerator {
     }
 
     private void appendStep(StringBuilder sb, String id, StepDocEntry entry) {
-        sb.append("### `").append(id).append("`\n\n");
+        sb.append("---\n\n");
+        sb.append("## `").append(id).append("`\n\n");
         sb.append(entry.description()).append("\n\n");
 
         if (entry.expressions() != null && !entry.expressions().isEmpty()) {
-            sb.append("| Language | Expression |\n");
+            sb.append("| locale | expression |\n");
             sb.append("|----------|------------|\n");
             for (var expr : entry.expressions().entrySet()) {
-                String lang = LANG_LABELS.getOrDefault(expr.getKey(), expr.getKey());
+                String lang = expr.getKey();
                 sb.append("| ").append(lang).append(" | `").append(expr.getValue()).append("` |\n");
             }
             sb.append("\n");
         }
 
         if (entry.parameters() != null && !entry.parameters().isEmpty()) {
-            sb.append("#### Parameters\n\n");
+            sb.append("### Parameters\n\n");
             sb.append("| Name | Type | Description |\n");
             sb.append("|------|------|-------------|\n");
             for (var param : entry.parameters()) {
@@ -48,13 +44,13 @@ class StepDocMarkdownGenerator {
             sb.append("\n");
         }
 
-        if (entry.additionalData() != null && entry.additionalData().containsKey("document")) {
-            sb.append("#### Body / Document\n\n");
-            sb.append(entry.additionalData().get("document")).append("\n\n");
+        if (entry.additionalData() != null ) {
+            sb.append("### Additional data\n\n");
+            sb.append(entry.additionalData()).append("\n\n");
         }
 
         if (entry.example() != null) {
-            sb.append("#### Example\n\n");
+            sb.append("### Example\n\n");
             sb.append("```gherkin\n");
             sb.append(entry.example()).append("\n");
             sb.append("```\n\n");

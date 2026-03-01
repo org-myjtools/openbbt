@@ -1,4 +1,15 @@
 package org.myjtools.openbbt.plugins.rest;
 
-public class RestConfigProvider {
+import org.myjtools.jexten.Extension;
+import org.myjtools.openbbt.core.ConfigAdapter;
+import org.myjtools.openbbt.core.contributors.ConfigProvider;
+
+@Extension
+public class RestConfigProvider extends ConfigAdapter implements ConfigProvider {
+	
+	@Override
+	protected String resource() {
+		return "rest-config.yaml";
+	}
+
 }

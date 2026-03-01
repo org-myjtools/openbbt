@@ -7,7 +7,7 @@ record StepDocEntry(
     String description,
     Map<String, String> expressions,
     List<ParameterDoc> parameters,
-    Map<String, String> additionalData,
+    String additionalData,
     String example
 ) {
 }

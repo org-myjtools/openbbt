@@ -23,15 +23,15 @@
       type: text
       description: The URL to which the POST request is made
   additional-data:
-    document: The body of the POST request, provided as a multi-line text input
+    The body of the POST request, provided as a multi-line text input
   example: |
     Given I make a POST request to "users" with body:
-    ```json
+    """json
     {
       "name": "John",
       "age": 30
     }
-    ```
+    """
 
 'rest.request.POST.file':
   description: |
@@ -61,15 +61,15 @@
       type: text
       description: The URL to which the PUT request is made
   additional-data:
-    document: The body of the PUT request, provided as a multi-line text input
+    The body of the PUT request, provided as a multi-line text input
   example: |
     Given I make a PUT request to "users/123" with body:
-    ```json
+    """json
     {
       "name": "John",
       "age": 31
     }
-    ```
+    """
 
 'rest.request.PUT.file':
   description: |
@@ -100,14 +100,14 @@
       type: text
       description: The URL to which the PATCH request is made
   additional-data:
-    document: The body of the PATCH request, provided as a multi-line text input
+    The body of the PATCH request, provided as a multi-line text input
   example: |
     Given I make a PATCH request to "users/123" with body:
-    ```json
+    """json
     {
       "age": 32
     }
-    ```
+    """
 
 'rest.request.PATCH.file':
   description: |
@@ -163,16 +163,16 @@
     en: 'the response body is:'
     es: 'el cuerpo de la respuesta es:'
   additional-data:
-    document: The expected body of the response, provided as a multi-line text input
+    The expected body of the response, provided as a multi-line text input
   example: |
     Then the response body is:
-    ```json
+    """json
     {
       "id": 123,
       "name": "John",
       "age": 30
     }
-    ```
+    """
 
 'rest.response.body.file':
   description: |
@@ -195,12 +195,26 @@
     en: 'the response body contains:'
     es: 'el cuerpo de la respuesta contiene:'
   additional-data:
-    document: The expected content that should be present in the response body, provided as a multi-line text input
+    The expected content that should be present in the response body, provided as a multi-line text input
   example: |
     Then the response body contains:
-    ```json
+    """json
     {
       "id": 123,
       "name": "John",
     }
-    ```
+    """
+
+'rest.response.body.contains.datatable':
+  description: |
+    Asserts that the body of the last REST response contains the expected value.
+  expressions:
+    en: 'the response body contains:'
+    es: 'el cuerpo de la respuesta contiene:'
+  additional-data:
+    The expected content that should be present in the response body, provided as a data table
+  example: |
+    Then the response body contains:
+    | id | name  |
+    | 123| John  |
+    | 124| Alice |

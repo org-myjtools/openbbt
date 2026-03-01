@@ -30,7 +30,7 @@ class StepDocLoader {
     private static StepDocEntry parseEntry(Map<String, Object> map) {
         String description = trimTrailingNewline((String) map.get("description"));
         Map<String, String> expressions = (Map<String, String>) map.getOrDefault("expressions", Map.of());
-        Map<String, String> additionalData = (Map<String, String>) map.getOrDefault("additional-data", null);
+        String additionalData = trimTrailingNewline((String) map.get("additional-data"));
         String example = trimTrailingNewline((String) map.get("example"));
         List<ParameterDoc> parameters = new ArrayList<>();
         var rawParams = (List<Map<String, Object>>) map.get("parameters");

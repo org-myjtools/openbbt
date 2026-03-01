@@ -1,4 +1,8 @@
 package org.myjtools.openbbt.plugins.rest;
 
-public class RestStepProvider {
+import org.myjtools.jexten.Extension;
+import org.myjtools.openbbt.core.contributors.StepProvider;
+
+@Extension
+public class RestStepProvider implements StepProvider  {
 }
