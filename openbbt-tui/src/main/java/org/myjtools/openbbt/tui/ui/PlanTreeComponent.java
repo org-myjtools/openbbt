@@ -142,8 +142,8 @@ public class PlanTreeComponent extends AbstractInteractableComponent<PlanTreeCom
             int cols = g.getSize().getColumns();
 
             // Clear background
-            g.setBackgroundColor(TextColor.ANSI.DEFAULT);
-            g.setForegroundColor(TextColor.ANSI.DEFAULT);
+            g.setBackgroundColor(TextColor.ANSI.BLACK);
+            g.setForegroundColor(TextColor.ANSI.WHITE);
             g.fill(' ');
 
             for (int row = 0; row < rows; row++) {
@@ -155,7 +155,7 @@ public class PlanTreeComponent extends AbstractInteractableComponent<PlanTreeCom
                 boolean selected = (idx == selectedIndex) && isFocused();
 
                 TextColor fg = selected ? TextColor.ANSI.BLACK : colorForStatus(node.getStatus());
-                TextColor bg = selected ? TextColor.ANSI.CYAN_BRIGHT : TextColor.ANSI.DEFAULT;
+                TextColor bg = selected ? TextColor.ANSI.CYAN_BRIGHT : TextColor.ANSI.BLACK;
 
                 // Fill line background
                 g.setBackgroundColor(bg);

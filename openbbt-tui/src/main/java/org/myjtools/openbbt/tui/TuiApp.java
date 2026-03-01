@@ -18,7 +18,7 @@ public class TuiApp {
             var gui = new MultiWindowTextGUI(
                 screen,
                 new DefaultWindowManager(),
-                new EmptySpace(TextColor.ANSI.DEFAULT)
+                new EmptySpace(TextColor.ANSI.BLACK)
             );
             gui.addWindowAndWait(new MainWindow());
         }
