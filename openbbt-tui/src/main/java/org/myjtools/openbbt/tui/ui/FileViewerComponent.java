@@ -55,13 +55,13 @@ public class FileViewerComponent extends AbstractInteractableComponent<FileViewe
     protected Result handleKeyStroke(KeyStroke key) {
         return switch (key.getKeyType()) {
             case ArrowUp -> {
-                if (scrollOffset > 0) { scrollOffset--; invalidate(); yield Result.HANDLED; }
-                yield Result.MOVE_FOCUS_UP;
+                if (scrollOffset > 0) { scrollOffset--; invalidate(); }
+                yield Result.HANDLED; // never trigger spatial lookup — use Tab to switch focus
             }
             case ArrowDown -> {
                 int max = Math.max(0, lines.size() - 1);
-                if (scrollOffset < max) { scrollOffset++; invalidate(); yield Result.HANDLED; }
-                yield Result.MOVE_FOCUS_DOWN;
+                if (scrollOffset < max) { scrollOffset++; invalidate(); }
+                yield Result.HANDLED;
             }
             case PageUp -> {
                 scrollOffset = Math.max(0, scrollOffset - getSize().getRows());

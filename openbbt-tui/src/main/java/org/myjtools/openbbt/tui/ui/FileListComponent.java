@@ -62,18 +62,16 @@ public class FileListComponent extends AbstractInteractableComponent<FileListCom
                     selectedIndex--;
                     adjustScroll();
                     invalidate();
-                    yield Result.HANDLED;
                 }
-                yield Result.MOVE_FOCUS_UP;
+                yield Result.HANDLED; // never trigger spatial lookup — use Tab to switch focus
             }
             case ArrowDown -> {
                 if (selectedIndex < entries.size() - 1) {
                     selectedIndex++;
                     adjustScroll();
                     invalidate();
-                    yield Result.HANDLED;
                 }
-                yield Result.MOVE_FOCUS_DOWN;
+                yield Result.HANDLED;
             }
             case Enter -> {
                 if (!entries.isEmpty()) {
