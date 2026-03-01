@@ -24,6 +24,10 @@ public class GenerateStepDocsMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
+        if (!inputFile.exists()) {
+            getLog().warn("Input file not found, skipping: " + inputFile);
+            return;
+        }
         try {
             var steps = StepDocLoader.load(inputFile.toPath());
             outputDirectory.mkdirs();
