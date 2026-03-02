@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16.3
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=petclinic
+      - POSTGRES_USER=petclinic
+      - POSTGRES_DB=petclinic
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petclinic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  petclinic:
+    image: springcommunity/spring-petclinic-rest
+    ports:
+      - "9966:9966"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres,spring-data-jpa
+      - POSTGRES_URL=jdbc:postgresql://postgres/petclinic
+      - POSTGRES_USER=petclinic
+      - POSTGRES_PASS=petclinic
+    depends_on:
+      postgres:
+        condition: service_healthy
