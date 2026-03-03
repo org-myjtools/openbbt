@@ -6,6 +6,8 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import org.myjtools.openbbt.core.docgen.StepDocLoader;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

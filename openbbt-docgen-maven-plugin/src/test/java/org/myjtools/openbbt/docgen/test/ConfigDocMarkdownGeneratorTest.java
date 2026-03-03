@@ -1,6 +1,8 @@
-package org.myjtools.openbbt.docgen;
+package org.myjtools.openbbt.docgen.test;
 
 import org.junit.jupiter.api.Test;
+import org.myjtools.openbbt.core.docgen.ConfigDocLoader;
+import org.myjtools.openbbt.docgen.ConfigDocMarkdownGenerator;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;

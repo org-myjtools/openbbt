@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.core.test.backend;
 
+import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.Assertion;
@@ -23,6 +24,11 @@ public class TestStepProvider implements StepProvider  {
 	public DataTable runnedStepWithOnlyDataTable = null;
 	public Integer runnedStepWithOneParameterAndDataTableNumber = null;
 	public Document runnedStepWithOnlyDocument = null;
+
+	@Override
+	public void init(Config config) {
+		// no-op for tests
+	}
 
 	@SetUp(order = 1)
 	public void setup() {

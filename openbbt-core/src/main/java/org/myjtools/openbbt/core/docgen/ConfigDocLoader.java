@@ -1,21 +1,28 @@
-package org.myjtools.openbbt.docgen;
+package org.myjtools.openbbt.core.docgen;
 
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-class ConfigDocLoader {
+public class ConfigDocLoader {
 
     @SuppressWarnings("unchecked")
-    static Map<String, ConfigDocEntry> load(Path path) throws IOException {
+    public static Map<String, ConfigDocEntry> load(Path path) throws IOException {
+        return load(Files.newInputStream(path));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, ConfigDocEntry> load(InputStream inputStream) throws IOException {
         Yaml yaml = new Yaml();
         Map<String, Map<String, Object>> raw;
-        try (var reader = Files.newBufferedReader(path)) {
+        try (var reader = new BufferedInputStream(inputStream)) {
             raw = yaml.load(reader);
         }
         var result = new LinkedHashMap<String, ConfigDocEntry>();

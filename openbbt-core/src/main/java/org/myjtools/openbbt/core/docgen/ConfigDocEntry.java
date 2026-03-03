@@ -1,9 +1,8 @@
-package org.myjtools.openbbt.docgen;
+package org.myjtools.openbbt.core.docgen;
 
 import java.util.List;
-import java.util.Map;
 
-record ConfigDocEntry(
+public record ConfigDocEntry(
     String description,
     String type,
     boolean required,

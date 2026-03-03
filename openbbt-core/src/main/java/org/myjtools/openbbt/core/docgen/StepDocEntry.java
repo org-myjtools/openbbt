@@ -1,9 +1,9 @@
-package org.myjtools.openbbt.docgen;
+package org.myjtools.openbbt.core.docgen;
 
 import java.util.List;
 import java.util.Map;
 
-record StepDocEntry(
+public record StepDocEntry(
     String description,
     Map<String, String> expressions,
     List<ParameterDoc> parameters,

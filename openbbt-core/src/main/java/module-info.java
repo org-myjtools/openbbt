@@ -28,6 +28,7 @@ module org.myjtools.openbbt.core {
 	exports org.myjtools.openbbt.core.expressions;
 	exports org.myjtools.openbbt.core.datatypes;
 	exports org.myjtools.openbbt.core.assertions;
+	exports org.myjtools.openbbt.core.docgen;
 
 	opens org.myjtools.openbbt.core to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.messages to org.myjtools.jexten;

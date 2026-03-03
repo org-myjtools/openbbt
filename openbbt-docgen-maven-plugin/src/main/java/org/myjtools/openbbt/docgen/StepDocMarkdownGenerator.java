@@ -1,10 +1,11 @@
 package org.myjtools.openbbt.docgen;
 
+import org.myjtools.openbbt.core.docgen.StepDocEntry;
 import java.util.Map;
 
-class StepDocMarkdownGenerator {
+public class StepDocMarkdownGenerator {
 
-    String generate(String title, String inputFileName, Map<String, StepDocEntry> steps) {
+    public String generate(String title, String inputFileName, Map<String, StepDocEntry> steps) {
         var sb = new StringBuilder();
 
         sb.append("# ").append(title).append("\n\n");
