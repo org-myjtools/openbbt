@@ -84,4 +84,15 @@ public class TestStepProvider implements StepProvider  {
 		this.runnedStepWithOnlyAssertion = assertion;
 	}
 
+	@Step(value = "stepThatAlwaysFails")
+	public void stepThatAlwaysFails() {
+		throw new AssertionError("This step is designed to always fail");
+	}
+
+	@Step(value = "stepWithUnexpectedError")
+	public void stepWithUnexpectedError() {
+		throw new IllegalArgumentException("This step is designed to throw an unexpected error");
+	}
+
+
 }

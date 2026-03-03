@@ -4,6 +4,7 @@ import org.myjtools.openbbt.core.*;
 import org.myjtools.openbbt.core.contributors.AssertionFactoryProvider;
 import org.myjtools.openbbt.core.contributors.DataTypeProvider;
 import org.myjtools.openbbt.core.contributors.StepProvider;
+import org.myjtools.openbbt.core.execution.NoMatchingStepException;
 import org.myjtools.openbbt.core.expressions.Match;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
@@ -60,7 +61,7 @@ public class StepProviderBackend {
 
 	public void run(String step, Locale locale, NodeArgument nodeArgument) {
 		var matchingStep = matchingStep(step,locale).orElseThrow(
-			() -> new OpenBBTException(
+			() -> new NoMatchingStepException(
 				"No matching step found for '{}'\n{}",
 				step,
 				hints(step,locale)

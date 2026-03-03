@@ -1,5 +1,7 @@
 package org.myjtools.openbbt.core.util;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -7,6 +9,8 @@ import java.util.function.Supplier;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
+@EqualsAndHashCode
+@ToString
 public class Pair<T,U>  {
 
 	public static <T,U> Pair<T,U> of(Supplier<T> value, Supplier<U> fallback) {
@@ -42,6 +46,7 @@ public class Pair<T,U>  {
 	public U right() {
 		return right.get();
 	}
+
 
 
 }

@@ -70,6 +70,9 @@ public class StepProviderService {
             String stepKey = entry.getKey();
             StepProviderMethod runnableStep = entry.getValue();
             String keyExpression = messages.forLocale(locale).get(stepKey);
+            if (keyExpression == null) {
+                keyExpression = stepKey;
+            }
             ExpressionMatcher matcher = matcherBuilder.buildExpressionMatcher(keyExpression);
             var matchingStep = matcher.matches(step,locale).map(match -> Pair.of(runnableStep,match));
             if (matchingStep.isPresent()) {

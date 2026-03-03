@@ -38,6 +38,7 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.persistence;
 	opens org.myjtools.openbbt.core.persistence to org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.execution;
 
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;

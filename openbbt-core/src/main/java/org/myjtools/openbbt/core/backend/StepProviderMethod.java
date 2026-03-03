@@ -111,7 +111,7 @@ public class StepProviderMethod {
 		} catch (IllegalAccessException e) {
 			throw new OpenBBTException(e);
 		} catch (InvocationTargetException e) {
-			throw new OpenBBTException(e.getCause());
+			throw e.getCause();
 		}
 	}
 

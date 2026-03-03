@@ -43,4 +43,17 @@ public class ResourceFinder {
 	   }
 	}
 
+	public Path resolve(String file) {
+		return startingPath.resolve(file);
+	}
+
+	public String readAsString(String file) {
+		try {
+			return Files.readString(resolve(file));
+		} catch (IOException e) {
+			throw new OpenBBTException(e, "Cannot read local file {}", file);
+		}
+	}
+
+
 }

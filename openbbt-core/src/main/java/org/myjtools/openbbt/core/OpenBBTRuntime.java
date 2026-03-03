@@ -11,6 +11,7 @@ import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.persistence.PlanRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
 import org.myjtools.openbbt.core.plan.Plan;
+import org.myjtools.openbbt.core.plan.PlanBuilder;
 import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
@@ -27,6 +28,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final OpenBBTPluginManager pluginManager;
 	private final Config config;
 	private final PlanBuilder planBuilder;
+	private final ResourceFinder resourceFinder;
 	private final ResourceSet resourceSet;
 	private final RepositoryFactory repositoryFactory;
 	private final Lazy<PlanRepository> planNodeRepository = Lazy.of(() -> createRepository(PlanRepository.class));
@@ -49,7 +51,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 			.append(configuration);
 		this.repositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
 			.orElse(null);
-		var resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
+		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
 			()-> new OpenBBTException("Resource path not configured {}: ",OpenBBTConfig.RESOURCE_PATH)
 		));
 		this.resourceSet = resourceFinder.findResources(configuration().getString(OpenBBTConfig.RESOURCE_FILTER).orElseThrow(
@@ -85,8 +87,10 @@ public class OpenBBTRuntime implements InjectionProvider {
 			return Stream.of(planNodeRepository.get());
 		} else if (type == Messages.class) {
 			return Stream.of(Messages.of(
-				getExtensions(MessageProvider.class).filter(it -> it.providerFor(name)).toList()
+					getExtensions(MessageProvider.class).filter(it -> it.providerFor(name)).toList()
 			));
+		} else if (type == ResourceFinder.class) {
+			return Stream.of(resourceFinder);
 		} else if (type == ResourceSet.class) {
 			return Stream.of(resourceSet);
 		} else if (type == Clock.class) {
