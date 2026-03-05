@@ -5,9 +5,9 @@ import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
-import org.myjtools.openbbt.core.plan.*;
+import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.testplan.*;
 import org.myjtools.openbbt.core.util.UUIDGenerator;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import javax.sql.DataSource;
@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-public class JooqPlanRepository implements PlanRepository {
+public class JooqPlanRepository implements TestPlanRepository {
 
 	private static final Table<Record> TABLE_PLAN_NODE = DSL.table("plan_node");
 	private static final Table<Record> TABLE_PLAN_NODE_TAG = DSL.table("plan_node_tag");
@@ -74,7 +74,7 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	public Optional<PlanNode> getNodeData(UUID id) {
+	public Optional<TestPlanNode> getNodeData(UUID id) {
 		return dsl.select(
 				FIELD_NODE_ID, FIELD_PARENT_NODE, FIELD_NODE_POSITION,
 				FIELD_TYPE, FIELD_NAME, FIELD_IDENTIFIER, FIELD_LANGUAGE, FIELD_SOURCE,
@@ -287,7 +287,7 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	public UUID persistNode(PlanNode node) {
+	public UUID persistNode(TestPlanNode node) {
 		boolean isUpdate = node.nodeID() != null;
 		UUID id;
 		if (isUpdate) {
@@ -305,7 +305,7 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private void insertNode(PlanNode node) {
+	private void insertNode(TestPlanNode node) {
 		dsl.insertInto(TABLE_PLAN_NODE)
 		   .set(FIELD_NODE_ID, node.nodeID())
 		   .set(FIELD_PARENT_NODE, (UUID) null)
@@ -325,7 +325,7 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private void updateNode(PlanNode node) {
+	private void updateNode(TestPlanNode node) {
 		dsl.update(TABLE_PLAN_NODE)
 		   .set(FIELD_TYPE, node.nodeType() != null ? node.nodeType().value : null)
 		   .set(FIELD_NAME, node.name())
@@ -378,7 +378,7 @@ public class JooqPlanRepository implements PlanRepository {
 
 
 	@Override
-	public Stream<UUID> searchNodes(PlanNodeCriteria criteria) {
+	public Stream<UUID> searchNodes(TestPlanNodeCriteria criteria) {
 		Condition condition = buildCondition(criteria);
 		return dsl.select(FIELD_NODE_ID).from(TABLE_PLAN_NODE)
 			.where(condition)
@@ -389,7 +389,7 @@ public class JooqPlanRepository implements PlanRepository {
 
 
 
-	public int countNodes(PlanNodeCriteria criteria) {
+	public int countNodes(TestPlanNodeCriteria criteria) {
 		Condition condition = buildCondition(criteria);
 		Integer count = dsl.selectCount().from(TABLE_PLAN_NODE)
 				.where(condition)
@@ -483,18 +483,18 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private Condition buildCondition(PlanNodeCriteria criteria) {
+	private Condition buildCondition(TestPlanNodeCriteria criteria) {
 		return switch (criteria) {
-			case PlanNodeCriteria.AllCriteria() -> DSL.trueCondition();
+			case TestPlanNodeCriteria.AllCriteria() -> DSL.trueCondition();
 
-			case PlanNodeCriteria.HasTagCriteria(String tag) -> DSL.exists(
+			case TestPlanNodeCriteria.HasTagCriteria(String tag) -> DSL.exists(
 				DSL.selectOne()
 					.from(TABLE_PLAN_NODE_TAG)
 					.where(FIELD_PLAN_NODE.eq(FIELD_NODE_ID))
 					.and(FIELD_TAG.eq(tag))
 			);
 
-			case PlanNodeCriteria.HasPropertyCriteria(String property, String value) -> DSL.exists(
+			case TestPlanNodeCriteria.HasPropertyCriteria(String property, String value) -> DSL.exists(
 				DSL.selectOne()
 					.from(TABLE_PLAN_NODE_PROPERTY)
 					.where(FIELD_PLAN_NODE.eq(FIELD_NODE_ID))
@@ -502,38 +502,38 @@ public class JooqPlanRepository implements PlanRepository {
 					.and(value != null ? FIELD_VALUE.eq(value) : DSL.trueCondition())
 			);
 
-			case PlanNodeCriteria.HasNodeTypeCriteria(NodeType nodeType) ->
+			case TestPlanNodeCriteria.HasNodeTypeCriteria(NodeType nodeType) ->
 				FIELD_TYPE.eq(nodeType.value);
 
-			case PlanNodeCriteria.HasFieldCriteria(String field, Object value) ->
+			case TestPlanNodeCriteria.HasFieldCriteria(String field, Object value) ->
 				buildFieldCondition(field, value);
 
-			case PlanNodeCriteria.HasValuedFieldCriteria(String field) ->
+			case TestPlanNodeCriteria.HasValuedFieldCriteria(String field) ->
 				resolveField(field).isNotNull();
 
-			case PlanNodeCriteria.IsDescendantCriteria(UUID parent, int depth) ->
+			case TestPlanNodeCriteria.IsDescendantCriteria(UUID parent, int depth) ->
 				buildDescendantCondition(parent, depth);
 
-			case PlanNodeCriteria.IsAscendantCriteria(UUID child, int depth) ->
+			case TestPlanNodeCriteria.IsAscendantCriteria(UUID child, int depth) ->
 				buildAscendantCondition(child, depth);
 
-			case PlanNodeCriteria.AndCriteria(PlanNodeCriteria[] conditions) -> {
+			case TestPlanNodeCriteria.AndCriteria(TestPlanNodeCriteria[] conditions) -> {
 				Condition result = DSL.trueCondition();
-				for (PlanNodeCriteria c : conditions) {
+				for (TestPlanNodeCriteria c : conditions) {
 					result = result.and(buildCondition(c));
 				}
 				yield result;
 			}
 
-			case PlanNodeCriteria.OrCriteria(PlanNodeCriteria[] conditions) -> {
+			case TestPlanNodeCriteria.OrCriteria(TestPlanNodeCriteria[] conditions) -> {
 				Condition result = DSL.falseCondition();
-				for (PlanNodeCriteria c : conditions) {
+				for (TestPlanNodeCriteria c : conditions) {
 					result = result.or(buildCondition(c));
 				}
 				yield result;
 			}
 
-			case PlanNodeCriteria.NotCriteria(PlanNodeCriteria condition) ->
+			case TestPlanNodeCriteria.NotCriteria(TestPlanNodeCriteria condition) ->
 				DSL.not(buildCondition(condition));
 		};
 	}
@@ -628,8 +628,8 @@ public class JooqPlanRepository implements PlanRepository {
 	}
 
 
-	private PlanNode mapPlanNode(Record rec) {
-		PlanNode node = new PlanNode();
+	private TestPlanNode mapPlanNode(Record rec) {
+		TestPlanNode node = new TestPlanNode();
 		node.nodeID(rec.get(FIELD_NODE_ID));
 		Integer typeValue = rec.get(FIELD_TYPE);
 		if (typeValue != null) {
@@ -655,21 +655,21 @@ public class JooqPlanRepository implements PlanRepository {
 		return node;
 	}
 
-	private void fillTagsAndProperties(PlanNode planNode) {
+	private void fillTagsAndProperties(TestPlanNode testPlanNode) {
 		// fill tags
 		Set<String> tags = new HashSet<>(dsl.select(FIELD_TAG)
             .from(TABLE_PLAN_NODE_TAG)
-            .where(FIELD_PLAN_NODE.eq(planNode.nodeID()))
+            .where(FIELD_PLAN_NODE.eq(testPlanNode.nodeID()))
             .fetch(FIELD_TAG));
-		planNode.tags(tags);
+		testPlanNode.tags(tags);
 		// fill properties
 		SortedMap<String, String> props = new TreeMap<>();
 		dsl.select(FIELD_KEY, FIELD_VALUE)
             .from(TABLE_PLAN_NODE_PROPERTY)
-            .where(FIELD_PLAN_NODE.eq(planNode.nodeID()))
+            .where(FIELD_PLAN_NODE.eq(testPlanNode.nodeID()))
             .fetch()
             .forEach(rec -> props.put(rec.get(FIELD_KEY), rec.get(FIELD_VALUE)));
-		planNode.properties(props);
+		testPlanNode.properties(props);
 	}
 
 
@@ -695,11 +695,11 @@ public class JooqPlanRepository implements PlanRepository {
 
 
 	@Override
-	public UUID persistProject(Project project) {
+	public UUID persistProject(TestProject testProject) {
 		Optional<UUID> existing = dsl.select(FIELD_PROJECT_ID)
 			.from(TABLE_PROJECT)
-			.where(FIELD_ORGANIZATION_NAME.eq(project.organization()))
-			.and(FIELD_PROJECT_NAME.eq(project.name()))
+			.where(FIELD_ORGANIZATION_NAME.eq(testProject.organization()))
+			.and(FIELD_PROJECT_NAME.eq(testProject.name()))
 			.fetchOptional()
 			.map(r -> r.get(FIELD_PROJECT_ID));
 		if (existing.isPresent()) {
@@ -708,34 +708,34 @@ public class JooqPlanRepository implements PlanRepository {
 		UUID id = UUIDGenerator.generateUUID();
 		dsl.insertInto(TABLE_PROJECT)
 			.set(FIELD_PROJECT_ID, id)
-			.set(FIELD_ORGANIZATION_NAME, project.organization())
-			.set(FIELD_PROJECT_NAME, project.name())
+			.set(FIELD_ORGANIZATION_NAME, testProject.organization())
+			.set(FIELD_PROJECT_NAME, testProject.name())
 			.execute();
 		return id;
 	}
 
 
 	@Override
-	public Plan persistPlan(Plan plan) {
-		UUID id = plan.planID() != null ? plan.planID() : UUIDGenerator.generateUUID();
+	public TestPlan persistPlan(TestPlan testPlan) {
+		UUID id = testPlan.planID() != null ? testPlan.planID() : UUIDGenerator.generateUUID();
 		dsl.insertInto(TABLE_PLAN)
 			.set(FIELD_PLAN_ID, id)
-			.set(FIELD_PROJECT_ID, plan.projectID())
-			.set(FIELD_CREATED_AT, plan.createdAt().atOffset(ZoneOffset.UTC).toLocalDateTime())
-			.set(FIELD_RESOURCE_SET_HASH, plan.resourceSetHash())
-			.set(FIELD_CONFIGURATION_HASH, plan.configurationHash())
-			.set(FIELD_PLAN_NODE_ROOT, plan.planNodeRoot())
+			.set(FIELD_PROJECT_ID, testPlan.projectID())
+			.set(FIELD_CREATED_AT, testPlan.createdAt().atOffset(ZoneOffset.UTC).toLocalDateTime())
+			.set(FIELD_RESOURCE_SET_HASH, testPlan.resourceSetHash())
+			.set(FIELD_CONFIGURATION_HASH, testPlan.configurationHash())
+			.set(FIELD_PLAN_NODE_ROOT, testPlan.planNodeRoot())
 			.execute();
-		return new Plan(id, plan.projectID(), plan.createdAt(), plan.resourceSetHash(), plan.configurationHash(), plan.planNodeRoot());
+		return new TestPlan(id, testPlan.projectID(), testPlan.createdAt(), testPlan.resourceSetHash(), testPlan.configurationHash(), testPlan.planNodeRoot());
 	}
 
 
 	@Override
-	public Optional<Plan> getPlan(Project project, String resourceSetHash, String configurationHash) {
+	public Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash) {
 		return dsl.select(FIELD_PROJECT_ID)
 			.from(TABLE_PROJECT)
-			.where(FIELD_ORGANIZATION_NAME.eq(project.organization()))
-			.and(FIELD_PROJECT_NAME.eq(project.name()))
+			.where(FIELD_ORGANIZATION_NAME.eq(testProject.organization()))
+			.and(FIELD_PROJECT_NAME.eq(testProject.name()))
 			.fetchOptional()
 			.map(r -> r.get(FIELD_PROJECT_ID))
 			.flatMap(projectID -> dsl.select(
@@ -754,7 +754,7 @@ public class JooqPlanRepository implements PlanRepository {
 
 
 	@Override
-	public Optional<Plan> getPlan(UUID planID) {
+	public Optional<TestPlan> getPlan(UUID planID) {
 		return dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
 				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
@@ -765,8 +765,8 @@ public class JooqPlanRepository implements PlanRepository {
 			.map(this::mapPlan);
 	}
 
-	private Plan mapPlan(Record6<UUID, UUID, LocalDateTime, String, String, UUID> rec) {
-		return new Plan(
+	private TestPlan mapPlan(Record6<UUID, UUID, LocalDateTime, String, String, UUID> rec) {
+		return new TestPlan(
 			rec.get(FIELD_PLAN_ID),
 			rec.get(FIELD_PROJECT_ID),
 			rec.get(FIELD_CREATED_AT).toInstant(ZoneOffset.UTC),

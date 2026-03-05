@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTFile;
-import org.myjtools.openbbt.core.plan.TagExpression;
-import org.myjtools.openbbt.core.plan.Project;
-import org.myjtools.openbbt.core.plan.TestSuite;
+import org.myjtools.openbbt.core.testplan.TagExpression;
+import org.myjtools.openbbt.core.testplan.TestProject;
+import org.myjtools.openbbt.core.testplan.TestSuite;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,7 +24,7 @@ class OpenBBTFileTest {
 		try (var reader = Files.newReader(new File("src/test/resources/openbbt.yaml"), StandardCharsets.UTF_8)) {
 			var file = OpenBBTFile.read(reader);
 			assertThat(file).isNotNull();
-			assertThat(file.project()).extracting(Project::name).isEqualTo("My Project");
+			assertThat(file.project()).extracting(TestProject::name).isEqualTo("My Project");
 			assertThat(file.project().testSuites()).containsExactlyInAnyOrder(
 				new TestSuite("suiteA", "Suite A", TagExpression.parse("A or Aa")),
 				new TestSuite("suiteB", "Suite B", TagExpression.parse("B or Bb"))
@@ -47,7 +47,7 @@ class OpenBBTFileTest {
 			));
 			var context = file.createContext(INPUT_ENV, List.of("suiteA"), "profileA", env);
 			assertThat(context).isNotNull();
-			assertThat(context.project()).extracting(Project::name).isEqualTo("My Project");
+			assertThat(context.testProject()).extracting(TestProject::name).isEqualTo("My Project");
 			assertThat(context.testSuites()).containsExactlyInAnyOrder(
 				"suiteA"
 			);

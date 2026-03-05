@@ -7,14 +7,14 @@ import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.execution.PlanExecutor;
 import org.myjtools.openbbt.core.execution.Result;
-import org.myjtools.openbbt.core.plan.NodeType;
-import org.myjtools.openbbt.core.plan.PlanNode;
+import org.myjtools.openbbt.core.testplan.NodeType;
+import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.util.Pair;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class TestPlanExecutor {
+class TestTestPlanExecutor {
 
 	static final Config TEST_CONFIG = Config.ofMap(Map.of(
 			OpenBBTConfig.RESOURCE_PATH, "src/test/resources",
@@ -29,7 +29,7 @@ class TestPlanExecutor {
 		void testRunStepWithOneParameter() throws ExecutionException, InterruptedException {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var executor = new PlanExecutor(cm);
-			PlanNode node = new PlanNode(NodeType.TEST_CASE)
+			TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 					.name("Step with one parameter: 5")
 					.language("en");
 			var future = executor.submitExecution(node);
@@ -41,7 +41,7 @@ class TestPlanExecutor {
 	void testRunStepWithInvalidStep() throws ExecutionException, InterruptedException {
 		var cm = new OpenBBTRuntime(TEST_CONFIG);
 		var executor = new PlanExecutor(cm);
-		PlanNode node = new PlanNode(NodeType.TEST_CASE)
+		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("XX Step with one parameter: 5")
 				.language("en");
 		var future = executor.submitExecution(node);
@@ -53,7 +53,7 @@ class TestPlanExecutor {
 	void testStepThatAlwaysFails() throws ExecutionException, InterruptedException {
 		var cm = new OpenBBTRuntime(TEST_CONFIG);
 		var executor = new PlanExecutor(cm);
-		PlanNode node = new PlanNode(NodeType.TEST_CASE)
+		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("stepThatAlwaysFails")
 				.language("en");
 		var future = executor.submitExecution(node);
@@ -66,7 +66,7 @@ class TestPlanExecutor {
 	void stepWithUnexpectedError() throws ExecutionException, InterruptedException {
 		var cm = new OpenBBTRuntime(TEST_CONFIG);
 		var executor = new PlanExecutor(cm);
-		PlanNode node = new PlanNode(NodeType.TEST_CASE)
+		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("stepWithUnexpectedError")
 				.language("en");
 		var future = executor.submitExecution(node);

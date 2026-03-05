@@ -1,9 +1,9 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.imconfig.Config;
-import org.myjtools.openbbt.core.plan.TagExpression;
-import org.myjtools.openbbt.core.plan.Project;
-import org.myjtools.openbbt.core.plan.TestSuite;
+import org.myjtools.openbbt.core.testplan.TagExpression;
+import org.myjtools.openbbt.core.testplan.TestProject;
+import org.myjtools.openbbt.core.testplan.TestSuite;
 import org.yaml.snakeyaml.Yaml;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class OpenBBTFile {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> projectMap = (Map<String, Object>) raw.get("project");
 		if (projectMap != null) {
-			file.project = parseProject(projectMap);
+			file.testProject = parseProject(projectMap);
 		}
 		@SuppressWarnings("unchecked")
 		List<String> plugins = (List<String>) raw.get("plugins");
@@ -38,11 +38,11 @@ public class OpenBBTFile {
 		return file;
 	}
 
-	private static Project parseProject(Map<String, Object> map) {
+	private static TestProject parseProject(Map<String, Object> map) {
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> suitesRaw = (List<Map<String, Object>>) map.getOrDefault("test-suites", List.of());
 		List<TestSuite> testSuites = suitesRaw.stream().map(OpenBBTFile::parseTestSuite).toList();
-		return new Project((String) map.get("name"), (String) map.get("description"), (String) map.get("organization"), testSuites);
+		return new TestProject((String) map.get("name"), (String) map.get("description"), (String) map.get("organization"), testSuites);
 	}
 
 	private static TestSuite parseTestSuite(Map<String, Object> map) {
@@ -50,14 +50,14 @@ public class OpenBBTFile {
 		return new TestSuite((String) map.get("name"), (String) map.get("description"), tagExpression);
 	}
 
-	private Project project;
+	private TestProject testProject;
 	private List<String> plugins;
 	private Map<String, Object> configuration;
 	private Map<String, Map<String,String>> profiles;
 
 
-	public Project project() {
-		return project;
+	public TestProject project() {
+		return testProject;
 	}
 
 	public List<String> plugins() {
@@ -79,15 +79,15 @@ public class OpenBBTFile {
 			String profile,
 			Config substitutions
 	) {
-		var contextProject = new Project(
-			project.name(),
-			project.description(),
-			project.organization(),
-			List.copyOf(project.testSuites())
+		var contextProject = new TestProject(
+			testProject.name(),
+			testProject.description(),
+			testProject.organization(),
+			List.copyOf(testProject.testSuites())
 		);
 		var contextTestSuites = new ArrayList<String>();
 		for (String testSuiteName : testSuites) {
-			var testSuite = project.testSuites().stream().filter(suite -> suite.name().equals(testSuiteName)).findFirst();
+			var testSuite = testProject.testSuites().stream().filter(suite -> suite.name().equals(testSuiteName)).findFirst();
 			if (testSuite.isEmpty()) {
 				throw new OpenBBTException("Test suite '" + testSuiteName + "' not found in project file");
 			}

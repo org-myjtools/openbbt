@@ -1,8 +1,8 @@
-package org.myjtools.openbbt.core.plan;
+package org.myjtools.openbbt.core.testplan;
 
 import java.util.List;
 
-public record Project(
+public record TestProject(
 	String name,
 	String description,
 	String organization,

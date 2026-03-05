@@ -7,7 +7,7 @@ import org.myjtools.openbbt.cli.MainCommand;
 import picocli.CommandLine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class PlanCommandTest {
+class TestPlanCommandTest {
 
 	@BeforeAll
 	static void installPlugins() {

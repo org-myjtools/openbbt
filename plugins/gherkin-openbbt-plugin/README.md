@@ -13,12 +13,12 @@ extension points:
 
 | Extension Point  | Implementation            | Role                                              |
 |------------------|---------------------------|---------------------------------------------------|
-| `SuiteAssembler` | `GherkinSuiteAssembler`   | Discovers `.feature` files and builds the plan tree |
+| `SuiteAssembler` | `GherkinSuiteAssembler`   | Discovers `.feature` files and builds the testPlan tree |
 | `ConfigProvider`  | `GherkinConfig`           | Provides default configuration from `gherkin-config.yaml` |
 
 ### Parsing Pipeline
 
-1. **Discovery** — all `*.feature` resources in the project are located via `ResourceFinder`.
+1. **Discovery** — all `*.feature` resources in the testProject are located via `ResourceFinder`.
 2. **Parsing** — each file is parsed by `gherkin-parser` into a Gherkin AST.
 3. **Assembly** — `FeaturePlanAssembler` converts each AST into a `PlanNode` subtree:
    - `Feature` → `TEST_AGGREGATOR`
@@ -120,7 +120,7 @@ examples table is taken from the definition feature.
 ## Configuration
 
 Configuration is loaded from `gherkin-config.yaml` (bundled with the plugin) and can be
-overridden by the project's own configuration. All keys are prefixed with `gherkin.`:
+overridden by the testProject's own configuration. All keys are prefixed with `gherkin.`:
 
 | Key                         | Type | Default       | Description                                                                                              |
 |-----------------------------|------|---------------|----------------------------------------------------------------------------------------------------------|
@@ -130,7 +130,7 @@ overridden by the project's own configuration. All keys are prefixed with `gherk
 
 ### Properties from Comments
 
-Gherkin comments matching the pattern `# key: value` are extracted as plan node properties.
+Gherkin comments matching the pattern `# key: value` are extracted as testPlan node properties.
 This is used internally (e.g. `gherkin.step-map`) and can be leveraged for custom properties.
 
 ## Module Structure

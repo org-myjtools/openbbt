@@ -1,6 +1,6 @@
-import org.myjtools.openbbt.core.contributors.*;
+import org.myjtools.openbbt.core.extensions.*;
 import org.myjtools.openbbt.core.messages.MessageProvider;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 
 module org.myjtools.openbbt.core {
 
@@ -21,10 +21,10 @@ module org.myjtools.openbbt.core {
 
 	exports org.myjtools.openbbt.core;
 	exports org.myjtools.openbbt.core.util;
-	exports org.myjtools.openbbt.core.plan;
+	exports org.myjtools.openbbt.core.testplan;
 	exports org.myjtools.openbbt.core.messages;
 	exports org.myjtools.openbbt.core.backend;
-	exports org.myjtools.openbbt.core.contributors;
+	exports org.myjtools.openbbt.core.extensions;
 	exports org.myjtools.openbbt.core.expressions;
 	exports org.myjtools.openbbt.core.datatypes;
 	exports org.myjtools.openbbt.core.assertions;
@@ -32,8 +32,8 @@ module org.myjtools.openbbt.core {
 
 	opens org.myjtools.openbbt.core to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.messages to org.myjtools.jexten;
-	opens org.myjtools.openbbt.core.plan to org.myjtools.jexten;
-	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
+	opens org.myjtools.openbbt.core.testplan to org.myjtools.jexten;
+	opens org.myjtools.openbbt.core.extensions to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.backend to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.persistence;
@@ -42,11 +42,11 @@ module org.myjtools.openbbt.core {
 
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;
-	uses PlanRepository;
+	uses TestPlanRepository;
 	uses ConfigProvider;
 	uses org.myjtools.openbbt.core.messages.MessageProvider;
 	uses SuiteAssembler;
-	uses org.myjtools.openbbt.core.contributors.StepProvider;
+	uses org.myjtools.openbbt.core.extensions.StepProvider;
 	uses RepositoryFactory;
 
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;

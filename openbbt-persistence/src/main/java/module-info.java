@@ -1,4 +1,4 @@
-import org.myjtools.openbbt.core.contributors.RepositoryFactory;
+import org.myjtools.openbbt.core.extensions.RepositoryFactory;
 import org.myjtools.openbbt.persistence.JooqRepositoryFactory;
 
 module org.myjtools.openbbt.persistence {

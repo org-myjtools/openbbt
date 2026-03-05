@@ -23,7 +23,7 @@ openbbt/
 │           ├── expressions/      # Expression parsing and matching
 │           ├── datatypes/        # Data type adapters
 │           ├── assertions/       # Assertion framework
-│           ├── plan/             # Plan node model
+│           ├── testPlan/             # Plan node model
 │           ├── persistence/      # Repository layer (H2)
 │           └── config/           # Configuration management
 │
@@ -34,7 +34,7 @@ openbbt/
 
 ## Getting Started
 
-See the **[Getting Started guide](docs/getting-started.md)** for step-by-step instructions on installation, PATH setup, plugin installation, and running a test plan.
+See the **[Getting Started guide](docs/getting-started.md)** for step-by-step instructions on installation, PATH setup, plugin installation, and running a test testPlan.
 
 ## Requirements
 
@@ -100,7 +100,7 @@ Test plans are organized as a tree structure:
 - **Test Cases**: Individual test scenarios
 - **Steps**: Executable test steps
 
-A plan is identified by the combination of organization, project, and a plan ID (hash derived from configuration and resources).
+A testPlan is identified by the combination of organization, testProject, and a testPlan ID (hash derived from configuration and resources).
 
 ## Gherkin Plugin
 
@@ -136,7 +136,7 @@ implementation-tag: "implementation"
 
 ```yaml
 organization: My Organization
-project: My Project
+testProject: My Project
 test-suites:
   - suite-a
   - suite-b
@@ -154,7 +154,7 @@ test-suites:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](openbbt-core/LICENSE) file for details.
+This testProject is licensed under the MIT License - see the [LICENSE](openbbt-core/LICENSE) file for details.
 
 ## Contributing
 

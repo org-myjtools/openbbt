@@ -1,13 +1,16 @@
-package org.myjtools.openbbt.core.plan;
+package org.myjtools.openbbt.core.testplan;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.Instant;
-import lombok.*;
 
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
 @Getter @Setter @EqualsAndHashCode
-public class PlanNodeExecution {
+public class
+TestPlanNodeExecution {
 
 	private ExecutionResult result;
 	private Instant startInstant;

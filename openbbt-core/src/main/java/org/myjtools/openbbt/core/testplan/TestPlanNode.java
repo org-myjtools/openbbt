@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.plan;
+package org.myjtools.openbbt.core.testplan;
 
 
 import java.util.UUID;
@@ -9,7 +9,7 @@ import java.util.*;
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
 @Getter @Setter @NoArgsConstructor @EqualsAndHashCode
-public class PlanNode {
+public class TestPlanNode {
 
 	private UUID nodeID;
 	private NodeType nodeType;
@@ -26,31 +26,31 @@ public class PlanNode {
 	private String display;
 
 
-	public PlanNode(NodeType type) {
+	public TestPlanNode(NodeType type) {
 		this.nodeType = type;
 	}
 
 
-	public PlanNode addProperties(Map<String, String> properties) {
+	public TestPlanNode addProperties(Map<String, String> properties) {
 		this.properties().putAll(properties);
 		return this;
 	}
 
 
-	public PlanNode addProperty(String key, String value) {
+	public TestPlanNode addProperty(String key, String value) {
 		this.properties().put(key,value);
 		return this;
 	}
 
 
 
-	public PlanNode addTag(String tag) {
+	public TestPlanNode addTag(String tag) {
 		this.tags().add(tag);
 		return this;
 	}
 
 
-	public PlanNode addTags(Collection<String> tags) {
+	public TestPlanNode addTags(Collection<String> tags) {
 		this.tags().addAll(tags);
 		return this;
 	}

@@ -1,10 +1,10 @@
-package org.myjtools.openbbt.core.plan;
+package org.myjtools.openbbt.core.testplan;
 
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
-import org.myjtools.openbbt.core.contributors.SuiteAssembler;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
+import org.myjtools.openbbt.core.extensions.SuiteAssembler;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.util.Hash;
 import org.myjtools.openbbt.core.util.Log;
 import java.util.ArrayList;
@@ -31,24 +31,24 @@ public class PlanBuilder {
 	 * @return the generated PlanID of the registered test plan
 	 * @throws OpenBBTException if the test plan could not be assembled or registered
 	 */
-	public Plan buildTestPlan(OpenBBTContext context) {
+	public TestPlan buildTestPlan(OpenBBTContext context) {
 
 
-		PlanRepository planRepository = runtime.getRepository(PlanRepository.class);
+		TestPlanRepository testPlanRepository = runtime.getRepository(TestPlanRepository.class);
 
 		// create project if not exists
-		UUID projectID = planRepository.persistProject(context.project());
+		UUID projectID = testPlanRepository.persistProject(context.testProject());
 
 		String resourceSetHash = runtime.resourceSet().hash();
 		String configurationHash = Hash.of(runtime.configuration().toString());
 
-		Plan plan = planRepository.getPlan(context.project(), resourceSetHash, configurationHash).orElse(null);
-		if (plan == null) {
+		TestPlan testPlan = testPlanRepository.getPlan(context.testProject(), resourceSetHash, configurationHash).orElse(null);
+		if (testPlan == null) {
 			// No existing plan found, assemble a new one
 			var rootNodeID = assembleTestPlanNodes(context).orElseThrow(
-				() -> new OpenBBTException("Failed to assemble test plan for project: {}", context.project().name())
+				() -> new OpenBBTException("Failed to assemble test plan for project: {}", context.testProject().name())
 			);
-			plan = new Plan(
+			testPlan = new TestPlan(
 				null,
 				projectID,
 				runtime.clock().now(),
@@ -56,12 +56,12 @@ public class PlanBuilder {
 				configurationHash,
 				rootNodeID
 			);
-			plan = planRepository.persistPlan(plan);
-			log.debug("Registered new test plan: {}", plan.planID());
+			testPlan = testPlanRepository.persistPlan(testPlan);
+			log.debug("Registered new test plan: {}", testPlan.planID());
 		} else {
-			log.debug("Reusing existing test plan: {}", plan.planID());
+			log.debug("Reusing existing test plan: {}", testPlan.planID());
 		}
-		return plan;
+		return testPlan;
 	}
 
 
@@ -70,7 +70,7 @@ public class PlanBuilder {
 	 * Assembles the test plan for the given context by invoking all registered SuiteAssemblers.
 	 */
 	private Optional<UUID> assembleTestPlanNodes(OpenBBTContext context) {
-		PlanRepository planNodeRepository = runtime.getRepository(PlanRepository.class);
+		TestPlanRepository planNodeRepository = runtime.getRepository(TestPlanRepository.class);
 		List<SuiteAssembler> assemblers = runtime.getExtensions(SuiteAssembler.class).toList();
 		if (assemblers.isEmpty()) {
 			log.warn("No SuiteAssembler found, cannot assemble test plan");
@@ -89,7 +89,7 @@ public class PlanBuilder {
 			log.warn("No test plan nodes assembled for test suites: {}", context.testSuites());
 			return Optional.empty();
 		}
-		PlanNode root = new PlanNode(NodeType.TEST_PLAN);
+		TestPlanNode root = new TestPlanNode(NodeType.TEST_PLAN);
 		root.name("Test Plan");
 		var rootID = planNodeRepository.persistNode(root);
 		for (UUID nodeId : nodes) {

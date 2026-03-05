@@ -4,12 +4,12 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.contributors.StepProvider;
-import org.myjtools.openbbt.core.plan.DataTable;
-import org.myjtools.openbbt.core.plan.Document;
-import org.myjtools.openbbt.core.contributors.SetUp;
-import org.myjtools.openbbt.core.contributors.Step;
-import org.myjtools.openbbt.core.contributors.TearDown;
+import org.myjtools.openbbt.core.extensions.StepProvider;
+import org.myjtools.openbbt.core.testplan.DataTable;
+import org.myjtools.openbbt.core.testplan.Document;
+import org.myjtools.openbbt.core.extensions.SetUp;
+import org.myjtools.openbbt.core.extensions.Step;
+import org.myjtools.openbbt.core.extensions.TearDown;
 
 @Extension(scope = Scope.TRANSIENT)
 public class TestStepProvider implements StepProvider  {

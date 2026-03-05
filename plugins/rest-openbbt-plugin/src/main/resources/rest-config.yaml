@@ -8,13 +8,13 @@ rest.httpCodeThreshold:
     The HTTP status code threshold for considering a response as successful. 
     For example, if set to 400, any response with a status code of 400 or higher 
     would be treated automatically as a failure.
-  type: number
+  type: integer
   defaultValue: 500
 
 rest.timeout:
   description: |
     The timeout duration (in milliseconds) for RESTful operations. If a request takes 
     longer than this duration, it will be aborted and treated as a failure.
-  type: number
+  type: integer
   defaultValue: 60000
 

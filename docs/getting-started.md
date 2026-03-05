@@ -1,6 +1,6 @@
 # Getting Started with OpenBBT
 
-This guide walks you through installing OpenBBT, configuring your first project, installing plugins, and generating a test plan.
+This guide walks you through installing OpenBBT, configuring your first testProject, installing plugins, and generating a test testPlan.
 
 ## Requirements
 
@@ -73,14 +73,14 @@ openbbt --help
 
 ---
 
-## 3. Create the project configuration file
+## 3. Create the testProject configuration file
 
-OpenBBT is driven by an `openbbt.yaml` file that you place in your project's working directory. The default name is `openbbt.yaml`; you can override it with the `-f` flag.
+OpenBBT is driven by an `openbbt.yaml` file that you place in your testProject's working directory. The default name is `openbbt.yaml`; you can override it with the `-f` flag.
 
 ### Minimal example
 
 ```yaml
-project:
+testProject:
   organization: Acme Corp
   name: My Project
   test-suites:
@@ -99,7 +99,7 @@ configuration:
 ### Full reference
 
 ```yaml
-project:
+testProject:
   organization: string          # Organisation name
   name: string                  # Project name
   description: string           # Optional description
@@ -144,7 +144,7 @@ configuration:
 Activate a profile with the `-p` flag:
 
 ```bash
-openbbt plan -p staging -s smoke
+openbbt testPlan -p staging -s smoke
 ```
 
 ---
@@ -152,7 +152,7 @@ openbbt plan -p staging -s smoke
 ## 4. Install plugins
 
 Plugins provide components such as the test format support (e.g., Gherkin), executable steps, hooks, and reports,
-among other things. Run the `install` command once per project, or whenever you add a new plugin to `openbbt.yaml`.
+among other things. Run the `install` command once per testProject, or whenever you add a new plugin to `openbbt.yaml`.
 Artifacts are downloaded from Maven Central and cached locally under the `core.environmentPath` directory
 (`.openbbt/` by default).
 
@@ -177,33 +177,33 @@ openbbt install --clean
 
 ---
 
-## 5. Generate a test plan
+## 5. Generate a test testPlan
 
-The `plan` command loads the plugins, reads your test resources, and assembles a test plan. On success it prints a plan identifier (a ULID) to stdout.
+The `testPlan` command loads the plugins, reads your test resources, and assembles a test testPlan. On success it prints a testPlan identifier (a ULID) to stdout.
 
 ```bash
-# Generate plan for one suite
-openbbt plan -s smoke
+# Generate testPlan for one suite
+openbbt testPlan -s smoke
 ```
 
 ```bash
-# Generate plan for multiple suites
-openbbt plan -s smoke -s regression
+# Generate testPlan for multiple suites
+openbbt testPlan -s smoke -s regression
 ```
 
 ```bash
-# Show the full plan tree (scenarios, steps, …)
-openbbt plan -s smoke --detail
+# Show the full testPlan tree (scenarios, steps, …)
+openbbt testPlan -s smoke --detail
 ```
 
 ```bash
 # Pass extra parameters at runtime
-openbbt plan -s smoke -D base-url=https://staging.example.com
+openbbt testPlan -s smoke -D base-url=https://staging.example.com
 ```
 
 ```bash
 # Use a profile
-openbbt plan -s smoke -p staging
+openbbt testPlan -s smoke -p staging
 ```
 
 ---
@@ -233,17 +233,17 @@ openbbt install [-f <file>] [--clean]
 |--------|-------------|
 | `--clean` / `-c` | Delete existing plugin cache before installing |
 
-### `plan`
+### `testPlan`
 
-Assemble and display the test plan.
+Assemble and display the test testPlan.
 
 ```bash
-openbbt plan [-f <file>] [-s <suite>]... [--detail] [-p <profile>] [-D key=value]...
+openbbt testPlan [-f <file>] [-s <suite>]... [--detail] [-p <profile>] [-D key=value]...
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--detail` | Print the full plan tree (suites, scenarios, steps) |
+| `--detail` | Print the full testPlan tree (suites, scenarios, steps) |
 
 ### `show-config`
 
@@ -268,7 +268,7 @@ openbbt purge [-f <file>]
 ## 7. Typical workflow
 
 ```bash
-# 1. Create your openbbt.yaml in the project root
+# 1. Create your openbbt.yaml in the testProject root
 vim openbbt.yaml
 
 # 2. Install plugins (once, or when openbbt.yaml changes)
@@ -277,14 +277,14 @@ openbbt install
 # 3. Inspect resolved configuration
 openbbt show-config 
 
-# 4. Generate the test plan for a suite
-openbbt plan-s smoke
+# 4. Generate the test testPlan for a suite
+openbbt testPlan-s smoke
 
-# 5. Inspect plan details
-openbbt plan -s smoke --detail
+# 5. Inspect testPlan details
+openbbt testPlan -s smoke --detail
 
 # 6. Use a profile for environment-specific values
-openbbt plan -s smoke -p staging
+openbbt testPlan -s smoke -p staging
 ```
 
 ---
@@ -296,11 +296,11 @@ openbbt plan -s smoke -p staging
 | `No SuiteAssembler found` | Plugin not installed or incompatible | Run `openbbt install` and verify the plugin name in `openbbt.yaml` |
 | `Test suite 'X' not found` | Suite name mismatch | Check the `test-suites[].name` values in `openbbt.yaml` |
 | `Failed to read configuration file` | Wrong path or missing file | Pass the correct path with `-f` |
-| `No test plan nodes assembled` | Tag expression matches nothing | Verify the `tag-expression` and that resources exist at `core.resourcePath` |
+| `No test testPlan nodes assembled` | Tag expression matches nothing | Verify the `tag-expression` and that resources exist at `core.resourcePath` |
 | Artifact download fails | Network or repository config | Check `core.artifacts.repository.url` and proxy settings |
 
 Enable debug logging with `-d` to get detailed output for any issue:
 
 ```bash
-openbbt plan -f openbbt.yaml -s smoke -d
+openbbt testPlan -f openbbt.yaml -s smoke -d
 ```

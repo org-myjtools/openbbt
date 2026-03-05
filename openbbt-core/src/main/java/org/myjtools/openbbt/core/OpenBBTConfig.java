@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.jexten.Extension;
-import org.myjtools.openbbt.core.contributors.ConfigProvider;
+import org.myjtools.openbbt.core.extensions.ConfigProvider;
 import java.nio.file.Path;
 
 /**

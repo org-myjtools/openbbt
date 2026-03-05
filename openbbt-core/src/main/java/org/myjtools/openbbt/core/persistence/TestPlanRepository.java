@@ -1,9 +1,9 @@
 package org.myjtools.openbbt.core.persistence;
 
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.plan.Plan;
-import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.Project;
+import org.myjtools.openbbt.core.testplan.TestPlan;
+import org.myjtools.openbbt.core.testplan.TestPlanNode;
+import org.myjtools.openbbt.core.testplan.TestProject;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
  * allowing for flexibility in how plan nodes are stored (e.g., in-memory, database, etc.).
  *
  * @author Luis Iñesta Gelabert - luiinge@gmail.com */
-public interface PlanRepository extends Repository {
+public interface TestPlanRepository extends Repository {
 
 
 	/**
@@ -29,7 +29,7 @@ public interface PlanRepository extends Repository {
 	 * @param id the node ID
 	 * @return the plan node data, or empty if the node does not exist
 	 */
-	Optional<PlanNode> getNodeData(UUID id);
+	Optional<TestPlanNode> getNodeData(UUID id);
 
 	/**
 	 * Update a specific field of a plan node. The field name and value are determined by the caller,
@@ -154,21 +154,21 @@ public interface PlanRepository extends Repository {
 	 * @param node the plan node to persist
 	 * @return the assigned node UUID
 	 */
-	UUID persistNode(PlanNode node);
+	UUID persistNode(TestPlanNode node);
 
 	/**
 	 * Search for nodes matching the given criteria.
 	 * @param criteria the search criteria
 	 * @return a stream of matching node IDs
 	 */
-	Stream<UUID> searchNodes(PlanNodeCriteria criteria);
+	Stream<UUID> searchNodes(TestPlanNodeCriteria criteria);
 
 	/**
 	 * Count nodes matching the given criteria.
 	 * @param criteria the search criteria
 	 * @return the number of matching nodes
 	 */
-	int countNodes(PlanNodeCriteria criteria);
+	int countNodes(TestPlanNodeCriteria criteria);
 
 	/**
 	 * Check whether a node has a specific tag.
@@ -228,13 +228,13 @@ public interface PlanRepository extends Repository {
 	Map<String, String> getNodeProperties(UUID nodeID);
 
 
-	Optional<Plan> getPlan(Project project, String resourceSetHash, String configurationHash);
+	Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash);
 
-	Optional<Plan> getPlan(UUID planID);
+	Optional<TestPlan> getPlan(UUID planID);
 
-	Plan persistPlan(Plan plan);
+	TestPlan persistPlan(TestPlan testPlan);
 
-	UUID persistProject(Project project);
+	UUID persistProject(TestProject testProject);
 
 
 

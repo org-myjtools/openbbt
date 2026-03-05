@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
-import org.myjtools.openbbt.core.contributors.SuiteAssembler;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
-import org.myjtools.openbbt.core.persistence.PlanRepositoryWriter;
-import org.myjtools.openbbt.core.plan.TagExpression;
-import org.myjtools.openbbt.core.plan.TestSuite;
+import org.myjtools.openbbt.core.extensions.SuiteAssembler;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.persistence.TestPlanRepositoryWriter;
+import org.myjtools.openbbt.core.testplan.TagExpression;
+import org.myjtools.openbbt.core.testplan.TestSuite;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -123,8 +123,8 @@ class MarkdownSuiteAssemblerTest {
 		var planAssembler = cm.getExtensions(SuiteAssembler.class).findFirst().orElseThrow();
 		TestSuite testSuite = new TestSuite("Test Suite", "Test Suite", tagExpression);
 		UUID planID = planAssembler.assembleSuite(testSuite).orElseThrow();
-		PlanRepository repository = cm.getRepository(PlanRepository.class);
-		PlanRepositoryWriter writer = new PlanRepositoryWriter(repository);
+		TestPlanRepository repository = cm.getRepository(TestPlanRepository.class);
+		TestPlanRepositoryWriter writer = new TestPlanRepositoryWriter(repository);
 		StringBuilder output = new StringBuilder();
 		writer.write(planID, output::append);
 		return output.toString();

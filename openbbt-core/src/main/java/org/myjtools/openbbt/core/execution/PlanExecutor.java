@@ -2,8 +2,8 @@ package org.myjtools.openbbt.core.execution;
 
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
-import org.myjtools.openbbt.core.plan.NodeArgument;
-import org.myjtools.openbbt.core.plan.PlanNode;
+import org.myjtools.openbbt.core.testplan.NodeArgument;
+import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.util.Log;
 import org.myjtools.openbbt.core.util.Pair;
 import java.util.Locale;
@@ -32,7 +32,7 @@ public class PlanExecutor {
 	}
 
 
-	public Future<Pair<Result,Throwable>> submitExecution(PlanNode node) {
+	public Future<Pair<Result,Throwable>> submitExecution(TestPlanNode node) {
 		return this.executor.submit(() -> {
 			try {
 				backend.run(node.name(), locale(node.language()), nodeArgument(node));
@@ -50,7 +50,7 @@ public class PlanExecutor {
 	}
 
 
-	private NodeArgument nodeArgument(PlanNode node) {
+	private NodeArgument nodeArgument(TestPlanNode node) {
 		NodeArgument nodeArgument = null;
 		if (node.document() != null) {
 			nodeArgument = node.document();

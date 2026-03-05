@@ -4,8 +4,8 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.contributors.RepositoryFactory;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
+import org.myjtools.openbbt.core.extensions.RepositoryFactory;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
 import org.myjtools.openbbt.persistence.plan.JooqPlanRepository;
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 
 	private Object createRemoteRepository(Class<?> type, String url, String username, String password) {
 		DataSourceProvider provider = DataSourceProvider.postgresql(url, username, password);
-		if (type.equals(PlanRepository.class)) {
+		if (type.equals(TestPlanRepository.class)) {
 			return new JooqPlanRepository(provider);
 		}
 		throw new OpenBBTException("Unsupported repository type for remote mode: {}", type.getName());
@@ -70,7 +70,7 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 
 	private static Object createFileRepository(Class<?> type, Path filePath) {
 		DataSourceProvider provider = DataSourceProvider.hsqldb(filePath);
-		if (type.equals(PlanRepository.class)) {
+		if (type.equals(TestPlanRepository.class)) {
 			return new JooqPlanRepository(provider);
 		}
 		throw new OpenBBTException("Unsupported repository type for file mode: {}", type.getName());

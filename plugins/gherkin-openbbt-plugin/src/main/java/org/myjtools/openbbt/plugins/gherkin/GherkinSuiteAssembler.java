@@ -12,13 +12,13 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.PostConstruct;
 import org.myjtools.openbbt.core.*;
-import org.myjtools.openbbt.core.persistence.PlanNodeCriteria;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
-import org.myjtools.openbbt.core.contributors.SuiteAssembler;
-import org.myjtools.openbbt.core.plan.NodeType;
-import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.TagExpression;
-import org.myjtools.openbbt.core.plan.TestSuite;
+import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.extensions.SuiteAssembler;
+import org.myjtools.openbbt.core.testplan.NodeType;
+import org.myjtools.openbbt.core.testplan.TestPlanNode;
+import org.myjtools.openbbt.core.testplan.TagExpression;
+import org.myjtools.openbbt.core.testplan.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
 import java.io.IOException;
 import java.util.stream.Stream;
@@ -28,7 +28,7 @@ import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
  * SPI implementation that assembles a test suite from Gherkin {@code .feature} files.
  *
  * <p>This assembler discovers all {@code .feature} resources in the project, parses them
- * using the Gherkin parser, and builds a {@link PlanNode} tree that represents the test
+ * using the Gherkin parser, and builds a {@link TestPlanNode} tree that represents the test
  * suite. When multiple feature files are present, it also handles the
  * <em>definition/implementation redefining</em> mechanism: features tagged with
  * {@code @definition} provide abstract test case structures, while features tagged with
@@ -59,7 +59,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 	Config config;
 
 	@Inject
-	PlanRepository repository;
+	TestPlanRepository repository;
 
 	@Inject
 	ResourceSet resourceSet;
@@ -108,7 +108,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 	private Optional<UUID> wrapTestSuite(UUID feature, TestSuite testSuite) {
-		PlanNode root = new PlanNode(NodeType.TEST_SUITE);
+		TestPlanNode root = new TestPlanNode(NodeType.TEST_SUITE);
 		root.name(testSuite.name());
 		var id = repository.persistNode(root);
 		repository.attachChildNodeLast(id, feature);
@@ -125,23 +125,23 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 		fillImplementationScenarioOutlines(root, testSuite.tagExpression());
 
 		// redefine definition test cases with implementation steps
-		repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
-			PlanNodeCriteria.withTag(definitionTag)
+		repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			TestPlanNodeCriteria.withTag(definitionTag)
 		)).forEach(definitionTestCase -> redefine(root,definitionTestCase));
 
-		repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_FEATURE),
-			PlanNodeCriteria.withTag(implementationTag)
+		repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_FEATURE),
+			TestPlanNodeCriteria.withTag(implementationTag)
 		)).forEach(implementationFeature -> repository.deleteNode(implementationFeature));
 
-		repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.or(
-				PlanNodeCriteria.withTag(definitionTag),
-				PlanNodeCriteria.withTag(implementationTag)
+		repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.or(
+				TestPlanNodeCriteria.withTag(definitionTag),
+				TestPlanNodeCriteria.withTag(implementationTag)
 			)
 		)).forEach(it -> {
 			repository.removeNodeTag(it, implementationTag);
@@ -166,10 +166,10 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 	private void deleteImplementationScenarioOutlineContent(UUID root) {
 		log.trace("deleteImplementationScenarioOutlineContent");
-		repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withTag(implementationTag),
-			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE)
+		repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.withTag(implementationTag),
+			TestPlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE)
 		)).forEach(scenarioOutline ->
 			repository.getNodeChildren(scenarioOutline).toList()
 				.forEach(child -> repository.deleteNode(child))
@@ -181,7 +181,7 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 	private UUID assembleStandaloneFeatures(List<Resource> resources, TestSuite testSuite) {
 		log.trace("provideStandaloneFeatures");
-		var id = repository.persistNode(new PlanNode(NodeType.TEST_FEATURE));
+		var id = repository.persistNode(new TestPlanNode(NodeType.TEST_FEATURE));
 		for (Resource resource : resources) {
 			assembleFeatureNode(
 				keywordMapProvider,
@@ -196,21 +196,21 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 	private void deleteDefinitionTestCasesWithoutId(UUID root) {
-		repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withTag(definitionTag),
-			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
-			PlanNodeCriteria.withField("identifier", null)
+		repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.withTag(definitionTag),
+			TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			TestPlanNodeCriteria.withField("identifier", null)
 		)).forEach(it -> repository.deleteNode(it));
 	}
 
 
 	private void fillImplementationScenarioOutlines(UUID root, TagExpression tagExpression) {
 		log.trace("fillImplementationScenarioOutlines");
-		repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withTag(implementationTag),
-			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE)
+		repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.withTag(implementationTag),
+			TestPlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE)
 		)).forEach(scenarioOutline -> fillImplementationScenarioOutline(root, scenarioOutline, tagExpression));
 	}
 
@@ -221,12 +221,12 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 		UUID impFeature = repository.getParentNode(impScenarioOutline).orElseThrow();
 		String identifier = repository.getNodeField(impScenarioOutline, "identifier").orElseThrow().toString();
 
-		UUID defScenarioOutline = repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withNodeType(NodeType.TEST_FEATURE),
-			PlanNodeCriteria.withTag(definitionTag),
-			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE),
-			PlanNodeCriteria.withField("identifier",identifier)
+		UUID defScenarioOutline = repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.withNodeType(NodeType.TEST_FEATURE),
+			TestPlanNodeCriteria.withTag(definitionTag),
+			TestPlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_SCENARIO_OUTLINE),
+			TestPlanNodeCriteria.withField("identifier",identifier)
 		)).findFirst().orElseThrow(
 			() -> new OpenBBTException(
 				"There is no definition feature with name {}",
@@ -310,9 +310,9 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 	private void moveBackgroundToOtherTestCase(UUID origin, UUID target) {
-		repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.childOf(origin),
-			PlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND)
+		repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.childOf(origin),
+			TestPlanNodeCriteria.withProperty(GHERKIN_TYPE, GHERKIN_TYPE_BACKGROUND)
 		)).findFirst().ifPresent(originBackground -> {
 			repository.detachChildNode(origin, originBackground);
 			repository.attachChildNodeFirst(target, originBackground); // background always in first
@@ -342,11 +342,11 @@ public class GherkinSuiteAssembler implements SuiteAssembler {
 
 
 	private Optional<UUID> implementationTestCase(UUID root, UUID definitionTestCase) {
-		return repository.searchNodes(PlanNodeCriteria.and(
-			PlanNodeCriteria.descendantOf(root),
-			PlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
-			PlanNodeCriteria.withTag(implementationTag),
-			PlanNodeCriteria.withField("identifier",repository.getNodeField(definitionTestCase,"identifier").orElseThrow()))
+		return repository.searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(root),
+			TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE),
+			TestPlanNodeCriteria.withTag(implementationTag),
+			TestPlanNodeCriteria.withField("identifier",repository.getNodeField(definitionTestCase,"identifier").orElseThrow()))
 		).findFirst();
 	}
 

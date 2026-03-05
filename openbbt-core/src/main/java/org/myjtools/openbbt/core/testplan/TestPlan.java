@@ -1,9 +1,9 @@
-package org.myjtools.openbbt.core.plan;
+package org.myjtools.openbbt.core.testplan;
 
 import java.util.UUID;
 import java.time.Instant;
 
-public record Plan(
+public record TestPlan(
 	UUID planID,
 	UUID projectID,
 	Instant createdAt,

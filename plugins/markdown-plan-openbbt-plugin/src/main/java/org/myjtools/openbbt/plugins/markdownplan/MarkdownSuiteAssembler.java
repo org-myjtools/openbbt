@@ -12,14 +12,14 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.PostConstruct;
 import org.myjtools.openbbt.core.*;
-import org.myjtools.openbbt.core.contributors.SuiteAssembler;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
-import org.myjtools.openbbt.core.plan.DataTable;
-import org.myjtools.openbbt.core.plan.Document;
-import org.myjtools.openbbt.core.plan.NodeType;
-import org.myjtools.openbbt.core.plan.PlanNode;
-import org.myjtools.openbbt.core.plan.TagExpression;
-import org.myjtools.openbbt.core.plan.TestSuite;
+import org.myjtools.openbbt.core.extensions.SuiteAssembler;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.testplan.DataTable;
+import org.myjtools.openbbt.core.testplan.Document;
+import org.myjtools.openbbt.core.testplan.NodeType;
+import org.myjtools.openbbt.core.testplan.TestPlanNode;
+import org.myjtools.openbbt.core.testplan.TagExpression;
+import org.myjtools.openbbt.core.testplan.TestSuite;
 import org.myjtools.openbbt.core.util.Log;
 
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
     Config config;
 
     @Inject
-    PlanRepository repository;
+    TestPlanRepository repository;
 
     @Inject
     ResourceSet resourceSet;
@@ -86,7 +86,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
             return Optional.empty();
         }
 
-        PlanNode suiteNode = new PlanNode(NodeType.TEST_SUITE).name(testSuite.name());
+        TestPlanNode suiteNode = new TestPlanNode(NodeType.TEST_SUITE).name(testSuite.name());
         UUID suiteId = repository.persistNode(suiteNode);
 
         for (Resource resource : resources) {
@@ -115,7 +115,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
             }
 
             // Multiple H1 sections in one file: wrap in a file-level aggregator
-            PlanNode fileNode = new PlanNode(NodeType.TEST_FEATURE)
+            TestPlanNode fileNode = new TestPlanNode(NodeType.TEST_FEATURE)
                 .name(resource.relativePath().getFileName().toString())
                 .source(relativePath);
             UUID fileId = repository.persistNode(fileNode);
@@ -142,7 +142,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
         TagExpression tagExpression
     ) {
         Set<String> featureTags = filterIdTags(feature.tags);
-        PlanNode featureData = new PlanNode(NodeType.TEST_FEATURE)
+        TestPlanNode featureData = new TestPlanNode(NodeType.TEST_FEATURE)
             .name(feature.name)
             .identifier(identifierFromTags(feature.tags))
             .display("{name}")
@@ -160,7 +160,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
 
             if (!tagExpression.evaluate(testCaseTags)) continue;
 
-            PlanNode testCaseData = new PlanNode(NodeType.TEST_CASE)
+            TestPlanNode testCaseData = new TestPlanNode(NodeType.TEST_CASE)
                 .name(testCase.name)
                 .identifier(identifierFromTags(testCase.tags))
                 .display("{name}")
@@ -173,7 +173,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
 
             for (MarkdownStepGroup group : testCase.stepGroups) {
                 for (MarkdownStep step : group.steps) {
-                    PlanNode stepData = new PlanNode(NodeType.STEP)
+                    TestPlanNode stepData = new TestPlanNode(NodeType.STEP)
                         .name(step.text)
                         .keyword(group.keyword)
                         .display("{keyword} {name}")

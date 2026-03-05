@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.contributors;
+package org.myjtools.openbbt.core.extensions;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

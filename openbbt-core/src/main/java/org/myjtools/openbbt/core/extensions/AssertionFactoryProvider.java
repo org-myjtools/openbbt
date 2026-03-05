@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.contributors;
+package org.myjtools.openbbt.core.extensions;
 
 import org.myjtools.jexten.ExtensionPoint;
 import org.myjtools.openbbt.core.AssertionFactory;

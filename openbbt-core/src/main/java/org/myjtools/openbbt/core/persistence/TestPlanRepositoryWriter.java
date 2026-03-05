@@ -1,18 +1,18 @@
 package org.myjtools.openbbt.core.persistence;
 
 import java.util.UUID;
-import org.myjtools.openbbt.core.plan.PlanNode;
+import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import java.io.IOException;
 
-public class PlanRepositoryWriter {
+public class TestPlanRepositoryWriter {
 
 	public interface Appender {
 		void append(String string) throws IOException;
 	}
 
-	private final PlanRepository repository;
+	private final TestPlanRepository repository;
 
-	public PlanRepositoryWriter(PlanRepository repository) {
+	public TestPlanRepositoryWriter(TestPlanRepository repository) {
 		this.repository = repository;
 	}
 
@@ -21,7 +21,7 @@ public class PlanRepositoryWriter {
 	}
 
 	private void write(UUID nodeID, Appender appender, int indent) throws IOException {
-		PlanNode node = repository.getNodeData(nodeID).orElseThrow();
+		TestPlanNode node = repository.getNodeData(nodeID).orElseThrow();
 		appender.append("  ".repeat(indent));
 		appender.append("[");
 		appender.append(String.valueOf(node.nodeType()));

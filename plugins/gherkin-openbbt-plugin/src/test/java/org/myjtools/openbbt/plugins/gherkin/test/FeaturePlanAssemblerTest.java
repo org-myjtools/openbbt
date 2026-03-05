@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
-import org.myjtools.openbbt.core.persistence.PlanRepositoryWriter;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.persistence.TestPlanRepositoryWriter;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import org.myjtools.openbbt.persistence.plan.JooqPlanRepository;
-import org.myjtools.openbbt.core.plan.TagExpression;
+import org.myjtools.openbbt.core.testplan.TagExpression;
 import org.myjtools.openbbt.plugins.gherkin.FeaturePlanAssembler;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,8 +25,8 @@ class FeaturePlanAssemblerTest {
 	@Test
 	void testAssemble() throws IOException {
 
-		PlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
-		var writer = new PlanRepositoryWriter(repository);
+		TestPlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
+		var writer = new TestPlanRepositoryWriter(repository);
 		Optional<UUID> testPlan = assembleFeature(repository,"");
 		assertThat(testPlan).isPresent();
 		StringBuilder output = new StringBuilder();
@@ -60,8 +60,8 @@ class FeaturePlanAssemblerTest {
 	@Test
 	void testAssembleScenarioWithTags() throws IOException {
 
-		PlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
-		var writer = new PlanRepositoryWriter(repository);
+		TestPlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
+		var writer = new TestPlanRepositoryWriter(repository);
 		Optional<UUID> testPlan = assembleFeature(repository,"ScenarioA");
 		assertThat(testPlan).isPresent();
 		StringBuilder output = new StringBuilder();
@@ -83,8 +83,8 @@ class FeaturePlanAssemblerTest {
 	@Test
 	void testAssembleScenarioOutlineWithTags() throws IOException {
 
-		PlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
-		var writer = new PlanRepositoryWriter(repository);
+		TestPlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
+		var writer = new TestPlanRepositoryWriter(repository);
 		Optional<UUID> testPlan = assembleFeature(repository,"ScenarioB");
 		assertThat(testPlan).isPresent();
 		StringBuilder output = new StringBuilder();
@@ -111,13 +111,13 @@ class FeaturePlanAssemblerTest {
 
 	@Test
 	void testAssembleScenarioWithInvalidTags() throws IOException {
-		PlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
+		TestPlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
 		Optional<UUID> testPlan = assembleFeature(repository,"InvalidTag");
 		assertThat(testPlan).isEmpty();
 	}
 
 
-	private Optional<UUID> assembleFeature (PlanRepository planNodeRepository, String tagExpression) throws IOException {
+	private Optional<UUID> assembleFeature (TestPlanRepository planNodeRepository, String tagExpression) throws IOException {
 		GherkinParser parser = new GherkinParser(new DefaultKeywordMapProvider());
 		var gherkinDocument = parser.parse(Files.newInputStream(Path.of("src/test/resources/test1/simpleScenario.feature")));
 		var feature = gherkinDocument.feature();

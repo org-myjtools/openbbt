@@ -1,11 +1,10 @@
 package org.myjtools.openbbt.core.datatypes;
 
 
-import java.util.UUID;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.DataType;
-import org.myjtools.openbbt.core.contributors.DataTypeProvider;
+import org.myjtools.openbbt.core.extensions.DataTypeProvider;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;

@@ -4,14 +4,14 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
-import org.myjtools.openbbt.core.contributors.ConfigProvider;
-import org.myjtools.openbbt.core.contributors.RepositoryFactory;
+import org.myjtools.openbbt.core.extensions.ConfigProvider;
+import org.myjtools.openbbt.core.extensions.RepositoryFactory;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
-import org.myjtools.openbbt.core.plan.Plan;
-import org.myjtools.openbbt.core.plan.PlanBuilder;
+import org.myjtools.openbbt.core.testplan.TestPlan;
+import org.myjtools.openbbt.core.testplan.PlanBuilder;
 import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
@@ -31,7 +31,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final ResourceFinder resourceFinder;
 	private final ResourceSet resourceSet;
 	private final RepositoryFactory repositoryFactory;
-	private final Lazy<PlanRepository> planNodeRepository = Lazy.of(() -> createRepository(PlanRepository.class));
+	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(() -> createRepository(TestPlanRepository.class));
 
 
 	public OpenBBTRuntime(Config configuration) {
@@ -80,7 +80,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 			} else {
 				return Stream.of(config.inner(name));
 			}
-		} else if (type == PlanRepository.class) {
+		} else if (type == TestPlanRepository.class) {
 			if (repositoryFactory == null) {
 				return Stream.empty();
 			}
@@ -109,7 +109,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 		if (repositoryFactory == null) {
 			throw new OpenBBTException("No PlanRepositoryFactory found, cannot create PlanRepository");
 		}
-		if (type == PlanRepository.class) {
+		if (type == TestPlanRepository.class) {
 			return (T) planNodeRepository.get();
 		} else {
 			throw new OpenBBTException("Unsupported repository type requested: {}", type.getSimpleName());
@@ -131,7 +131,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	}
 
 
-	public Plan buildTestPlan(OpenBBTContext context) {
+	public TestPlan buildTestPlan(OpenBBTContext context) {
 		return planBuilder.buildTestPlan(context);
 	}
 

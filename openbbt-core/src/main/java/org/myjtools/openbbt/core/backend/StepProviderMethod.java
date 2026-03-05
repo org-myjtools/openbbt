@@ -4,10 +4,10 @@ import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.DataType;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.contributors.StepProvider;
-import org.myjtools.openbbt.core.plan.DataTable;
-import org.myjtools.openbbt.core.plan.Document;
-import org.myjtools.openbbt.core.contributors.Step;
+import org.myjtools.openbbt.core.extensions.StepProvider;
+import org.myjtools.openbbt.core.testplan.DataTable;
+import org.myjtools.openbbt.core.testplan.Document;
+import org.myjtools.openbbt.core.extensions.Step;
 import org.myjtools.openbbt.core.util.Pair;
 
 import java.lang.reflect.InvocationTargetException;

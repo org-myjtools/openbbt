@@ -8,7 +8,7 @@ import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTFile;
 import org.myjtools.openbbt.core.OpenBBTPluginManager;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
-import org.myjtools.openbbt.core.plan.Plan;
+import org.myjtools.openbbt.core.testplan.TestPlan;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PlanBuilderTest {
+class TestPlanBuilderTest {
 
 	@BeforeAll
 	static void installPlugins() throws IOException {
@@ -51,12 +51,12 @@ class PlanBuilderTest {
 		);
 
 		// Step 1: first call creates a new plan
-		Plan plan1 = new OpenBBTRuntime(context.configuration()).buildTestPlan(context);
-		assertThat(plan1.planID()).isNotNull();
+		TestPlan testPlan1 = new OpenBBTRuntime(context.configuration()).buildTestPlan(context);
+		assertThat(testPlan1.planID()).isNotNull();
 
 		// Step 2: second call reuses the existing plan
-		Plan plan2 = new OpenBBTRuntime(context.configuration()).buildTestPlan(context);
-		assertThat(plan2.planID()).isEqualTo(plan1.planID());
+		TestPlan testPlan2 = new OpenBBTRuntime(context.configuration()).buildTestPlan(context);
+		assertThat(testPlan2.planID()).isEqualTo(testPlan1.planID());
 	}
 
 }

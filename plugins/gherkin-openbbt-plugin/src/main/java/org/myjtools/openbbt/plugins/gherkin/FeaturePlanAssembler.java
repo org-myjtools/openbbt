@@ -7,8 +7,8 @@ import org.myjtools.gherkinparser.KeywordMapProvider;
 import org.myjtools.gherkinparser.KeywordType;
 import org.myjtools.gherkinparser.elements.*;
 import org.myjtools.gherkinparser.elements.DataTable;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
-import org.myjtools.openbbt.core.plan.*;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.testplan.*;
 import org.myjtools.openbbt.core.util.Patterns;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -21,8 +21,8 @@ import static org.myjtools.openbbt.plugins.gherkin.GherkinConstants.*;
 
 /**
  * Transforms a parsed Gherkin {@link Feature} into a tree of
- * {@link org.myjtools.openbbt.core.plan.PlanNode} elements persisted in a
- * {@link PlanRepository}.
+ * {@link org.myjtools.openbbt.core.testplan.TestPlanNode} elements persisted in a
+ * {@link TestPlanRepository}.
  *
  * <p>Each Gherkin element is mapped to a plan node type:</p>
  * <ul>
@@ -53,7 +53,7 @@ public class FeaturePlanAssembler {
 	private final Background background;
 	private final Pattern idTagPattern;
 	private final TagExpression tagExpression;
-	private final PlanRepository repository;
+	private final TestPlanRepository repository;
 	private final Map<UUID, Object> underlyingModels = new HashMap<>();
 
 
@@ -74,7 +74,7 @@ public class FeaturePlanAssembler {
 		String relativePath,
 		KeywordMapProvider keywordMapProvider,
 		String idTagPattern,
-		PlanRepository repository,
+		TestPlanRepository repository,
 		TagExpression tagExpression
 	) {
 		this.feature = feature;
@@ -106,7 +106,7 @@ public class FeaturePlanAssembler {
 
 	private Optional<UUID> featureNode() {
 
-		var nodeData = new PlanNode(NodeType.TEST_FEATURE)
+		var nodeData = new TestPlanNode(NodeType.TEST_FEATURE)
 			.identifier(idFromTags(feature))
 			.name(feature.name())
 			.language(feature.language())
@@ -171,7 +171,7 @@ public class FeaturePlanAssembler {
 		if (!include) {
 			return Optional.empty();
 		}
-		var data = new PlanNode(NodeType.TEST_CASE)
+		var data = new TestPlanNode(NodeType.TEST_CASE)
 			.identifier(identifier)
 			.name(name)
 			.language(feature.language())
@@ -202,7 +202,7 @@ public class FeaturePlanAssembler {
 		if (!include) {
 			return Optional.empty();
 		}
-		var node = new PlanNode(NodeType.TEST_FEATURE)
+		var node = new TestPlanNode(NodeType.TEST_FEATURE)
 			.identifier(idFromTags(scenarioOutline))
 			.name(scenarioOutline.name())
 			.display("{name}")
@@ -228,7 +228,7 @@ public class FeaturePlanAssembler {
 
 
 	private UUID stepNode(Step step) {
-		var node = new PlanNode(NodeType.STEP)
+		var node = new TestPlanNode(NodeType.STEP)
 			.name(step.text())
 			.language(feature.language())
 			.keyword(step.keyword())
@@ -256,7 +256,7 @@ public class FeaturePlanAssembler {
 		if (background == null) {
 			return null;
 		}
-		var node = new PlanNode(NodeType.STEP_AGGREGATOR)
+		var node = new TestPlanNode(NodeType.STEP_AGGREGATOR)
 			.name(notEmpty(name, background.name()))
 			.language(feature.language())
 			.keyword(background.keyword())
@@ -341,15 +341,15 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private org.myjtools.openbbt.core.plan.DataTable tableOf(DataTable dataTable) {
-		return new org.myjtools.openbbt.core.plan.DataTable(
+	private org.myjtools.openbbt.core.testplan.DataTable tableOf(DataTable dataTable) {
+		return new org.myjtools.openbbt.core.testplan.DataTable(
 				mapped(dataTable.rows(), row -> mapped(row.cells(), TableCell::value))
 		);
 	}
 
 
-	private org.myjtools.openbbt.core.plan.DataTable tableOf(Examples examples) {
-		return new org.myjtools.openbbt.core.plan.DataTable(concat(
+	private org.myjtools.openbbt.core.testplan.DataTable tableOf(Examples examples) {
+		return new org.myjtools.openbbt.core.testplan.DataTable(concat(
 				List.of(mapped(examples.tableHeader().cells(),TableCell::value)),
 				mapped(examples.tableBody(), row -> mapped(row.cells(),TableCell::value))
 		));

@@ -12,7 +12,7 @@
 
 
     <groupId>org.myjtools.openbbt.plugins</groupId>
-    <artifactId>markdown-plan-openbbt-plugin</artifactId>
+    <artifactId>markdown-testPlan-openbbt-plugin</artifactId>
     <version>1.0.0-alpha1</version>
 
     <name>Markdown Plan Plugin</name>
@@ -24,7 +24,7 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    <url>https://myjtools.org/open-bbt/plugins/markdown-plan</url>
+    <url>https://myjtools.org/open-bbt/plugins/markdown-testPlan</url>
 
     <dependencies>
         <!-- Markdown parsing -->

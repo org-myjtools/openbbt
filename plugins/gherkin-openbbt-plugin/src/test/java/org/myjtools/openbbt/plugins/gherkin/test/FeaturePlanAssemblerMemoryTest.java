@@ -8,10 +8,10 @@ import org.junit.jupiter.api.io.TempDir;
 import org.myjtools.gherkinparser.DefaultKeywordMapProvider;
 import org.myjtools.gherkinparser.GherkinParser;
 import org.myjtools.junit5.memorycheck.MemoryExtension;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import org.myjtools.openbbt.persistence.plan.JooqPlanRepository;
-import org.myjtools.openbbt.core.plan.TagExpression;
+import org.myjtools.openbbt.core.testplan.TagExpression;
 import org.myjtools.openbbt.plugins.gherkin.FeaturePlanAssembler;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FeaturePlanAssemblerMemoryTest {
 
-	static void processFeatures(PlanRepository repository) throws IOException {
+	static void processFeatures(TestPlanRepository repository) throws IOException {
 		GherkinParser parser = new GherkinParser(new DefaultKeywordMapProvider());
 		try (var paths = Files.walk(Path.of("src/test/resources/test-memory"))) {
 			for (Path path : paths.filter(p -> p.toString().endsWith(".feature")).toList()) {
@@ -49,7 +49,7 @@ class FeaturePlanAssemblerMemoryTest {
 		@TempDir
 		private Path tempDir;
 
-		private PlanRepository repository;
+		private TestPlanRepository repository;
 
 		@BeforeEach
 		void setUp() {

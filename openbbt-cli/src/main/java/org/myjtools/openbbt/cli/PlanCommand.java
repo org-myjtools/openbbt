@@ -2,9 +2,9 @@ package org.myjtools.openbbt.cli;
 
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
-import org.myjtools.openbbt.core.persistence.PlanRepository;
-import org.myjtools.openbbt.core.persistence.PlanRepositoryWriter;
-import org.myjtools.openbbt.core.plan.Plan;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.persistence.TestPlanRepositoryWriter;
+import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.util.Log;
 import picocli.CommandLine;
 
@@ -30,13 +30,13 @@ public final class PlanCommand extends AbstractCommand {
 		OpenBBTContext context = getContext();
 		OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration());
 		try {
-			Plan plan = runtime.buildTestPlan(context);
-			log.info("{}",plan.planID());
+			TestPlan testPlan = runtime.buildTestPlan(context);
+			log.info("{}", testPlan.planID());
 			if (detail) {
-				PlanRepositoryWriter writer = new PlanRepositoryWriter(
-						runtime.getRepository(PlanRepository.class)
+				TestPlanRepositoryWriter writer = new TestPlanRepositoryWriter(
+						runtime.getRepository(TestPlanRepository.class)
 				);
-				writer.write(plan.planNodeRoot(), System.out::print);
+				writer.write(testPlan.planNodeRoot(), System.out::print);
 			}
 		} catch (Exception e) {
 			log.warn("No test plan assembled");

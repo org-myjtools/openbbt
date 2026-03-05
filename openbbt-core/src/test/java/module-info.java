@@ -1,4 +1,4 @@
-import org.myjtools.openbbt.core.contributors.StepProvider;
+import org.myjtools.openbbt.core.extensions.StepProvider;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 
 module org.myjtools.openbbt.core.test {

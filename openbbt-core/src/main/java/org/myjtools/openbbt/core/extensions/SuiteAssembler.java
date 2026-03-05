@@ -1,8 +1,8 @@
-package org.myjtools.openbbt.core.contributors;
+package org.myjtools.openbbt.core.extensions;
 
 import java.util.UUID;
 import org.myjtools.jexten.ExtensionPoint;
-import org.myjtools.openbbt.core.plan.TestSuite;
+import org.myjtools.openbbt.core.testplan.TestSuite;
 import java.util.Optional;
 
 
