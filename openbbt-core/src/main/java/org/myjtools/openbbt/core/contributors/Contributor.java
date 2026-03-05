@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.extensions;
+package org.myjtools.openbbt.core.contributors;
 
 /**
  * Common interface for OpenBBT contributors.

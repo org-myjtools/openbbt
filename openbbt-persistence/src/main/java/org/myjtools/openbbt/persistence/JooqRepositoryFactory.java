@@ -4,7 +4,7 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.extensions.RepositoryFactory;
+import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
 import org.myjtools.openbbt.persistence.plan.JooqPlanRepository;

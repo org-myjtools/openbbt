@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.extensions;
+package org.myjtools.openbbt.core.contributors;
 
 import java.util.UUID;
 import org.myjtools.jexten.ExtensionPoint;

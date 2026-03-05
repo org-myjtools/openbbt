@@ -12,7 +12,7 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.PostConstruct;
 import org.myjtools.openbbt.core.*;
-import org.myjtools.openbbt.core.extensions.SuiteAssembler;
+import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.DataTable;
 import org.myjtools.openbbt.core.testplan.Document;

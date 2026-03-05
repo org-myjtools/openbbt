@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.extensions;
+package org.myjtools.openbbt.core.contributors;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,8 +10,10 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
-public @interface SetUp {
+public @interface StepExpression {
 
-	int order() default 100;
+	String value();
+
+	String[] args() default {};
 
 }

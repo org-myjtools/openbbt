@@ -4,10 +4,10 @@ package org.myjtools.openbbt.core.backend;
 import org.myjtools.openbbt.core.AssertionFactories;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.extensions.SetUp;
-import org.myjtools.openbbt.core.extensions.Step;
-import org.myjtools.openbbt.core.extensions.StepProvider;
-import org.myjtools.openbbt.core.extensions.TearDown;
+import org.myjtools.openbbt.core.contributors.SetUp;
+import org.myjtools.openbbt.core.contributors.StepExpression;
+import org.myjtools.openbbt.core.contributors.StepProvider;
+import org.myjtools.openbbt.core.contributors.TearDown;
 import org.myjtools.openbbt.core.expressions.ExpressionMatcher;
 import org.myjtools.openbbt.core.expressions.ExpressionMatcherBuilder;
 import org.myjtools.openbbt.core.expressions.Match;
@@ -45,7 +45,7 @@ public class StepProviderService {
 
         var methods = stepProvider.getClass().getMethods();
         for (var method : methods) {
-            var step = method.getAnnotation(Step.class);
+            var step = method.getAnnotation(StepExpression.class);
             addRunnableMethod(dataTypes, method, step);
             addMethod(SetUp.class, method, setupMethods);
             addMethod(TearDown.class, method, teardownMethods);
@@ -83,7 +83,7 @@ public class StepProviderService {
     }
 
 
-    private void addRunnableMethod(DataTypes dataTypes, Method method, Step step) {
+    private void addRunnableMethod(DataTypes dataTypes, Method method, StepExpression step) {
         if (step != null) {
             try {
                 checkMethodNotStatic(method);

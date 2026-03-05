@@ -6,7 +6,7 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.*;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepositoryWriter;
-import org.myjtools.openbbt.core.extensions.SuiteAssembler;
+import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.testplan.TagExpression;
 import org.myjtools.openbbt.core.testplan.TestSuite;
 import java.io.IOException;

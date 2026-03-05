@@ -4,10 +4,10 @@ import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.DataType;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
-import org.myjtools.openbbt.core.extensions.StepProvider;
+import org.myjtools.openbbt.core.contributors.StepProvider;
 import org.myjtools.openbbt.core.testplan.DataTable;
 import org.myjtools.openbbt.core.testplan.Document;
-import org.myjtools.openbbt.core.extensions.Step;
+import org.myjtools.openbbt.core.contributors.StepExpression;
 import org.myjtools.openbbt.core.util.Pair;
 
 import java.lang.reflect.InvocationTargetException;
@@ -33,7 +33,7 @@ public class StepProviderMethod {
 
 	public StepProviderMethod(StepProvider stepProvider, Method method, DataTypes dataTypes) {
 		this.stepProvider = stepProvider;
-		var annotation = method.getAnnotation(Step.class);
+		var annotation = method.getAnnotation(StepExpression.class);
 		this.stepKey = annotation.value();
 		this.method = method;
 		this.lastParameterType = checkLastParameterType(method);
@@ -116,7 +116,7 @@ public class StepProviderMethod {
 	}
 
 
-	private LinkedHashMap<String, DataType> checkStepArgs(DataTypes datatypes, Step step, Method method) {
+	private LinkedHashMap<String, DataType> checkStepArgs(DataTypes datatypes, StepExpression step, Method method) {
 	   if (step.args().length == 0) {
 			return checkImplicitStepArgs(datatypes, step, method);
 		} else {
@@ -125,7 +125,7 @@ public class StepProviderMethod {
 	}
 
 
-	private LinkedHashMap<String, DataType> checkImplicitStepArgs(DataTypes dataTypes, Step step, Method method) {
+	private LinkedHashMap<String, DataType> checkImplicitStepArgs(DataTypes dataTypes, StepExpression step, Method method) {
 
 		var result = new LinkedHashMap<String, DataType>();
 		if (method.getParameterCount() == 0) {
@@ -150,7 +150,7 @@ public class StepProviderMethod {
 
 
 
-	private LinkedHashMap<String, DataType> checkExplicitStepArgs(DataTypes dataTypes, Step step, Method method, String[] args) {
+	private LinkedHashMap<String, DataType> checkExplicitStepArgs(DataTypes dataTypes, StepExpression step, Method method, String[] args) {
 
 		var result = new LinkedHashMap<String, DataType>();
 
@@ -195,7 +195,7 @@ public class StepProviderMethod {
 	}
 
 
-	private void throwError(Step step, Method method, String message, Object... args) {
+	private void throwError(StepExpression step, Method method, String message, Object... args) {
 		Object[] messageArgs = new Object[args.length + 3];
 		messageArgs[0] = step.value();
 		messageArgs[1] = stepProvider.getClass().getSimpleName();

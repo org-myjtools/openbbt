@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.extensions;
+package org.myjtools.openbbt.core.contributors;
 
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.ExtensionPoint;

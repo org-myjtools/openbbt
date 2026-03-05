@@ -9,8 +9,8 @@ module org.myjtools.openbbt.plugins.rest {
 	requires org.myjtools.imconfig;
 	requires rest.assured;
 
-	provides org.myjtools.openbbt.core.extensions.StepProvider with RestStepProvider;
-    provides org.myjtools.openbbt.core.extensions.ConfigProvider with RestConfigProvider;
+	provides org.myjtools.openbbt.core.contributors.StepProvider with RestStepProvider;
+    provides org.myjtools.openbbt.core.contributors.ConfigProvider with RestConfigProvider;
     provides org.myjtools.openbbt.core.messages.MessageProvider with RestMessageProvider;
 
     exports org.myjtools.openbbt.plugins.rest;

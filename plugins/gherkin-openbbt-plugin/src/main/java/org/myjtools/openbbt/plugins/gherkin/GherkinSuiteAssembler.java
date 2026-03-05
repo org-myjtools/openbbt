@@ -14,7 +14,7 @@ import org.myjtools.jexten.PostConstruct;
 import org.myjtools.openbbt.core.*;
 import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
-import org.myjtools.openbbt.core.extensions.SuiteAssembler;
+import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.testplan.NodeType;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.testplan.TagExpression;

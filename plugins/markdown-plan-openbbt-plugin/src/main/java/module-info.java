@@ -5,6 +5,6 @@ module org.myjtools.openbbt.plugins.markdownplan {
 	requires org.myjtools.jexten;
 	requires org.myjtools.openbbt.core;
 	exports org.myjtools.openbbt.plugins.markdownplan;
-	provides org.myjtools.openbbt.core.extensions.SuiteAssembler with org.myjtools.openbbt.plugins.markdownplan.MarkdownSuiteAssembler;
+	provides org.myjtools.openbbt.core.contributors.SuiteAssembler with org.myjtools.openbbt.plugins.markdownplan.MarkdownSuiteAssembler;
 	opens org.myjtools.openbbt.plugins.markdownplan to org.myjtools.jexten;
 }

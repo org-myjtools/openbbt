@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.core;
 
 import org.myjtools.imconfig.Config;
-import org.myjtools.openbbt.core.extensions.ConfigProvider;
+import org.myjtools.openbbt.core.contributors.ConfigProvider;
 import org.myjtools.openbbt.core.util.Lazy;
 
 /**
