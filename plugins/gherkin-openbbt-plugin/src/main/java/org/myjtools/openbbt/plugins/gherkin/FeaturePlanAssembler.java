@@ -191,7 +191,7 @@ public class FeaturePlanAssembler {
 			repository.attachChildNodeLast(id, backgroundNodeId);
 		}
 
-		scenarioDefinition.children().forEach( step -> repository.attachChildNodeLast(id, stepNode(step)));
+		scenarioDefinition.children().forEach( step -> repository.attachChildNodeLast(id, stepNode(step, id)));
 		return Optional.of(id);
 	}
 
@@ -227,13 +227,15 @@ public class FeaturePlanAssembler {
 	}
 
 
-	private UUID stepNode(Step step) {
+	private UUID stepNode(Step step, UUID parent) {
 		var node = new TestPlanNode(NodeType.STEP)
 			.name(step.text())
 			.language(feature.language())
 			.keyword(step.keyword())
 			.display("{keyword} {name}")
+			.tags(new HashSet<>(repository.getNodeTags(parent)))
 			.source(nodeLocation(step))
+			.addProperties(propertiesFromComments(step, parent))
 			.addProperty(GHERKIN_TYPE,GHERKIN_TYPE_STEP);
 		if (step.argument() instanceof DataTable dataTable) {
 			node.dataTable(tableOf(dataTable));
@@ -264,11 +266,11 @@ public class FeaturePlanAssembler {
 			.description(background.description())
 			.tags(tags(parent,background))
 			.source(nodeLocation(background))
-			.addProperties(propertiesFromComments(background))
+			.addProperties(propertiesFromComments(background, parent))
 			.addProperty(GHERKIN_TYPE,GHERKIN_TYPE_BACKGROUND);
 		var id = repository.persistNode(node);
 		underlyingModels.put(id,background);
-		background.children().forEach(step -> repository.attachChildNodeLast(id,stepNode(step)));
+		background.children().forEach(step -> repository.attachChildNodeLast(id,stepNode(step, id)));
 		return id;
 	}
 

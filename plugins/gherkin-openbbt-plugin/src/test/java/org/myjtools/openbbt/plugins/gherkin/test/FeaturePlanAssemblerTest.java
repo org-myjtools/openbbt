@@ -117,6 +117,46 @@ class FeaturePlanAssemblerTest {
 	}
 
 
+	@Test
+	void testTagsAndPropertiesAreInheritedFromParentToChild() throws IOException {
+		TestPlanRepository repository = new JooqPlanRepository(DataSourceProvider.hsqldb(tempDir.resolve("testdb")));
+		UUID featureId = assembleFeature(repository, "").orElseThrow();
+
+		// Feature: own tags and properties
+		assertThat(repository.getNodeTags(featureId)).contains("Test1");
+		assertThat(repository.getNodeProperties(featureId)).containsEntry("featureProperty", "A");
+
+		// Scenario: inherits feature tags and properties, adds its own
+		UUID scenarioId = repository.getNodeChildren(featureId).findFirst().orElseThrow();
+		assertThat(repository.getNodeTags(scenarioId)).contains("Test1", "ScenarioA");
+		assertThat(repository.getNodeProperties(scenarioId))
+			.containsEntry("featureProperty", "A")
+			.containsEntry("scenarioProperty", "B");
+
+		// Background aggregator: inherits scenario tags and properties
+		UUID backgroundId = repository.getNodeChildren(scenarioId).findFirst().orElseThrow();
+		assertThat(repository.getNodeTags(backgroundId)).contains("Test1", "ScenarioA");
+		assertThat(repository.getNodeProperties(backgroundId))
+			.containsEntry("featureProperty", "A")
+			.containsEntry("scenarioProperty", "B");
+
+		// Background step: inherits background (and thus scenario+feature) tags and properties
+		UUID backgroundStepId = repository.getNodeChildren(backgroundId).findFirst().orElseThrow();
+		assertThat(repository.getNodeTags(backgroundStepId)).contains("Test1", "ScenarioA");
+		assertThat(repository.getNodeProperties(backgroundStepId))
+			.containsEntry("featureProperty", "A")
+			.containsEntry("scenarioProperty", "B");
+
+		// First scenario step: inherits scenario tags and properties, adds its own from comment
+		UUID firstStepId = repository.getNodeChildren(scenarioId).skip(1).findFirst().orElseThrow();
+		assertThat(repository.getNodeTags(firstStepId)).contains("Test1", "ScenarioA");
+		assertThat(repository.getNodeProperties(firstStepId))
+			.containsEntry("featureProperty", "A")
+			.containsEntry("scenarioProperty", "B")
+			.containsEntry("stepProperty", "C");
+	}
+
+
 	private Optional<UUID> assembleFeature (TestPlanRepository planNodeRepository, String tagExpression) throws IOException {
 		GherkinParser parser = new GherkinParser(new DefaultKeywordMapProvider());
 		var gherkinDocument = parser.parse(Files.newInputStream(Path.of("src/test/resources/test1/simpleScenario.feature")));
