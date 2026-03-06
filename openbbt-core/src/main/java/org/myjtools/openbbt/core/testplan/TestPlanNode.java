@@ -24,6 +24,9 @@ public class TestPlanNode {
 	private Set<String> tags;
 	private SortedMap<String,String> properties;
 	private String display;
+	private ValidationStatus validationStatus;
+	private String validationMessage;
+	private boolean hasIssues;
 
 
 	public TestPlanNode(NodeType type) {

@@ -4,6 +4,7 @@ import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.testplan.TestProject;
+import org.myjtools.openbbt.core.testplan.ValidationStatus;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -114,6 +115,15 @@ public interface TestPlanRepository extends Repository {
 	 * @throws OpenBBTException if the node does not exist in the repository
 	 */
 	Stream<UUID> getNodeDescendants(UUID id);
+
+	/**
+	 * Retrieve all nodes in the subtree rooted at {@code rootNodeId} (including the root itself)
+	 * that have their own validation error (i.e. {@code VALIDATION_STATUS} is not OK).
+	 * Nodes that carry {@code HAS_ISSUES=true} only because of a child are not included.
+	 * @param rootNodeId the root of the subtree to inspect
+	 * @return a stream of node IDs that have a validation error
+	 */
+	Stream<UUID> getNodeDescendantsWithIssues(UUID rootNodeId);
 
 	/**
 	 * Retrieve all ancestors of a node (parent, grandparent, etc.) up to the root.
@@ -235,6 +245,35 @@ public interface TestPlanRepository extends Repository {
 	TestPlan persistPlan(TestPlan testPlan);
 
 	UUID persistProject(TestProject testProject);
+
+	/**
+	 * Assign the given plan ID to the root node and all its descendants.
+	 * @param planId the plan ID to assign
+	 * @param rootNodeId the root node of the plan
+	 */
+	void assignPlanToNodes(UUID planId, UUID rootNodeId);
+
+	/**
+	 * Persist the validation result of a single node.
+	 * @param nodeId the node to update
+	 * @param status the validation status
+	 * @param message human-readable error message, or {@code null} if OK
+	 */
+	void setNodeValidation(UUID nodeId, ValidationStatus status, String message);
+
+	/**
+	 * After all nodes in the plan have been individually validated, propagate
+	 * {@code HAS_ISSUES=true} upward so that every ancestor of a failing node
+	 * also reflects that it has issues in its subtree.
+	 * @param planId the plan whose nodes should be updated
+	 */
+	void propagatePlanIssues(UUID planId);
+
+	/**
+	 * Returns {@code true} if any node in the plan has {@code HAS_ISSUES=true}.
+	 * @param planId the plan to check
+	 */
+	boolean planHasIssues(UUID planId);
 
 
 

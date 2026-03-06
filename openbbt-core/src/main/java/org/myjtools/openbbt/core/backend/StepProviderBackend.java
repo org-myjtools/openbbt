@@ -59,6 +59,11 @@ public class StepProviderBackend {
 		return Optional.empty();
 	}
 
+	public boolean isValidStep(String step, Locale locale) {
+		return matchingStep(step, locale).isPresent();
+	}
+
+
 	public void run(String step, Locale locale, NodeArgument nodeArgument) {
 		var matchingStep = matchingStep(step,locale).orElseThrow(
 			() -> new NoMatchingStepException(

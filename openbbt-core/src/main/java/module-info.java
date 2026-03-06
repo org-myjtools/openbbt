@@ -1,4 +1,5 @@
 import org.myjtools.openbbt.core.contributors.*;
+import org.myjtools.openbbt.core.execution.DefaultPlanValidator;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 
@@ -39,6 +40,7 @@ module org.myjtools.openbbt.core {
 	exports org.myjtools.openbbt.core.persistence;
 	opens org.myjtools.openbbt.core.persistence to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.execution;
+	opens org.myjtools.openbbt.core.execution to org.myjtools.jexten;
 
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;
@@ -48,10 +50,12 @@ module org.myjtools.openbbt.core {
 	uses SuiteAssembler;
 	uses org.myjtools.openbbt.core.contributors.StepProvider;
 	uses RepositoryFactory;
+	uses TestPlanValidator;
 
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 	provides DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;
 	provides MessageProvider with org.myjtools.openbbt.core.assertions.AssertionMessageProvider;
 	provides AssertionFactoryProvider with org.myjtools.openbbt.core.assertions.CoreAssertionFactories;
+	provides TestPlanValidator with DefaultPlanValidator;
 
 }

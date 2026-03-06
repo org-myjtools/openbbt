@@ -8,6 +8,7 @@ import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.*;
+import org.myjtools.openbbt.core.testplan.ValidationStatus;
 import org.myjtools.openbbt.core.util.UUIDGenerator;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import javax.sql.DataSource;
@@ -48,6 +49,9 @@ public class JooqPlanRepository implements TestPlanRepository {
 	private static final Field<String> FIELD_DOCUMENT_MIME_TYPE = DSL.field("document_mime_type", String.class);
 
 	private static final Field<UUID> FIELD_PLAN_ID = DSL.field("plan_id", UUID.class);
+	private static final Field<Integer> FIELD_VALIDATION_STATUS = DSL.field("validation_status", Integer.class);
+	private static final Field<String> FIELD_VALIDATION_MESSAGE = DSL.field("validation_message", String.class);
+	private static final Field<Boolean> FIELD_HAS_ISSUES = DSL.field("has_issues", Boolean.class);
 	private static final Field<UUID> FIELD_PROJECT_ID = DSL.field("project_id", UUID.class);
 	private static final Field<String> FIELD_ORGANIZATION_NAME = DSL.field("organization_name", String.class);
 	private static final Field<String> FIELD_PROJECT_NAME = DSL.field("project_name", String.class);
@@ -79,7 +83,8 @@ public class JooqPlanRepository implements TestPlanRepository {
 				FIELD_NODE_ID, FIELD_PARENT_NODE, FIELD_NODE_POSITION,
 				FIELD_TYPE, FIELD_NAME, FIELD_IDENTIFIER, FIELD_LANGUAGE, FIELD_SOURCE,
 				FIELD_KEYWORD, FIELD_DESCRIPTION, FIELD_DISPLAY, FIELD_DATA_TABLE,
-				FIELD_DOCUMENT, FIELD_DOCUMENT_MIME_TYPE
+				FIELD_DOCUMENT, FIELD_DOCUMENT_MIME_TYPE,
+				FIELD_VALIDATION_STATUS, FIELD_VALIDATION_MESSAGE, FIELD_HAS_ISSUES
 			)
 			.from(TABLE_PLAN_NODE)
 			.where(FIELD_NODE_ID.eq(id))
@@ -222,6 +227,32 @@ public class JooqPlanRepository implements TestPlanRepository {
 		   .from(CTE_DESC)
 		   .fetch().stream()
 		   .map(rec -> rec.get(CTE_NID));
+	}
+
+
+	@Override
+	public Stream<UUID> getNodeDescendantsWithIssues(UUID rootNodeId) {
+		var allNodes = DSL.unquotedName("all_nodes");
+		var allNodesTable = DSL.table(allNodes);
+		var nid = DSL.field(DSL.unquotedName("nid"), UUID.class);
+		return dsl.withRecursive(allNodes, DSL.unquotedName("nid")).as(
+			   DSL.select(FIELD_NODE_ID)
+				   .from(TABLE_PLAN_NODE)
+				   .where(FIELD_NODE_ID.eq(rootNodeId))
+			   .unionAll(
+				   DSL.select(FIELD_NODE_ID)
+					   .from(TABLE_PLAN_NODE)
+					   .join(allNodesTable)
+					   .on(FIELD_PARENT_NODE.eq(nid))
+			   )
+		   )
+		   .select(FIELD_NODE_ID)
+		   .from(TABLE_PLAN_NODE)
+		   .where(FIELD_NODE_ID.in(DSL.select(nid).from(allNodesTable)))
+		   .and(FIELD_VALIDATION_STATUS.isNotNull())
+		   .and(FIELD_VALIDATION_STATUS.gt(ValidationStatus.OK.value))
+		   .fetch().stream()
+		   .map(rec -> rec.get(FIELD_NODE_ID));
 	}
 
 
@@ -651,6 +682,13 @@ public class JooqPlanRepository implements TestPlanRepository {
 		if (documentContent != null) {
 			node.document(Document.of(documentMimeType, documentContent));
 		}
+		Integer validationStatusValue = rec.get(FIELD_VALIDATION_STATUS);
+		if (validationStatusValue != null) {
+			node.validationStatus(ValidationStatus.of(validationStatusValue));
+		}
+		node.validationMessage(rec.get(FIELD_VALIDATION_MESSAGE));
+		Boolean hasIssues = rec.get(FIELD_HAS_ISSUES);
+		node.hasIssues(Boolean.TRUE.equals(hasIssues));
 		fillTagsAndProperties(node);
 		return node;
 	}
@@ -681,6 +719,96 @@ public class JooqPlanRepository implements TestPlanRepository {
 			.where(FIELD_PARENT_NODE.eq(planNodeID))
 			.fetchOne(DSL.max(FIELD_NODE_POSITION));
 		return maxPosition != null ? maxPosition : 0;
+	}
+
+
+	@Override
+	public void setNodeValidation(UUID nodeId, ValidationStatus status, String message) {
+		dsl.update(TABLE_PLAN_NODE)
+		   .set(FIELD_VALIDATION_STATUS, status != null ? status.value : null)
+		   .set(FIELD_VALIDATION_MESSAGE, message)
+		   .where(FIELD_NODE_ID.eq(nodeId))
+		   .execute();
+	}
+
+
+	@Override
+	public void propagatePlanIssues(UUID planId) {
+		// Step 1: initialize HAS_ISSUES from own VALIDATION_STATUS
+		dsl.update(TABLE_PLAN_NODE)
+		   .set(FIELD_HAS_ISSUES, DSL.inline(false))
+		   .where(FIELD_PLAN_ID.eq(planId))
+		   .execute();
+		dsl.update(TABLE_PLAN_NODE)
+		   .set(FIELD_HAS_ISSUES, DSL.inline(true))
+		   .where(FIELD_PLAN_ID.eq(planId))
+		   .and(FIELD_VALIDATION_STATUS.isNotNull())
+		   .and(FIELD_VALIDATION_STATUS.gt(ValidationStatus.OK.value))
+		   .execute();
+		// Step 2: propagate upward — mark all ancestors of problematic nodes
+		var anc = DSL.unquotedName("anc");
+		var ancTable = DSL.table(anc);
+		var pid = DSL.field(DSL.unquotedName("pid"), UUID.class);
+		dsl.update(TABLE_PLAN_NODE)
+		   .set(FIELD_HAS_ISSUES, DSL.inline(true))
+		   .where(FIELD_PLAN_ID.eq(planId))
+		   .and(FIELD_NODE_ID.in(
+			   DSL.withRecursive(anc, DSL.unquotedName("pid")).as(
+				   DSL.select(FIELD_PARENT_NODE)
+					   .from(TABLE_PLAN_NODE)
+					   .where(FIELD_PLAN_ID.eq(planId))
+					   .and(FIELD_HAS_ISSUES.eq(DSL.inline(true)))
+					   .and(FIELD_PARENT_NODE.isNotNull())
+				   .unionAll(
+					   DSL.select(FIELD_PARENT_NODE)
+						   .from(TABLE_PLAN_NODE)
+						   .join(ancTable)
+						   .on(FIELD_NODE_ID.eq(pid))
+						   .where(FIELD_PARENT_NODE.isNotNull())
+				   )
+			   )
+			   .select(pid)
+			   .from(ancTable)
+			   .where(pid.isNotNull())
+		   ))
+		   .execute();
+	}
+
+
+	@Override
+	public boolean planHasIssues(UUID planId) {
+		return dsl.fetchExists(
+			dsl.selectOne()
+			   .from(TABLE_PLAN_NODE)
+			   .where(FIELD_PLAN_ID.eq(planId))
+			   .and(FIELD_HAS_ISSUES.eq(DSL.inline(true)))
+		);
+	}
+
+
+	@Override
+	public void assignPlanToNodes(UUID planId, UUID rootNodeId) {
+		var allNodes = DSL.unquotedName("all_nodes");
+		var allNodesTable = DSL.table(allNodes);
+		var nid = DSL.field(DSL.unquotedName("nid"), UUID.class);
+		dsl.update(TABLE_PLAN_NODE)
+		   .set(FIELD_PLAN_ID, planId)
+		   .where(FIELD_NODE_ID.in(
+			   DSL.withRecursive(allNodes, DSL.unquotedName("nid")).as(
+				   DSL.select(FIELD_NODE_ID)
+					   .from(TABLE_PLAN_NODE)
+					   .where(FIELD_NODE_ID.eq(rootNodeId))
+				   .unionAll(
+					   DSL.select(FIELD_NODE_ID)
+						   .from(TABLE_PLAN_NODE)
+						   .join(allNodesTable)
+						   .on(FIELD_PARENT_NODE.eq(nid))
+				   )
+			   )
+			   .select(nid)
+			   .from(allNodesTable)
+		   ))
+		   .execute();
 	}
 
 

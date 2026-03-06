@@ -3,7 +3,9 @@ package org.myjtools.openbbt.core.testplan;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
+import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
+import org.myjtools.openbbt.core.contributors.TestPlanValidator;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.util.Hash;
 import org.myjtools.openbbt.core.util.Log;
@@ -57,6 +59,26 @@ public class PlanBuilder {
 				rootNodeID
 			);
 			testPlan = testPlanRepository.persistPlan(testPlan);
+			testPlanRepository.assignPlanToNodes(testPlan.planID(), rootNodeID);
+			var backend = new StepProviderBackend(runtime);
+			log.debug("Validating test plan");
+			for (var validator : runtime.getExtensions(TestPlanValidator.class).toList()) {
+				validator.validate(testPlan, backend);
+			}
+			var rootNode = testPlanRepository.getNodeData(rootNodeID).orElseThrow();
+			if (rootNode.hasIssues()) {
+				testPlanRepository.getNodeDescendantsWithIssues(rootNodeID).forEach(id -> {
+					var nodeWithIssues = testPlanRepository.getNodeData(id).orElseThrow();
+					log.warn(
+						"Validation issue in '{}' ({}): {}",
+						nodeWithIssues.name(),
+						nodeWithIssues.source(),
+						nodeWithIssues.validationMessage()
+					);
+				});
+			} else {
+				log.info("Test plan validated successfully with no issues");
+			}
 			log.debug("Registered new test plan: {}", testPlan.planID());
 		} else {
 			log.debug("Reusing existing test plan: {}", testPlan.planID());
