@@ -160,6 +160,9 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
 
             if (!tagExpression.evaluate(testCaseTags)) continue;
 
+            Map<String, String> testCaseProperties = new LinkedHashMap<>(feature.properties);
+            testCaseProperties.putAll(testCase.properties);
+
             TestPlanNode testCaseData = new TestPlanNode(NodeType.TEST_CASE)
                 .name(testCase.name)
                 .identifier(identifierFromTags(testCase.tags))
@@ -167,6 +170,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
                 .tags(testCaseTags)
                 .description(testCase.description)
                 .source(relativePath)
+                .addProperties(testCaseProperties)
                 .addProperty(MARKDOWN_TYPE, MARKDOWN_TYPE_TESTCASE);
 
             UUID testCaseId = repository.persistNode(testCaseData);
@@ -177,6 +181,8 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
                         .name(step.text)
                         .keyword(group.keyword)
                         .display("{keyword} {name}")
+                        .tags(new HashSet<>(testCaseTags))
+                        .addProperties(testCaseProperties)
                         .source(relativePath);
                     if (step.dataTable != null) stepData.dataTable(step.dataTable);
                     if (step.document != null) stepData.document(step.document);
@@ -217,6 +223,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
         // Test-case-level accumulators
         String testCaseName = null;
         Set<String> testCaseTags = new LinkedHashSet<>();
+        Map<String, String> testCaseProps = new LinkedHashMap<>();
         String testCaseDesc = null;
         List<MarkdownStepGroup> stepGroups = new ArrayList<>();
 
@@ -234,8 +241,8 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
                     case 1 -> {
                         finalizeStepGroup(stepGroups, currentKeyword, currentSteps);
                         currentSteps.clear(); currentKeyword = null;
-                        finalizeTestCase(testCases, testCaseName, testCaseTags, testCaseDesc, stepGroups);
-                        testCaseName = null; testCaseTags.clear(); testCaseDesc = null; stepGroups = new ArrayList<>();
+                        finalizeTestCase(testCases, testCaseName, testCaseTags, testCaseProps, testCaseDesc, stepGroups);
+                        testCaseName = null; testCaseTags.clear(); testCaseProps.clear(); testCaseDesc = null; stepGroups = new ArrayList<>();
                         if (featureName != null) {
                             features.add(new MarkdownFeature(featureName, Set.copyOf(featureTags), Map.copyOf(featureProps), featureDesc, List.copyOf(testCases)));
                             testCases.clear();
@@ -247,9 +254,9 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
                     case 2 -> {
                         finalizeStepGroup(stepGroups, currentKeyword, currentSteps);
                         currentSteps.clear(); currentKeyword = null;
-                        finalizeTestCase(testCases, testCaseName, testCaseTags, testCaseDesc, stepGroups);
+                        finalizeTestCase(testCases, testCaseName, testCaseTags, testCaseProps, testCaseDesc, stepGroups);
                         testCaseName = textOf(h);
-                        testCaseTags.clear(); testCaseDesc = null; stepGroups = new ArrayList<>();
+                        testCaseTags.clear(); testCaseProps.clear(); testCaseDesc = null; stepGroups = new ArrayList<>();
                         context = 2;
                     }
                     case 3 -> {
@@ -267,6 +274,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
 
             } else if (node instanceof HtmlBlock html) {
                 if (context == 1) featureProps.putAll(extractProperties(html.getLiteral()));
+                else if (context == 2) testCaseProps.putAll(extractProperties(html.getLiteral()));
 
             } else if (node instanceof Paragraph p) {
                 String text = textOf(p);
@@ -294,7 +302,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
 
         // Finalize last accumulated elements
         finalizeStepGroup(stepGroups, currentKeyword, currentSteps);
-        finalizeTestCase(testCases, testCaseName, testCaseTags, testCaseDesc, stepGroups);
+        finalizeTestCase(testCases, testCaseName, testCaseTags, testCaseProps, testCaseDesc, stepGroups);
         if (featureName != null) {
             features.add(new MarkdownFeature(featureName, Set.copyOf(featureTags), Map.copyOf(featureProps), featureDesc, List.copyOf(testCases)));
         }
@@ -312,11 +320,12 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
         List<MarkdownTestCase> testCases,
         String name,
         Set<String> tags,
+        Map<String, String> properties,
         String description,
         List<MarkdownStepGroup> stepGroups
     ) {
         if (name != null) {
-            testCases.add(new MarkdownTestCase(name, Set.copyOf(tags), description, List.copyOf(stepGroups)));
+            testCases.add(new MarkdownTestCase(name, Set.copyOf(tags), Map.copyOf(properties), description, List.copyOf(stepGroups)));
         }
     }
 
@@ -455,6 +464,7 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
     private record MarkdownTestCase(
         String name,
         Set<String> tags,
+        Map<String, String> properties,
         String description,
         List<MarkdownStepGroup> stepGroups
     ) {}
