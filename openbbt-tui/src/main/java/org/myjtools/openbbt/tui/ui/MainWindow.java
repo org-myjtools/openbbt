@@ -3,29 +3,49 @@ package org.myjtools.openbbt.tui.ui;
 import com.googlecode.lanterna.SGR;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.*;
+import com.googlecode.lanterna.gui2.GridLayout;
+import com.googlecode.lanterna.gui2.LayoutData;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
+import org.myjtools.openbbt.core.OpenBBTRuntime;
+import org.myjtools.openbbt.core.execution.PlanExecutor;
+import org.myjtools.openbbt.core.execution.Result;
+import org.myjtools.openbbt.core.persistence.TestPlanRepository;
+import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.tui.mock.MockData;
 import org.myjtools.openbbt.tui.model.PlanNode;
+import org.myjtools.openbbt.tui.model.PlanNodeAdapter;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class MainWindow extends BasicWindow {
 
-    private enum ViewMode { PLAN, FILES }
+    private enum ViewMode { FILES, PLAN, EXECUTION }
 
     // ─── State ───────────────────────────────────────────────────────────────
 
-    private ViewMode currentMode = ViewMode.PLAN;
+    private ViewMode currentMode = ViewMode.FILES;
     private volatile boolean running = false;
 
+    // Backend (may be null for mock/demo mode)
+    private final OpenBBTRuntime runtime;
+    private final TestPlan storedTestPlan;
+
     // Plan view
-    private final PlanNode plan;
-    private final PlanTreeComponent treeComponent;
-    private final DetailPanel detailPanel;
+    private PlanNode planRoot;
+    private final PlanTreeComponent planTreeComponent;
+    private final DetailPanel planDetailPanel;
     private Panel planViewPanel;
+
+    // Execution view
+    private PlanNode execRoot;
+    private final PlanTreeComponent execTreeComponent;
+    private final DetailPanel execDetailPanel;
+    private Panel execViewPanel;
 
     // Files view
     private final FileListComponent fileList;
@@ -35,22 +55,46 @@ public class MainWindow extends BasicWindow {
 
     // Layout anchors
     private Panel viewport;
-    private Label tabPlan;
     private Label tabFiles;
+    private Label tabPlan;
+    private Label tabExec;
     private Label statusLabel;
 
     // ─── Construction ────────────────────────────────────────────────────────
 
     public MainWindow() {
+        this(null, null);
+    }
+
+    public MainWindow(OpenBBTRuntime runtime, TestPlan testPlan) {
         super(" OpenBBT ");
         setHints(List.of(Hint.FULL_SCREEN));
 
+        this.runtime        = runtime;
+        this.storedTestPlan = testPlan;
+
+        // Build plan root from real data or mock
+        if (runtime != null && testPlan != null) {
+            var repo = (TestPlanRepository) runtime.getRepository(TestPlanRepository.class);
+            planRoot = PlanNodeAdapter.adaptForPlanView(testPlan.planNodeRoot(), repo);
+        } else {
+            planRoot = MockData.createMockPlan();
+        }
+        PlanNode.collapseBelow(planRoot, 2);
+
         // Plan view
-        plan          = MockData.createMockPlan();
-        treeComponent = new PlanTreeComponent(plan);
-        detailPanel   = new DetailPanel();
-        treeComponent.setOnSelectionChange(detailPanel::showNode);
-        detailPanel.showNode(plan);
+        planTreeComponent = new PlanTreeComponent(planRoot);
+        planDetailPanel   = new DetailPanel(DetailPanel.Mode.PLAN);
+        planTreeComponent.setOnSelectionChange(planDetailPanel::showNode);
+        planDetailPanel.showNode(planRoot);
+
+        // Execution view (structural copy, statuses = PENDING)
+        execRoot          = PlanNodeAdapter.copyForExecution(planRoot);
+        PlanNode.collapseBelow(execRoot, 2);
+        execTreeComponent = new PlanTreeComponent(execRoot);
+        execDetailPanel   = new DetailPanel(DetailPanel.Mode.EXECUTION);
+        execTreeComponent.setOnSelectionChange(execDetailPanel::showNode);
+        execDetailPanel.showNode(execRoot);
 
         // Files view
         fileList   = new FileListComponent(Path.of(".").toAbsolutePath().normalize());
@@ -62,41 +106,52 @@ public class MainWindow extends BasicWindow {
 
         // Build sub-panels
         planViewPanel  = buildPlanViewPanel();
+        execViewPanel  = buildExecViewPanel();
         filesViewPanel = buildFilesViewPanel();
 
         // Status + tab labels
-        tabPlan    = new Label("");
         tabFiles   = new Label("");
+        tabPlan    = new Label("");
+        tabExec    = new Label("");
         statusLabel = new Label(" Ready");
 
         setComponent(buildRootLayout());
         updateTabBar();
+        updateStatusBar();
     }
 
     // ─── Root layout ─────────────────────────────────────────────────────────
 
+    private static LayoutData gridFixed() {
+        return GridLayout.createLayoutData(GridLayout.Alignment.FILL, GridLayout.Alignment.BEGINNING, true, false);
+    }
+
+    private static LayoutData gridGrow() {
+        return GridLayout.createLayoutData(GridLayout.Alignment.FILL, GridLayout.Alignment.FILL, true, true);
+    }
+
     private Panel buildRootLayout() {
-        var root = new Panel(new LinearLayout(Direction.VERTICAL));
+        // Use GridLayout(1) so the viewport row can grow to fill remaining height
+        var root = new Panel(new GridLayout(1));
 
-        // Tab bar
+        // Tab bar row (fixed height)
         var tabBar = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        tabBar.addComponent(tabPlan);
         tabBar.addComponent(tabFiles);
-        root.addComponent(tabBar);
-        root.addComponent(new Separator(Direction.HORIZONTAL));
+        tabBar.addComponent(tabPlan);
+        tabBar.addComponent(tabExec);
+        root.addComponent(tabBar, gridFixed());
+        root.addComponent(new Separator(Direction.HORIZONTAL), gridFixed());
 
-        // Viewport (swappable content area)
-        viewport = new Panel(new LinearLayout(Direction.VERTICAL));
-        viewport.addComponent(planViewPanel,
-            LinearLayout.createLayoutData(LinearLayout.Alignment.Fill));
-        root.addComponent(viewport,
-            LinearLayout.createLayoutData(LinearLayout.Alignment.Fill));
+        // Viewport (grows to fill all remaining vertical space)
+        viewport = new Panel(new GridLayout(1));
+        viewport.addComponent(filesViewPanel, gridGrow());
+        root.addComponent(viewport, gridGrow());
 
-        // Status bar
-        root.addComponent(new Separator(Direction.HORIZONTAL));
+        // Status bar row (fixed height)
+        root.addComponent(new Separator(Direction.HORIZONTAL), gridFixed());
         var statusBar = new Panel(new LinearLayout(Direction.HORIZONTAL));
         statusBar.addComponent(statusLabel);
-        root.addComponent(statusBar);
+        root.addComponent(statusBar, gridFixed());
 
         return root;
     }
@@ -104,11 +159,24 @@ public class MainWindow extends BasicWindow {
     private Panel buildPlanViewPanel() {
         var panel = new Panel(new GridLayout(2));
         panel.addComponent(
-            treeComponent.withBorder(Borders.singleLine(" Plan ")),
+            planTreeComponent.withBorder(Borders.singleLine(" Plan ")),
             GridLayout.createLayoutData(
                 GridLayout.Alignment.FILL, GridLayout.Alignment.FILL, false, true));
         panel.addComponent(
-            detailPanel.getPanel().withBorder(Borders.singleLine(" Detail ")),
+            planDetailPanel.getPanel().withBorder(Borders.singleLine(" Detail ")),
+            GridLayout.createLayoutData(
+                GridLayout.Alignment.FILL, GridLayout.Alignment.FILL, true, true));
+        return panel;
+    }
+
+    private Panel buildExecViewPanel() {
+        var panel = new Panel(new GridLayout(2));
+        panel.addComponent(
+            execTreeComponent.withBorder(Borders.singleLine(" Execution ")),
+            GridLayout.createLayoutData(
+                GridLayout.Alignment.FILL, GridLayout.Alignment.FILL, false, true));
+        panel.addComponent(
+            execDetailPanel.getPanel().withBorder(Borders.singleLine(" Detail ")),
             GridLayout.createLayoutData(
                 GridLayout.Alignment.FILL, GridLayout.Alignment.FILL, true, true));
         return panel;
@@ -142,25 +210,25 @@ public class MainWindow extends BasicWindow {
         if (currentMode == mode) return;
         currentMode = mode;
         viewport.removeAllComponents();
-        var panel = (mode == ViewMode.PLAN) ? planViewPanel : filesViewPanel;
-        viewport.addComponent(panel, LinearLayout.createLayoutData(LinearLayout.Alignment.Fill));
+        Panel panel = switch (mode) {
+            case FILES     -> filesViewPanel;
+            case PLAN      -> planViewPanel;
+            case EXECUTION -> execViewPanel;
+        };
+        viewport.addComponent(panel, gridGrow());
         updateTabBar();
         updateStatusBar();
-        // After removing the old panel, the previously focused component is detached from the
-        // window but still referenced as "focused" in the base pane. Any subsequent key that
-        // triggers findNextUp/Down calls toBasePane() on that stale component, whose parent
-        // chain is now broken (null), causing an NPE inside AbstractBorder.toBasePane.
-        // Calling takeFocus() on the new mode's primary component traverses parent pointers
-        // (not positions) to reach the BasePane and registers the new focused interactable,
-        // clearing the stale reference before the next input event is dispatched.
-        if (mode == ViewMode.PLAN) treeComponent.takeFocus();
-        else                        fileList.takeFocus();
+        switch (mode) {
+            case FILES     -> fileList.takeFocus();
+            case PLAN      -> planTreeComponent.takeFocus();
+            case EXECUTION -> execTreeComponent.takeFocus();
+        }
     }
 
     private void updateTabBar() {
-        boolean planActive  = currentMode == ViewMode.PLAN;
-        setTab(tabPlan,  "  [1] Plan ",  planActive);
-        setTab(tabFiles, "  [2] Files ", !planActive);
+        setTab(tabFiles, "  [1] Files ", currentMode == ViewMode.FILES);
+        setTab(tabPlan,  "  [2] Plan ",  currentMode == ViewMode.PLAN);
+        setTab(tabExec,  "  [3] Exec ",  currentMode == ViewMode.EXECUTION);
     }
 
     private void setTab(Label lbl, String text, boolean active) {
@@ -175,9 +243,11 @@ public class MainWindow extends BasicWindow {
     }
 
     private void updateStatusBar() {
-        statusLabel.setText(currentMode == ViewMode.PLAN
-            ? " [↑↓] Navigate  [Enter] Expand  [R] Run  [F] Filter  [1/2] Switch view  [Q] Quit"
-            : " [↑↓] Navigate  [Enter] Open  [Tab] Switch panel  [1/2] Switch view  [Q] Quit");
+        statusLabel.setText(switch (currentMode) {
+            case FILES     -> " [↑↓] Navigate  [Enter] Open  [Tab] Switch panel  [1/2/3] Switch view  [Q] Quit";
+            case PLAN      -> " [↑↓] Navigate  [Enter] Expand  [V] Validate  [F] Filter  [1/2/3] Switch view  [Q] Quit";
+            case EXECUTION -> " [↑↓] Navigate  [Enter] Expand  [R] Run  [1/2/3] Switch view  [Q] Quit";
+        });
     }
 
     // ─── Input handling ──────────────────────────────────────────────────────
@@ -187,10 +257,15 @@ public class MainWindow extends BasicWindow {
         if (key.getKeyType() == KeyType.Character) {
             return switch (key.getCharacter()) {
                 case 'q', 'Q' -> { close(); yield true; }
-                case '1'      -> { switchMode(ViewMode.PLAN);  yield true; }
-                case '2'      -> { switchMode(ViewMode.FILES); yield true; }
+                case '1'      -> { switchMode(ViewMode.FILES);     yield true; }
+                case '2'      -> { switchMode(ViewMode.PLAN);      yield true; }
+                case '3'      -> { switchMode(ViewMode.EXECUTION); yield true; }
                 case 'r', 'R' -> {
-                    if (currentMode == ViewMode.PLAN) { startRun(); yield true; }
+                    if (currentMode == ViewMode.EXECUTION) { startRun(); yield true; }
+                    yield false;
+                }
+                case 'v', 'V' -> {
+                    if (currentMode == ViewMode.PLAN) { rebuildPlanView(); yield true; }
                     yield false;
                 }
                 case 'f', 'F' -> {
@@ -221,59 +296,184 @@ public class MainWindow extends BasicWindow {
         pathLabel.setForegroundColor(TextColor.ANSI.BLACK_BRIGHT);
     }
 
-    // ─── Plan run simulation ─────────────────────────────────────────────────
+    // ─── Plan re-evaluation ──────────────────────────────────────────────────
+
+    private void rebuildPlanView() {
+        if (runtime == null) {
+            setStatus(" Demo mode — validation is static");
+            return;
+        }
+        setStatus(" Re-evaluating plan...");
+        var repo = (TestPlanRepository) runtime.getRepository(TestPlanRepository.class);
+        planRoot = PlanNodeAdapter.adaptForPlanView(storedTestPlan.planNodeRoot(), repo);
+        PlanNode.collapseBelow(planRoot, 2);
+        planTreeComponent.reload(planRoot);
+        planDetailPanel.showNode(planTreeComponent.getSelectedNode());
+
+        execRoot = PlanNodeAdapter.copyForExecution(planRoot);
+        PlanNode.collapseBelow(execRoot, 2);
+        execTreeComponent.reload(execRoot);
+        execDetailPanel.showNode(execTreeComponent.getSelectedNode());
+        setStatus(" Plan re-evaluated");
+    }
+
+    // ─── Plan execution ──────────────────────────────────────────────────────
 
     private void startRun() {
         if (running) { setStatus(" Already running..."); return; }
         running = true;
-        plan.resetStatus();
-        refreshPlanUi(" Running...");
+        execRoot.resetStatus();
+        refreshExecUi(" Running...");
 
-        Thread.ofVirtual().name("run-simulation").start(() -> {
-            try {
-                for (var feature : plan.getChildren()) {
-                    for (var scenario : feature.getChildren()) {
-                        runScenario(scenario);
+        if (runtime != null) {
+            var repo     = (TestPlanRepository) runtime.getRepository(TestPlanRepository.class);
+            var executor = new PlanExecutor(runtime);
+            Thread.ofVirtual().name("run-executor").start(() -> {
+                executor.setUp();
+                try {
+                    runNode(execRoot, executor, repo);
+                    refreshExecUi(" Done");
+                } catch (Exception e) {
+                    refreshExecUi(" Error: " + e.getMessage());
+                } finally {
+                    executor.tearDown();
+                    running = false;
+                }
+            });
+        } else {
+            Thread.ofVirtual().name("run-simulation").start(() -> {
+                try {
+                    runNode(execRoot, null, null);
+                    refreshExecUi(" Done");
+                } finally {
+                    running = false;
+                }
+            });
+        }
+    }
+
+    private boolean runNode(PlanNode node, PlanExecutor executor, TestPlanRepository repo) {
+        return switch (node.getType()) {
+            case STEP -> {
+                executeStep(node, executor, repo);
+                yield node.getStatus() == PlanNode.Status.PASS;
+            }
+            case SCENARIO, STEP_GROUP -> {
+                node.setStatus(PlanNode.Status.RUNNING);
+                refreshExecUi(null);
+                List<PlanNode> leafSteps = findLeafSteps(node);
+                boolean failed = false;
+                for (var step : leafSteps) {
+                    if (failed) {
+                        step.setStatus(PlanNode.Status.SKIPPED);
+                        refreshExecUi(null);
+                    } else {
+                        executeStep(step, executor, repo);
+                        if (step.getStatus() != PlanNode.Status.PASS) failed = true;
                     }
                 }
-                updateFeatureStatuses();
-                refreshPlanUi(" Done");
-            } finally {
-                running = false;
+                propagateStatus(node);
+                refreshExecUi(null);
+                yield !failed;
             }
-        });
+            case FEATURE, PROJECT -> {
+                node.setStatus(PlanNode.Status.RUNNING);
+                refreshExecUi(null);
+                for (var child : node.getChildren()) {
+                    runNode(child, executor, repo);
+                }
+                node.setStatus(aggregateStatus(node.getChildren()));
+                refreshExecUi(null);
+                yield node.getStatus() == PlanNode.Status.PASS;
+            }
+        };
     }
 
-    private void runScenario(PlanNode scenario) {
-        scenario.setStatus(PlanNode.Status.RUNNING);
-        refreshPlanUi(null);
+    private void executeStep(PlanNode step, PlanExecutor executor, TestPlanRepository repo) {
+        step.setStatus(PlanNode.Status.RUNNING);
+        refreshExecUi(null);
 
-        boolean passed = true;
-        boolean failedEarly = false;
-        for (var step : scenario.getChildren()) {
-            if (failedEarly) break;
-            step.setStatus(PlanNode.Status.RUNNING);
-            refreshPlanUi(null);
-            sleep(120);
-            boolean ok = Math.random() > 0.15;
-            step.setStatus(ok ? PlanNode.Status.PASS : PlanNode.Status.FAIL);
-            if (!ok) { passed = false; failedEarly = true; }
-            refreshPlanUi(null);
-            sleep(60);
+        if (executor == null) {
+            sleep(100);
+            if (Math.random() > 0.15) {
+                step.setStatus(PlanNode.Status.PASS);
+            } else {
+                step.setStatus(PlanNode.Status.FAIL);
+                step.setValidationMessage("AssertionError: expected condition was not met");
+            }
+            sleep(50);
+            return;
         }
-        scenario.setStatus(passed ? PlanNode.Status.PASS : PlanNode.Status.FAIL);
-        refreshPlanUi(null);
+
+        UUID id;
+        try {
+            id = UUID.fromString(step.getId());
+        } catch (IllegalArgumentException e) {
+            // Mock data — simulate
+            sleep(80);
+            if (Math.random() > 0.15) {
+                step.setStatus(PlanNode.Status.PASS);
+            } else {
+                step.setStatus(PlanNode.Status.FAIL);
+                step.setValidationMessage("AssertionError: expected condition was not met");
+            }
+            return;
+        }
+
+        var coreNode = repo.getNodeData(id).orElse(null);
+        if (coreNode == null) {
+            step.setStatus(PlanNode.Status.UNDEFINED);
+            step.setValidationMessage("Step node not found in repository");
+            return;
+        }
+
+        try {
+            var pair = executor.submitExecution(coreNode).get();
+            step.setStatus(mapResult(pair.left()));
+            if (pair.right() != null) {
+                step.setValidationMessage(pair.right().getMessage());
+            }
+        } catch (Exception e) {
+            step.setStatus(PlanNode.Status.FAIL);
+            step.setValidationMessage(e.getMessage());
+        }
     }
 
-    private void updateFeatureStatuses() {
-        for (var feature : plan.getChildren()) {
-            boolean anyFail    = feature.getChildren().stream().anyMatch(s -> s.getStatus() == PlanNode.Status.FAIL);
-            boolean anyPending = feature.getChildren().stream().anyMatch(s -> s.getStatus() == PlanNode.Status.PENDING);
-            feature.setStatus(anyFail ? PlanNode.Status.FAIL : anyPending ? PlanNode.Status.PENDING : PlanNode.Status.PASS);
-        }
-        boolean anyFail    = plan.getChildren().stream().anyMatch(f -> f.getStatus() == PlanNode.Status.FAIL);
-        boolean anyPending = plan.getChildren().stream().anyMatch(f -> f.getStatus() == PlanNode.Status.PENDING);
-        plan.setStatus(anyFail ? PlanNode.Status.FAIL : anyPending ? PlanNode.Status.PENDING : PlanNode.Status.PASS);
+    private static List<PlanNode> findLeafSteps(PlanNode node) {
+        if (!node.hasChildren()) return List.of(node);
+        var result = new ArrayList<PlanNode>();
+        for (var child : node.getChildren()) result.addAll(findLeafSteps(child));
+        return result;
+    }
+
+    private static void propagateStatus(PlanNode node) {
+        if (!node.hasChildren()) return;
+        for (var child : node.getChildren()) propagateStatus(child);
+        node.setStatus(aggregateStatus(node.getChildren()));
+    }
+
+    private static PlanNode.Status aggregateStatus(List<PlanNode> children) {
+        if (children.isEmpty()) return PlanNode.Status.PENDING;
+        boolean anyFail    = children.stream().anyMatch(c -> c.getStatus() == PlanNode.Status.FAIL);
+        boolean anyUndef   = children.stream().anyMatch(c -> c.getStatus() == PlanNode.Status.UNDEFINED);
+        boolean anySkip    = children.stream().anyMatch(c -> c.getStatus() == PlanNode.Status.SKIPPED);
+        boolean anyPending = children.stream().anyMatch(c ->
+            c.getStatus() == PlanNode.Status.PENDING || c.getStatus() == PlanNode.Status.RUNNING);
+        if (anyFail)    return PlanNode.Status.FAIL;
+        if (anyUndef)   return PlanNode.Status.UNDEFINED;
+        if (anySkip)    return PlanNode.Status.SKIPPED;
+        if (anyPending) return PlanNode.Status.PENDING;
+        return PlanNode.Status.PASS;
+    }
+
+    private static PlanNode.Status mapResult(Result result) {
+        return switch (result) {
+            case PASSED    -> PlanNode.Status.PASS;
+            case FAILED    -> PlanNode.Status.FAIL;
+            case SKIPPED   -> PlanNode.Status.SKIPPED;
+            case ERROR     -> PlanNode.Status.FAIL;
+            case UNDEFINED -> PlanNode.Status.UNDEFINED;
+        };
     }
 
     // ─── Filter dialog ───────────────────────────────────────────────────────
@@ -287,10 +487,10 @@ public class MainWindow extends BasicWindow {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private void refreshPlanUi(String newStatus) {
+    private void refreshExecUi(String newStatus) {
         getTextGUI().getGUIThread().invokeLater(() -> {
-            treeComponent.refresh();
-            detailPanel.showNode(treeComponent.getSelectedNode());
+            execTreeComponent.refresh();
+            execDetailPanel.showNode(execTreeComponent.getSelectedNode());
             if (newStatus != null) statusLabel.setText(newStatus);
         });
     }

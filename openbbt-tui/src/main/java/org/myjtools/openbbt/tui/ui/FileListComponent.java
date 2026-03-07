@@ -21,6 +21,7 @@ public class FileListComponent extends AbstractInteractableComponent<FileListCom
 
     private record Entry(Path path, boolean isDir, boolean isParent) {}
 
+    private final Path rootDir;
     private Path currentDir;
     private List<Entry> entries = new ArrayList<>();
     private int selectedIndex = 0;
@@ -29,7 +30,8 @@ public class FileListComponent extends AbstractInteractableComponent<FileListCom
     private Consumer<Path> onDirChanged;
 
     public FileListComponent(Path startDir) {
-        this.currentDir = startDir.toAbsolutePath().normalize();
+        this.rootDir    = startDir.toAbsolutePath().normalize();
+        this.currentDir = this.rootDir;
         reload();
     }
 
@@ -39,8 +41,12 @@ public class FileListComponent extends AbstractInteractableComponent<FileListCom
 
     private void reload() {
         entries.clear();
-        var parent = currentDir.getParent();
-        if (parent != null) entries.add(new Entry(parent, true, true));
+
+        // Only show ".." if we are not at the root working directory
+        if (!currentDir.equals(rootDir)) {
+            var parent = currentDir.getParent();
+            if (parent != null) entries.add(new Entry(parent, true, true));
+        }
 
         try (var stream = Files.list(currentDir)) {
             stream.sorted(Comparator
@@ -130,6 +136,8 @@ public class FileListComponent extends AbstractInteractableComponent<FileListCom
 
                 var entry  = entries.get(idx);
                 boolean sel = (idx == selectedIndex) && isFocused();
+                boolean openbbtYaml = !entry.isDir() && "openbbt.yaml".equals(
+                    entry.path().getFileName().toString());
 
                 String icon = entry.isParent() ? "↑ " : entry.isDir() ? "▸ " : "  ";
                 String name = nameOf(entry);
@@ -142,8 +150,11 @@ public class FileListComponent extends AbstractInteractableComponent<FileListCom
 
                 String line = " " + icon + name;
                 if (line.length() > cols) line = line.substring(0, cols);
-                if (sel) g.putString(0, row, line, SGR.BOLD);
-                else     g.putString(0, row, line);
+
+                if (sel && openbbtYaml)       g.putString(0, row, line, SGR.BOLD, SGR.REVERSE);
+                else if (sel)                 g.putString(0, row, line, SGR.BOLD);
+                else if (openbbtYaml)         g.putString(0, row, line, SGR.BOLD);
+                else                          g.putString(0, row, line);
             }
         }
 
@@ -157,6 +168,8 @@ public class FileListComponent extends AbstractInteractableComponent<FileListCom
             if (selected) return TextColor.ANSI.BLACK;
             if (e.isParent()) return TextColor.ANSI.YELLOW_BRIGHT;
             if (e.isDir())    return TextColor.ANSI.CYAN_BRIGHT;
+            if ("openbbt.yaml".equals(e.path().getFileName().toString()))
+                return TextColor.ANSI.WHITE_BRIGHT;
             return TextColor.ANSI.WHITE;
         }
     }

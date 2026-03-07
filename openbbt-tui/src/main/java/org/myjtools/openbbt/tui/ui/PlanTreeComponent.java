@@ -18,7 +18,7 @@ public class PlanTreeComponent extends AbstractInteractableComponent<PlanTreeCom
 
     private record FlatItem(PlanNode node, int depth) {}
 
-    private final PlanNode root;
+    private PlanNode root;
     private final List<FlatItem> flatItems = new ArrayList<>();
     private int selectedIndex = 0;
     private int scrollOffset = 0;
@@ -39,11 +39,19 @@ public class PlanTreeComponent extends AbstractInteractableComponent<PlanTreeCom
     }
 
     public void refresh() {
-        int prevSize = flatItems.size();
         rebuildFlatList();
         if (selectedIndex >= flatItems.size()) {
             selectedIndex = Math.max(0, flatItems.size() - 1);
         }
+        invalidate();
+    }
+
+    public void reload(PlanNode newRoot) {
+        this.root = newRoot;
+        selectedIndex = 0;
+        scrollOffset = 0;
+        rebuildFlatList();
+        fireSelectionChange();
         invalidate();
     }
 
@@ -180,19 +188,31 @@ public class PlanTreeComponent extends AbstractInteractableComponent<PlanTreeCom
 
         private String iconForStatus(PlanNode.Status s) {
             return switch (s) {
-                case PENDING -> "○";
-                case RUNNING -> "►";
-                case PASS    -> "✓";
-                case FAIL    -> "✗";
+                case NOT_VALIDATED -> "○";
+                case VALIDATED     -> "✓";
+                case INVALID       -> "✗";
+                case HAS_ISSUES    -> "!";
+                case PENDING       -> "○";
+                case RUNNING       -> "►";
+                case PASS          -> "✓";
+                case FAIL          -> "✗";
+                case SKIPPED       -> "-";
+                case UNDEFINED     -> "?";
             };
         }
 
         private TextColor colorForStatus(PlanNode.Status s) {
             return switch (s) {
-                case PENDING -> TextColor.ANSI.DEFAULT;
-                case RUNNING -> TextColor.ANSI.YELLOW_BRIGHT;
-                case PASS    -> TextColor.ANSI.GREEN_BRIGHT;
-                case FAIL    -> TextColor.ANSI.RED_BRIGHT;
+                case NOT_VALIDATED -> TextColor.ANSI.DEFAULT;
+                case VALIDATED     -> TextColor.ANSI.DEFAULT;
+                case INVALID       -> TextColor.ANSI.RED_BRIGHT;
+                case HAS_ISSUES    -> TextColor.ANSI.YELLOW_BRIGHT;
+                case PENDING       -> TextColor.ANSI.DEFAULT;
+                case RUNNING       -> TextColor.ANSI.YELLOW_BRIGHT;
+                case PASS          -> TextColor.ANSI.GREEN_BRIGHT;
+                case FAIL          -> TextColor.ANSI.RED_BRIGHT;
+                case SKIPPED       -> TextColor.ANSI.BLACK_BRIGHT;
+                case UNDEFINED     -> TextColor.ANSI.MAGENTA_BRIGHT;
             };
         }
     }

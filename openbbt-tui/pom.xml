@@ -19,6 +19,11 @@
             <artifactId>lanterna</artifactId>
             <version>3.1.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.myjtools.openbbt</groupId>
+            <artifactId>openbbt-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

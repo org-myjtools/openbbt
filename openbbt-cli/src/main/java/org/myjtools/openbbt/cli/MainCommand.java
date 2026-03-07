@@ -12,7 +12,8 @@ import java.util.Map;
 		VersionCommand.class,
 		PurgeCommand.class,
 		PlanCommand.class,
-		ShowConfigCommand.class
+		ShowConfigCommand.class,
+		TuiCommand.class
 	}
 )
 public class MainCommand implements Runnable {
