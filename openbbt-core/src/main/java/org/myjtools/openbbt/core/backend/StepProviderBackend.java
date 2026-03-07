@@ -63,6 +63,16 @@ public class StepProviderBackend {
 		return matchingStep(step, locale).isPresent();
 	}
 
+	public List<String> allStepsForLocale(Locale locale) {
+		return services.stream()
+			.flatMap(s -> s.stepStringsForLocale(locale).stream())
+			.toList();
+	}
+
+	public List<String> hintsForStep(String invalidStep, Locale locale, int limit) {
+		return hinter.getHintsForInvalidStep(invalidStep, locale, limit);
+	}
+
 
 	public void run(String step, Locale locale, NodeArgument nodeArgument) {
 		var matchingStep = matchingStep(step,locale).orElseThrow(

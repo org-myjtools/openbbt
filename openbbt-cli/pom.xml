@@ -34,6 +34,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.myjtools.openbbt</groupId>
+            <artifactId>openbbt-lsp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.5.16</version>
@@ -73,5 +78,65 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>install-system</id>
+            <activation>
+                <os><family>unix</family></os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>install-cli-system</id>
+                                <phase>install</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <target>
+                                        <property name="dist.zip"
+                                                  value="${project.build.directory}/${project.artifactId}-${project.version}-dist.zip"/>
+                                        <property name="install.dir" value="${user.home}/.local/share/openbbt"/>
+                                        <property name="bin.dir"     value="${user.home}/.local/bin"/>
+
+                                        <!-- Clean previous installation -->
+                                        <delete dir="${install.dir}" quiet="true"/>
+                                        <mkdir dir="${user.home}/.local/share"/>
+                                        <mkdir dir="${bin.dir}"/>
+
+                                        <!-- Extract zip; creates ${project.artifactId}-${project.version}/ -->
+                                        <unzip src="${dist.zip}" dest="${user.home}/.local/share"/>
+                                        <move file="${user.home}/.local/share/${project.artifactId}-${project.version}"
+                                              tofile="${install.dir}" overwrite="true"/>
+
+                                        <!-- Ensure launcher is executable -->
+                                        <chmod file="${install.dir}/bin/openbbt" perm="755"/>
+
+                                        <!-- Symlink into bin dir -->
+                                        <exec executable="ln" failonerror="true">
+                                            <arg value="-sf"/>
+                                            <arg value="${install.dir}/bin/openbbt"/>
+                                            <arg value="${bin.dir}/openbbt"/>
+                                        </exec>
+
+                                        <echo message=""/>
+                                        <echo message="=============================================="/>
+                                        <echo message=" OpenBBT installed at: ${install.dir}"/>
+                                        <echo message=" Executable linked at: ${bin.dir}/openbbt"/>
+                                        <echo message=" Make sure ${bin.dir} is in your PATH"/>
+                                        <echo message="=============================================="/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

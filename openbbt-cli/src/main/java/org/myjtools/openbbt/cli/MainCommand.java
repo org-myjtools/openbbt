@@ -8,12 +8,14 @@ import java.util.Map;
 	name = "openbbt",
 	description = "OpenBBT CLI utility",
 	subcommands = {
+		InitCommand.class,
 		InstallCommand.class,
 		VersionCommand.class,
 		PurgeCommand.class,
 		PlanCommand.class,
 		ShowConfigCommand.class,
-		TuiCommand.class
+		TuiCommand.class,
+		LspCommand.class
 	}
 )
 public class MainCommand implements Runnable {

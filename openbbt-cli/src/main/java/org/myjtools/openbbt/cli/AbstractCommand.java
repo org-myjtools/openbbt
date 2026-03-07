@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public abstract sealed class AbstractCommand implements Callable<Integer> permits InstallCommand, PlanCommand, PurgeCommand, ShowConfigCommand, TuiCommand {
+public abstract sealed class AbstractCommand implements Callable<Integer> permits InitCommand, InstallCommand, LspCommand, PlanCommand, PurgeCommand, ShowConfigCommand, TuiCommand {
 
 	@CommandLine.ParentCommand
 	MainCommand parent;
@@ -63,7 +63,6 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 			return 0;
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
-			e.printStackTrace(System.err);
 			return 1;
 		}
 	}

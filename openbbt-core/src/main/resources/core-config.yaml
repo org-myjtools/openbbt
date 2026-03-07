@@ -46,7 +46,7 @@ core.persistence.mode:
     type: text
     constraints:
         enum: [transient, file, remote]
-    defaultValue: in-memory
+    defaultValue: transient
 
 core.persistence.file:
   description: |

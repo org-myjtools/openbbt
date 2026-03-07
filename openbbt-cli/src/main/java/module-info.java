@@ -8,6 +8,7 @@ module org.myjtools.openbbt.cli {
 	requires org.myjtools.imconfig;
 	requires org.slf4j;
 	requires org.myjtools.openbbt.tui;
+	requires org.myjtools.openbbt.lsp;
 
 	opens org.myjtools.openbbt.cli to info.picocli;
 
