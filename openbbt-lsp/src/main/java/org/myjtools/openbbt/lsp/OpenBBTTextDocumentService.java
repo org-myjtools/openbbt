@@ -23,6 +23,9 @@ public class OpenBBTTextDocumentService implements TextDocumentService {
         KeywordType.SCENARIO_OUTLINE, KeywordType.EXAMPLES,
         KeywordType.GIVEN, KeywordType.WHEN, KeywordType.THEN, KeywordType.AND, KeywordType.BUT
     );
+    private static final List<KeywordType> STEP_KEYWORD_TYPES = List.of(
+        KeywordType.GIVEN, KeywordType.WHEN, KeywordType.THEN, KeywordType.AND, KeywordType.BUT
+    );
     private static final List<String> DEFAULT_STEP_KEYWORDS  = List.of("Given", "When", "Then", "And", "But");
     private static final List<String> DEFAULT_GHERKIN_KEYWORDS = List.of(
         "Feature:", "Background:", "Scenario:", "Scenario Outline:",
@@ -159,31 +162,48 @@ public class OpenBBTTextDocumentService implements TextDocumentService {
         Locale locale = localeFromContent(content);
         String linePrefix = getLinePrefix(content, pos);
         String trimmed = linePrefix.stripLeading();
+        int indentLen = linePrefix.length() - trimmed.length();
 
         var matchingStepKeyword = stepKeywordsForLocale(locale).stream()
-            .filter(kw -> trimmed.startsWith(kw + " "))
+            .filter(kw -> trimmed.toLowerCase().startsWith((kw + " ").toLowerCase()))
             .findFirst();
 
         if (matchingStepKeyword.isPresent()) {
-            String stepPrefix = trimmed.substring(matchingStepKeyword.get().length() + 1);
-            return stepCompletions(stepPrefix, locale);
+            String kw = matchingStepKeyword.get();
+            String stepPrefix = trimmed.substring(kw.length() + 1);
+            int stepStartCol = indentLen + kw.length() + 1;
+            String[] lines = content.split("\n", -1);
+            String fullLine = pos.getLine() < lines.length ? lines[pos.getLine()] : "";
+            int lineEndCol = Math.max(stepStartCol, fullLine.stripTrailing().length());
+            var replaceRange = new Range(
+                new Position(pos.getLine(), stepStartCol),
+                new Position(pos.getLine(), lineEndCol)
+            );
+            return stepCompletions(stepPrefix, locale, replaceRange);
         }
         return gherkinKeywordCompletions(trimmed, locale);
     }
 
     private List<String> stepKeywordsForLocale(Locale locale) {
         return keywordProvider.keywordMap(locale)
-            .map(km -> km.keywords(KeywordType.STEP))
+            .map(km -> STEP_KEYWORD_TYPES.stream()
+                .map(km::keywords)
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .distinct()
+                .sorted(Comparator.comparingInt(String::length).reversed())
+                .toList())
             .orElse(DEFAULT_STEP_KEYWORDS);
     }
 
-    private List<CompletionItem> stepCompletions(String prefix, Locale locale) {
+    private List<CompletionItem> stepCompletions(String prefix, Locale locale, Range replaceRange) {
         if (backend == null) return List.of();
         return backend.allStepsForLocale(locale).stream()
             .filter(s -> s.toLowerCase().contains(prefix.toLowerCase()))
             .map(s -> {
                 var item = new CompletionItem(s);
                 item.setKind(CompletionItemKind.Function);
+                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, s)));
                 return item;
             })
             .toList();

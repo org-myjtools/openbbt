@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StepProviderService {
 
@@ -30,6 +31,8 @@ public class StepProviderService {
     private final List<Method> setupMethods = new ArrayList<>();
     private final List<Method> teardownMethods = new ArrayList<>();
     private final ExpressionMatcherBuilder matcherBuilder;
+    private final Map<String, ExpressionMatcher> matcherCache = new ConcurrentHashMap<>();
+    private final Set<String> failedExpressions = ConcurrentHashMap.newKeySet();
 
 
     public StepProviderService(
@@ -73,8 +76,19 @@ public class StepProviderService {
             if (keyExpression == null) {
                 keyExpression = stepKey;
             }
-            ExpressionMatcher matcher = matcherBuilder.buildExpressionMatcher(keyExpression);
-            var matchingStep = matcher.matches(step,locale).map(match -> Pair.of(runnableStep,match));
+            if (failedExpressions.contains(keyExpression)) continue;
+            ExpressionMatcher matcher = matcherCache.get(keyExpression);
+            if (matcher == null) {
+                try {
+                    matcher = matcherBuilder.buildExpressionMatcher(keyExpression);
+                    matcherCache.put(keyExpression, matcher);
+                } catch (OpenBBTException e) {
+                    log.warn("Cannot build matcher for step '{}': {}", keyExpression, e.getMessage());
+                    failedExpressions.add(keyExpression);
+                    continue;
+                }
+            }
+            var matchingStep = matcher.matches(step, locale).map(match -> Pair.of(runnableStep, match));
             if (matchingStep.isPresent()) {
                 return matchingStep;
             }

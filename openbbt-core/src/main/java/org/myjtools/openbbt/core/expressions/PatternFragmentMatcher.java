@@ -27,7 +27,7 @@ public class PatternFragmentMatcher implements FragmentMatcher {
 	 * @param literal the literal representation for display purposes
 	 */
 	public PatternFragmentMatcher(String regex, String literal) {
-		this.pattern = Patterns.of(regex);
+		this.pattern = Patterns.ofIgnoreCase(regex);
 		this.literal = literal;
 	}
 

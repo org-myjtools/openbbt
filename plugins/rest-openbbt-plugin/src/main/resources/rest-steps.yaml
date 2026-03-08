@@ -3,7 +3,7 @@
     Makes a GET request to the specified URL.
   expressions:
     en: 'I make a GET request to {endpoint:text}'
-    es: 'Hago una petición GET a {endpoint:text}'
+    es: 'hago una petición GET a {endpoint:text}'
   parameters:
     - name: endpoint
       type: text
@@ -17,7 +17,7 @@
     Makes a POST request to the specified URL with an empty body.
   expressions:
     en: 'I make a POST request to {endpoint:text}'
-    es: 'Hago una petición POST a {endpoint:text}'
+    es: 'hago una petición POST a {endpoint:text}'
   parameters:
     - name: endpoint
       type: text
@@ -32,7 +32,7 @@
     Makes a POST request to the specified URL with the given body.
   expressions:
     en: 'I make a POST request to {endpoint:text} with body:'
-    es: 'Hago una petición POST a {endpoint:text} con el cuerpo:'
+    es: 'hago una petición POST a {endpoint:text} con el cuerpo:'
   parameters:
     - name: endpoint
       type: text
@@ -54,7 +54,7 @@
     Makes a POST request to the specified URL with the given body read from a file.
   expressions:
     en: 'I make a POST request to {endpoint:text} with body from file {file:text}'
-    es: 'Hago una petición POST a {endpoint:text} con el cuerpo del archivo {file:text}'
+    es: 'hago una petición POST a {endpoint:text} con el cuerpo del archivo {file:text}'
   parameters:
     - name: endpoint
       type: text
@@ -71,7 +71,7 @@
     Makes a PUT request to the specified URL with the given body.
   expressions:
     en: 'I make a PUT request to {endpoint:text} with body:'
-    es: 'Hago una petición PUT a {endpoint:text} con el cuerpo:'
+    es: 'hago una petición PUT a {endpoint:text} con el cuerpo:'
   parameters:
     - name: endpoint
       type: text
@@ -92,7 +92,7 @@
     Makes a PUT request to the specified URL with the given body read from a file.
   expressions:
     en: 'I make a PUT request to {endpoint:text} with body from file {file:text}'
-    es: 'Hago una petición PUT a {endpoint:text} con el cuerpo del archivo {file:text}'
+    es: 'hago una petición PUT a {endpoint:text} con el cuerpo del archivo {file:text}'
   parameters:
     - name: endpoint
       type: text
@@ -110,7 +110,7 @@
     Makes a PATCH request to the specified URL with the given body.
   expressions:
     en: 'I make a PATCH request to {endpoint:text} with body:'
-    es: 'Hago una petición PATCH a {endpoint:text} con el cuerpo:'
+    es: 'hago una petición PATCH a {endpoint:text} con el cuerpo:'
   parameters:
     - name: endpoint
       type: text
@@ -130,7 +130,7 @@
     Makes a PATCH request to the specified URL with the given body read from a file.
   expressions:
     en: 'I make a PATCH request to {endpoint:text} with body from file {file:text}'
-    es: 'Hago una petición PATCH a {endpoint:text} con el cuerpo del archivo {file:text}'
+    es: 'hago una petición PATCH a {endpoint:text} con el cuerpo del archivo {file:text}'
   parameters:
     - name: endpoint
       type: text
@@ -148,7 +148,7 @@
     Makes a DELETE request to the specified URL.
   expressions:
     en: 'I make a DELETE request to {endpoint:text}'
-    es: 'Hago una petición DELETE a {endpoint:text}'
+    es: 'hago una petición DELETE a {endpoint:text}'
   parameters:
     - name: endpoint
       type: text
@@ -162,8 +162,8 @@
   description: |
     Asserts that the status code of the last REST response matches the expected value.
   expressions:
-    en: 'the HTTP status code {numeric-assertion}'
-    es: 'el código de estado HTTP {numeric-assertion}'
+    en: 'the HTTP status code {integer-assertion}'
+    es: 'el código de estado HTTP {integer-assertion}'
   parameters:
     - name: statusCode
       type: number
