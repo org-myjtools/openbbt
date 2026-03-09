@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Top face: VS Code light blue -->
+  <polygon points="11.1,0 22.3,5.9 11.1,11.8 0,5.9"
+           fill="#7CC5F4"/>
+  <!-- Left face: VS Code dark blue -->
+  <polygon points="0,5.9 11.1,11.8 10.7,24 0,18.4"
+           fill="#084E88"/>
+  <!-- Right face: VS Code primary blue -->
+  <polygon points="22.3,5.9 22.3,18.4 11.6,24 11.1,11.8"
+           fill="#0078D4"/>
+  <!-- Checkmark swoosh: white, faithfully reproduced from logo -->
+  <path fill="#FFFFFF" d="M12.93,17.05
+    C12.98,16.64 13.17,16.18 13.93,16
+    C14.57,16.03 15.08,16.35 15.85,16.76
+    C17.32,13.93 18.46,11.64 20.86,10.26
+    C21.1,10.11 21.18,10.08 21.07,10.34
+    C18.86,12.71 17.52,15.8 16.77,19.15
+    C16.65,19.26 16.57,19.29 16.52,19.26
+    C15.93,18.62 15.39,17.96 14.13,17.57
+    C13.82,17.07 13.42,16.91 12.93,17.05 Z"/>
+</svg>

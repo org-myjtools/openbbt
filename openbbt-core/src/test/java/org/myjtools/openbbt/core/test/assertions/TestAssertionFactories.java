@@ -17,7 +17,7 @@ class TestAssertionFactories {
 
 	@Test
 	void coreEnglish_shouldContainAllDefaultFactories() {
-		assertThat(factories.byName("number-assertion")).isNotNull();
+		assertThat(factories.byName("integer-assertion")).isNotNull();
 		assertThat(factories.byName("decimal-assertion")).isNotNull();
 		assertThat(factories.byName("date-assertion")).isNotNull();
 		assertThat(factories.byName("time-assertion")).isNotNull();
@@ -27,10 +27,10 @@ class TestAssertionFactories {
 
 	@Test
 	void byName_withValidName_shouldReturnFactory() {
-		AssertionFactory<?> factory = factories.byName("number-assertion");
+		AssertionFactory<?> factory = factories.byName("integer-assertion");
 
 		assertThat(factory).isNotNull();
-		assertThat(factory.name()).isEqualTo("number-assertion");
+		assertThat(factory.name()).isEqualTo("integer-assertion");
 	}
 
 	@Test
@@ -43,12 +43,12 @@ class TestAssertionFactories {
 
 	@Test
 	void of_withVarargs_shouldCreateRegistry() {
-		AssertionFactory<?> numberFactory = factories.byName("number-assertion");
+		AssertionFactory<?> numberFactory = factories.byName("integer-assertion");
 		AssertionFactory<?> textFactory = factories.byName("text-assertion");
 
 		AssertionFactories custom = AssertionFactories.of(numberFactory, textFactory);
 
-		assertThat(custom.byName("number-assertion")).isNotNull();
+		assertThat(custom.byName("integer-assertion")).isNotNull();
 		assertThat(custom.byName("text-assertion")).isNotNull();
 		assertThatThrownBy(() -> custom.byName("date-assertion"))
 			.isInstanceOf(OpenBBTException.class);

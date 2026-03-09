@@ -26,9 +26,9 @@ class TestStepProviderService {
     static final Messages stepMessages = new TestMessages(
         Map.of(Locale.ENGLISH, Map.of(
             "stepWithoutParameters", "Step without parameters",
-            "stepWithOneParameter", "Step with one parameter: {number}",
-            "stepWithTwoParameters", "Step with two parameters: {number1:number}, {number2:number}",
-            "stepWithOneParameterAndAssertion", "Step with one parameter and assertion: {number} {{number-assertion}}",
+            "stepWithOneParameter", "Step with one parameter: {integer}",
+            "stepWithTwoParameters", "Step with two parameters: {number1:integer}, {number2:integer}",
+            "stepWithOneParameterAndAssertion", "Step with one parameter and assertion: {integer} {{integer-assertion}}",
             "stepWithOnlyDataTable", "Step with only data table",
             "stepWithOnlyDocument", "Step with only document"
         )
@@ -110,7 +110,7 @@ class TestStepProviderService {
         assertThat(stepProvider.runnedStepWithOneParameter).isNull();
         assertThatCode( ()-> stepMethod.run(arguments,null) )
             .isInstanceOf(OpenBBTException.class)
-            .hasMessage("Argument 'number' has type Long, but expected type is Integer");
+            .hasMessage("Argument 'integer' has type Long, but expected type is Integer");
 
     }
 

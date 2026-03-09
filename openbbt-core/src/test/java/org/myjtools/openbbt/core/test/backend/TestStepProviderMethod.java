@@ -45,7 +45,7 @@ class TestStepProviderMethod {
 	private static final DataType dataType = new DataType() {
 		@Override
 		public String name() {
-			return "number";
+			return "integer";
 		}
 		@Override
 		public Class<?> javaType() {
@@ -98,7 +98,7 @@ class TestStepProviderMethod {
 					DataTypes.of()
 			);
 			assertThat(stepProviderMethod.stepKey()).isEqualTo("stepWithoutParameters");
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			assertThatCode(
 					() -> stepProviderMethod.run(arguments, null)
 			)
@@ -164,7 +164,7 @@ class TestStepProviderMethod {
 				DataTypes.of(dataType)
 			);
 			assertThat(stepProviderMethod.stepKey()).isEqualTo("stepWithOneParameter");
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			assertThat(stepProvider.runnedStepWithOneParameter).isNull();
 			assertThatCode(() -> stepProviderMethod.run(arguments, null)).doesNotThrowAnyException();
 			assertThat(stepProvider.runnedStepWithOneParameter).isEqualTo(42);
@@ -197,10 +197,10 @@ class TestStepProviderMethod {
 				DataTypes.of(dataType)
 			);
 			assertThat(stepProviderMethod.stepKey()).isEqualTo("stepWithOneParameter");
-			Map<String, Object> arguments = Map.of("number", 42L);
+			Map<String, Object> arguments = Map.of("integer", 42L);
 			assertThatCode(() -> stepProviderMethod.run(arguments, null))
 				.isInstanceOf(OpenBBTException.class)
-				.hasMessage("Argument 'number' has type Long, but expected type is Integer");
+				.hasMessage("Argument 'integer' has type Long, but expected type is Integer");
 		}
 
 
@@ -236,7 +236,7 @@ class TestStepProviderMethod {
 					DataTypes.of(dataType)
 			);
 			assertThat(stepProviderMethod.stepKey()).isEqualTo("stepWithOneParameter");
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			DataTable datatable = new DataTable(List.of(List.of("column1"), List.of("value1")));
 			assertThatCode(
 					() -> stepProviderMethod.run(arguments, datatable)
@@ -301,7 +301,7 @@ class TestStepProviderMethod {
 				method,
 				DataTypes.of()
 			)).isInstanceOf(OpenBBTException.class)
-			.hasMessageStartingWith("Unknown data type number");
+			.hasMessageStartingWith("Unknown data type integer");
 		}
 
 
@@ -389,7 +389,7 @@ class TestStepProviderMethod {
 				method,
 				DataTypes.of(dataType)
 			);
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			assertThatCode(() -> stepProviderMethod.run(arguments, assertion))
 				.isInstanceOf(OpenBBTException.class)
 				.hasMessage("Step 'stepWithOnlyAssertion' expects 0 arguments, but 1 were provided");
@@ -412,7 +412,7 @@ class TestStepProviderMethod {
 				DataTypes.of(dataType)
 			);
 			assertThat(stepProviderMethod.stepKey()).isEqualTo("stepWithOneParameterAndAssertion");
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			assertThat(stepProvider.runnedStepWithOneParameterAndAssertionNumber).isNull();
 			assertThatCode(() -> stepProviderMethod.run(arguments, passingAssertion)).doesNotThrowAnyException();
 			assertThat(stepProvider.runnedStepWithOneParameterAndAssertionNumber).isEqualTo(42);
@@ -445,10 +445,10 @@ class TestStepProviderMethod {
 				method,
 				DataTypes.of(dataType)
 			);
-			Map<String, Object> arguments = Map.of("number", 42L);
+			Map<String, Object> arguments = Map.of("integer", 42L);
 			assertThatCode(() -> stepProviderMethod.run(arguments, passingAssertion))
 				.isInstanceOf(OpenBBTException.class)
-				.hasMessage("Argument 'number' has type Long, but expected type is Integer");
+				.hasMessage("Argument 'integer' has type Long, but expected type is Integer");
 		}
 
 	}
@@ -486,7 +486,7 @@ class TestStepProviderMethod {
 				DataTypes.of(dataType)
 			);
 			DataTable datatable = new DataTable(List.of(List.of("column1"), List.of("value1")));
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			assertThatCode(() -> stepProviderMethod.run(arguments, datatable))
 				.isInstanceOf(OpenBBTException.class)
 				.hasMessage("Step 'stepWithOnlyDataTable' expects 0 arguments, but 1 were provided");
@@ -510,7 +510,7 @@ class TestStepProviderMethod {
 			);
 			assertThat(stepProviderMethod.stepKey()).isEqualTo("stepWithOneParameterAndDataTable");
 			DataTable datatable = new DataTable(List.of(List.of("column1"), List.of("value1")));
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			assertThat(stepProvider.runnedStepWithOneParameterAndDataTableNumber).isNull();
 			assertThatCode(() -> stepProviderMethod.run(arguments, datatable)).doesNotThrowAnyException();
 			assertThat(stepProvider.runnedStepWithOneParameterAndDataTableNumber).isEqualTo(42);
@@ -545,10 +545,10 @@ class TestStepProviderMethod {
 				DataTypes.of(dataType)
 			);
 			DataTable datatable = new DataTable(List.of(List.of("column1"), List.of("value1")));
-			Map<String, Object> arguments = Map.of("number", 42L);
+			Map<String, Object> arguments = Map.of("integer", 42L);
 			assertThatCode(() -> stepProviderMethod.run(arguments, datatable))
 				.isInstanceOf(OpenBBTException.class)
-				.hasMessage("Argument 'number' has type Long, but expected type is Integer");
+				.hasMessage("Argument 'integer' has type Long, but expected type is Integer");
 		}
 
 	}
@@ -586,7 +586,7 @@ class TestStepProviderMethod {
 				DataTypes.of(dataType)
 			);
 			Document document = new Document("text/plain", "content");
-			Map<String, Object> arguments = Map.of("number", 42);
+			Map<String, Object> arguments = Map.of("integer", 42);
 			assertThatCode(() -> stepProviderMethod.run(arguments, document))
 				.isInstanceOf(OpenBBTException.class)
 				.hasMessage("Step 'stepWithOnlyDocument' expects 0 arguments, but 1 were provided");

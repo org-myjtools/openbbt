@@ -24,7 +24,7 @@ class TestCoreAssertionFactories {
 	}
 
 	@Test
-	void assertionFactories_shouldContainNumberAssertion() {
+	void assertionFactories_shouldContainIntegerAssertion() {
 		Messages messages = Messages.of(List.of(new AssertionMessageProvider()));
 		CoreAssertionFactories provider = new CoreAssertionFactories(messages);
 
@@ -32,7 +32,7 @@ class TestCoreAssertionFactories {
 
 		assertThat(factories)
 			.extracting(AssertionFactory::name)
-			.contains("number-assertion");
+			.contains("integer-assertion");
 	}
 
 	@Test
@@ -105,7 +105,7 @@ class TestCoreAssertionFactories {
 		assertThat(factories)
 			.extracting(AssertionFactory::name)
 			.containsExactlyInAnyOrder(
-				"number-assertion",
+				"integer-assertion",
 				"decimal-assertion",
 				"date-assertion",
 				"time-assertion",

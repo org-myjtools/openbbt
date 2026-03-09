@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>openbbt-tui</artifactId>
-    <name>Open BBT TUI</name>
+    <name>OpenBBT TUI</name>
 
     <dependencies>
         <dependency>

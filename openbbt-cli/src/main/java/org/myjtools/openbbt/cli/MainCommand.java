@@ -8,6 +8,7 @@ import java.util.Map;
 	name = "openbbt",
 	description = "OpenBBT CLI utility",
 	subcommands = {
+		BrowseCommand.class,
 		InitCommand.class,
 		InstallCommand.class,
 		VersionCommand.class,

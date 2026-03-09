@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>openbbt-it</artifactId>
-    <name>Open BBT Integration Tests</name>
+    <name>OpenBBT Integration Tests</name>
 
     <dependencies>
         <dependency>

@@ -40,6 +40,7 @@ const path = __importStar(require("path"));
 const child_process_1 = require("child_process");
 const vscode = __importStar(require("vscode"));
 const featureFormatter_1 = require("./featureFormatter");
+const testPlanProvider_1 = require("./testPlanProvider");
 const node_1 = require("vscode-languageclient/node");
 let client;
 let extensionContext;
@@ -194,6 +195,11 @@ function activate(context) {
     extensionContext = context;
     startClient();
     vscode.workspace.textDocuments.forEach(updateDiagnostics);
+    const testPlanProvider = new testPlanProvider_1.TestPlanProvider();
+    vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.testPlan.refresh', () => {
+        testPlanProvider.refresh();
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.installPlugins', () => {
         const config = vscode.workspace.getConfiguration('openbbt');
         const executable = config.get('executablePath', 'openbbt');

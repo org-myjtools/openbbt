@@ -72,7 +72,7 @@ public class CoreAssertionFactories implements AssertionFactoryProvider {
 	@Override
 	public Stream<org.myjtools.openbbt.core.AssertionFactory<?>> assertionFactories() {
 		return Stream.of(
-			new ComparableAssertionFactory<>("number-assertion", Integer::valueOf, CoreDataTypes.NUMBER, messages),
+			new ComparableAssertionFactory<>("integer-assertion", Integer::valueOf, CoreDataTypes.NUMBER, messages),
 			new ComparableAssertionFactory<>("decimal-assertion", BigDecimal::new, CoreDataTypes.DECIMAL, messages),
 			new TemporalAssertionFactory<>("date-assertion", LocalDate::parse, CoreDataTypes.DATE, messages),
 			new TemporalAssertionFactory<>("time-assertion", LocalTime::parse, CoreDataTypes.TIME, messages),

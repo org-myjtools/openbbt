@@ -3,6 +3,7 @@ import * as path from 'path';
 import { spawnSync } from 'child_process';
 import * as vscode from 'vscode';
 import { formatFeatureText } from './featureFormatter';
+import { TestPlanProvider } from './testPlanProvider';
 import {
     CloseAction,
     ErrorAction,
@@ -200,6 +201,15 @@ export function activate(context: vscode.ExtensionContext): void {
     extensionContext = context;
     startClient();
     vscode.workspace.textDocuments.forEach(updateDiagnostics);
+
+    const testPlanProvider = new TestPlanProvider();
+    vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.testPlan.refresh', () => {
+            testPlanProvider.refresh();
+        })
+    );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('openbbt.installPlugins', () => {

@@ -52,7 +52,7 @@ public class TestStepProvider implements StepProvider  {
 		this.runnedStepWithOneParameter = number;
 	}
 
-	@StepExpression(value = "stepWithTwoParameters", args = { "number1:number", "number2:number" })
+	@StepExpression(value = "stepWithTwoParameters", args = { "number1:integer", "number2:integer" })
 	public void stepWithTwoParameters(Integer number1, Integer number2) {
 		this.runnedStepWithTwoParameters1 = number1;
 		this.runnedStepWithTwoParameters2 = number2;

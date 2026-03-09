@@ -102,7 +102,7 @@ public class CoreDataTypes implements DataTypeProvider {
 
 	/** Integer number. Supports grouping separators. Example: {@code 12345}, {@code 12,345} */
 	public static final DataType NUMBER = new NumberDataTypeAdapter<>(
-		"number",
+		"integer",
 		Integer.class,
 		false,
 		false,
@@ -111,7 +111,7 @@ public class CoreDataTypes implements DataTypeProvider {
 
 	/** Large integer (long). Supports grouping separators. Example: {@code 9999999999} */
 	public static final DataType BIG_NUMBER = new NumberDataTypeAdapter<>(
-		"big-number",
+		"big-integer",
 		Long.class,
 		false,
 		false,

@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>openbbt-cli</artifactId>
-    <name>Open BBT Command Line Interpeter</name>
+    <name>OpenBBT Command Line Interpeter</name>
 
     <dependencies>
         <dependency>

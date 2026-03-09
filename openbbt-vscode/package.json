@@ -11,6 +11,7 @@
   "activationEvents": [
     "workspaceContains:openbbt.yaml"
   ],
+  "icon": "./resources/openbbt-icon.svg",
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
@@ -31,8 +32,40 @@
         "command": "openbbt.installPlugins",
         "title": "OpenBBT: Install plugins",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "openbbt.testPlan.refresh",
+        "title": "OpenBBT: Refresh Test Plan",
+        "icon": "$(refresh)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "openbbt",
+          "title": "OpenBBT",
+          "icon": "./resources/openbbt-activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "openbbt": [
+        {
+          "id": "openbbt.testPlan",
+          "name": "Test Plan",
+          "icon": "$(list-tree)"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "openbbt.testPlan.refresh",
+          "when": "view == openbbt.testPlan",
+          "group": "navigation"
+        }
+      ]
+    },
     "grammars": [
       {
         "language": "feature",

@@ -23,12 +23,12 @@ class TestComparableAssertionFactory {
 
 	@BeforeEach
 	void setUp() {
-		numberFactory = factories.byName("number-assertion");
+		numberFactory = factories.byName("integer-assertion");
 	}
 
 	@Test
 	void name_shouldReturnFactoryName() {
-		assertThat(numberFactory.name()).isEqualTo("number-assertion");
+		assertThat(numberFactory.name()).isEqualTo("integer-assertion");
 	}
 
 	@Test

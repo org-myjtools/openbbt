@@ -226,14 +226,14 @@ Asserts that the status code of the last REST response matches the expected valu
 
 | locale | expression |
 |----------|------------|
-| en | `the HTTP status code {numeric-assertion}` |
-| es | `el código de estado HTTP {numeric-assertion}` |
+| en | `the HTTP status code {integer-assertion}` |
+| es | `el código de estado HTTP {integer-assertion}` |
 
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| `statusCode` | number | The expected HTTP status code of the response |
+| `statusCode` | integer | The expected HTTP status code of the response |
 
 ### Example
 

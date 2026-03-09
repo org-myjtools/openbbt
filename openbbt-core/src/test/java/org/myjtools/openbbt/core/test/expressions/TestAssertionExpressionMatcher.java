@@ -40,7 +40,7 @@ class TestAssertionExpressionMatcher {
 	@ParameterizedTest
 	@MethodSource("numberAssertionTestData")
 	void testNumberAssertionExpression(String input, Boolean assertResult) {
-		var expression = "the number {number} {{number-assertion}}";
+		var expression = "the number {integer} {{integer-assertion}}";
 		var matcher = builder.buildExpressionMatcher(expression);
 		Match match = matcher.matches(input, Locale.ENGLISH).orElseThrow();
 		Integer number = (Integer) ((LiteralValue) match.arguments().getFirst()).value();

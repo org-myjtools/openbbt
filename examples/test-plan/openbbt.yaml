@@ -5,7 +5,6 @@ project:
 plugins:
     - gherkin
     - rest
-    - poo
 
 configuration:
     core:

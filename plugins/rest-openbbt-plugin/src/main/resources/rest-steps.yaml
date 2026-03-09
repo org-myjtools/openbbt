@@ -166,7 +166,7 @@
     es: 'el código de estado HTTP {integer-assertion}'
   parameters:
     - name: statusCode
-      type: number
+      type: integer
       description: The expected HTTP status code of the response
   example: |
     Then the HTTP status code is greater than 200

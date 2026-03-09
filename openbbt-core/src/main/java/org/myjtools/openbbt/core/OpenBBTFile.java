@@ -79,19 +79,41 @@ public class OpenBBTFile {
 			String profile,
 			Config substitutions
 	) {
-		var contextProject = new TestProject(
-			testProject.name(),
-			testProject.description(),
-			testProject.organization(),
-			List.copyOf(testProject.testSuites())
-		);
 		var contextTestSuites = new ArrayList<String>();
-		for (String testSuiteName : testSuites) {
-			var testSuite = testProject.testSuites().stream().filter(suite -> suite.name().equals(testSuiteName)).findFirst();
-			if (testSuite.isEmpty()) {
-				throw new OpenBBTException("Test suite '" + testSuiteName + "' not found in project file");
+		TestProject contextProject;
+		if (testSuites.isEmpty()) {
+			if (testProject.testSuites().isEmpty()) {
+				var defaultSuite = new TestSuite("default", null, TagExpression.EMPTY);
+				contextProject = new TestProject(
+					testProject.name(),
+					testProject.description(),
+					testProject.organization(),
+					List.of(defaultSuite)
+				);
+				contextTestSuites.add("default");
+			} else {
+				contextProject = new TestProject(
+					testProject.name(),
+					testProject.description(),
+					testProject.organization(),
+					List.copyOf(testProject.testSuites())
+				);
+				testProject.testSuites().forEach(suite -> contextTestSuites.add(suite.name()));
 			}
-			contextTestSuites.add(testSuite.map(TestSuite::name).orElseThrow());
+		} else {
+			contextProject = new TestProject(
+				testProject.name(),
+				testProject.description(),
+				testProject.organization(),
+				List.copyOf(testProject.testSuites())
+			);
+			for (String testSuiteName : testSuites) {
+				var testSuite = testProject.testSuites().stream().filter(suite -> suite.name().equals(testSuiteName)).findFirst();
+				if (testSuite.isEmpty()) {
+					throw new OpenBBTException("Test suite '" + testSuiteName + "' not found in project file");
+				}
+				contextTestSuites.add(testSuite.map(TestSuite::name).orElseThrow());
+			}
 		}
 		Map<String,Object> profiledConfiguration = this.configuration != null ? this.configuration : new HashMap<>();
 		if (!profile.isBlank()) {

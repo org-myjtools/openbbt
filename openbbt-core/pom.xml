@@ -14,8 +14,8 @@
 
 	<artifactId>openbbt-core</artifactId>
 	<packaging>jar</packaging>
-	<name>Open BBT Core</name>
-	<description>Core functionality for Open BBT</description>
+	<name>OpenBBT Core</name>
+	<description>Core functionality for OpenBBT</description>
 
 
 	<dependencies>

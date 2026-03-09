@@ -23,7 +23,7 @@ class TestArgumentExpressionMatcher {
 
 	@Test
 	void testUnnamedArgumentExpression() {
-		var expression = "this is a unnamed number: {number}";
+		var expression = "this is a unnamed number: {integer}";
 		var matcher = builder.buildExpressionMatcher(expression);
 		Match match = matcher.matches("this is a unnamed number: 42", LOCALE).orElseThrow();
 		assertThat(match.arguments().getFirst()).isInstanceOf(LiteralValue.class);
@@ -32,7 +32,7 @@ class TestArgumentExpressionMatcher {
 
 	@Test
 	void testNamedInterpolateArgumentsExpression() {
-		var expression = "this is a named number: {number1:number} and another: {number2:number}";
+		var expression = "this is a named number: {number1:integer} and another: {number2:integer}";
 		var matcher = builder.buildExpressionMatcher(expression);
 		Match match = matcher.matches("this is a named number: 42 and another: 84", LOCALE).orElseThrow();
 		assertThat(match.arguments().get(0)).isInstanceOf(LiteralValue.class);
@@ -56,12 +56,12 @@ class TestArgumentExpressionMatcher {
 
 	@Test
 	void testVariableArgumentExpression() {
-		var expression = "this is a unnamed number: {number}";
+		var expression = "this is a unnamed number: {integer}";
 		var matcher = builder.buildExpressionMatcher(expression);
 		Match match = matcher.matches("this is a unnamed number: ${varnumber}", LOCALE).orElseThrow();
 		assertThat(match.arguments().getFirst()).isInstanceOf(VariableValue.class);
 		assertThat(((VariableValue) match.arguments().getFirst()).variable()).isEqualTo("varnumber");
-		assertThat(match.arguments().getFirst().type().name()).isEqualTo("number");
+		assertThat(match.arguments().getFirst().type().name()).isEqualTo("integer");
 	}
 
 

@@ -15,7 +15,7 @@
     <artifactId>markdown-testPlan-openbbt-plugin</artifactId>
     <version>1.0.0-alpha1</version>
 
-    <name>Markdown Plan Plugin</name>
+    <name>Markdown Plan OpenBBT Plugin</name>
     <description>Plugin that allows to define test plans using Markdown</description>
     <licenses>
         <license>

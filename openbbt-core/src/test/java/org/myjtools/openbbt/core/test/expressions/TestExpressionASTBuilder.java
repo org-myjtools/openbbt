@@ -201,13 +201,13 @@ TestExpressionASTBuilder {
 	@Test
 	void arguments() {
 		var tree = new ExpressionASTBuilder("""
-			this is an unnamed argument {number} and a named argument {name:text}
+			this is an unnamed argument {integer} and a named argument {name:text}
 		""").buildTree();
 		System.out.println(tree);
 		assertThat(tree).isEqualTo(
 			SEQUENCE.of(
 				LITERAL.of("this is an unnamed argument "),
-				ARGUMENT.of("number"),
+				ARGUMENT.of("integer"),
 				LITERAL.of(" and a named argument "),
 				ARGUMENT.of("name:text")
 			)

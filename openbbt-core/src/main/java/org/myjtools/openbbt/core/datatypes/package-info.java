@@ -21,7 +21,7 @@
  * <h3>Numeric Types</h3>
  * <ul>
  *   <li>{@code number} - Integer number</li>
- *   <li>{@code big-number} - Long integer</li>
+ *   <li>{@code big-integer} - Long integer</li>
  *   <li>{@code decimal} - Decimal number (BigDecimal)</li>
  * </ul>
  *

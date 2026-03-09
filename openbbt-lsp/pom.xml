@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>openbbt-lsp</artifactId>
-    <name>Open BBT LSP Server</name>
+    <name>OpenBBT LSP Server</name>
     <description>Language Server Protocol server for OpenBBT feature files</description>
 
     <dependencies>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>org.myjtools</groupId>
             <artifactId>gherkin-parser</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.4</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.lsp4j</groupId>

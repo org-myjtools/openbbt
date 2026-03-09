@@ -15,7 +15,7 @@
 	<version>1.0.0-alpha1</version>
 	<packaging>pom</packaging>
 
-	<name>Open BBT</name>
+	<name>OpenBBT</name>
 	<description>Open Blackbox Testing</description>
 
 	<properties>
@@ -81,5 +81,16 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>plugins</id>
+			<modules>
+				<module>plugins/gherkin-openbbt-plugin</module>
+				<module>plugins/markdown-plan-openbbt-plugin</module>
+				<module>plugins/rest-openbbt-plugin</module>
+			</modules>
+		</profile>
+	</profiles>
 
 </project>
