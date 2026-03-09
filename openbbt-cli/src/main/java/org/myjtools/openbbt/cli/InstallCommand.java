@@ -30,7 +30,7 @@ public final class InstallCommand extends AbstractCommand {
 		OpenBBTContext context = getContext();
 
 		if (clean) {
-			Path envPath = context.configuration().get(OpenBBTConfig.ENV_PATH, Path::of).orElseThrow();
+			Path envPath = context.configuration().get(OpenBBTConfig.ENV_PATH, Path::of).orElse(OpenBBTConfig.ENV_DEFAULT_PATH);
 			Path pluginsPath = envPath.resolve(OpenBBTConfig.PLUGINS_PATH);
 			Util.deleteDirectory(pluginsPath);
 			log.info("Existing plugins cleaned.");
