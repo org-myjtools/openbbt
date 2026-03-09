@@ -162,8 +162,8 @@
   description: |
     Asserts that the status code of the last REST response matches the expected value.
   expressions:
-    en: 'the HTTP status code {integer-assertion}'
-    es: 'el código de estado HTTP {integer-assertion}'
+    en: 'the HTTP status code {{integer-assertion}}'
+    es: 'el código de estado HTTP {{integer-assertion}}'
   parameters:
     - name: statusCode
       type: integer
