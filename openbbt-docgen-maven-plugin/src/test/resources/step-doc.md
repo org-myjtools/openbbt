@@ -8,21 +8,30 @@
 
 Makes a GET request to the specified URL.
 
-| locale | expression |
-|----------|------------|
-| en | `I make a GET request to {endpoint:text}` |
-| es | `Hago una petición GET a {endpoint:text}` |
-
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
 | `endpoint` | text | The URL to which the GET request is made |
 
-### Example
+### `en`
+
+**Expression:** `I make a GET request to {endpoint:text}`
+
+**Example:**
 
 ```gherkin
 Given I make a GET request to "users"
+```
+
+### `es`
+
+**Expression:** `Hago una petición GET a {endpoint:text}`
+
+**Example:**
+
+```gherkin
+Dado que hago una petición GET a "users"
 ```
 
 ---
@@ -30,11 +39,6 @@ Given I make a GET request to "users"
 ## `rest.request.POST`
 
 Makes a POST request to the specified URL with the given body.
-
-| locale | expression |
-|----------|------------|
-| en | `I make a POST request to {endpoint:text} with body:` |
-| es | `Hago una petición POST a {endpoint:text} con el cuerpo:` |
 
 ### Parameters
 
@@ -46,7 +50,11 @@ Makes a POST request to the specified URL with the given body.
 
 The body of the POST request, provided as a multi-line text input
 
-### Example
+### `en`
+
+**Expression:** `I make a POST request to {endpoint:text} with body:`
+
+**Example:**
 
 ```gherkin
 Given I make a POST request to "users" with body:
@@ -58,16 +66,15 @@ Given I make a POST request to "users" with body:
 """
 ```
 
+### `es`
+
+**Expression:** `Hago una petición POST a {endpoint:text} con el cuerpo:`
+
 ---
 
 ## `rest.request.POST.file`
 
 Makes a POST request to the specified URL with the given body read from a file.
-
-| locale | expression |
-|----------|------------|
-| en | `I make a POST request to {endpoint:text} with body from file {file:text}` |
-| es | `Hago una petición POST a {endpoint:text} con el cuerpo del archivo {file:text}` |
 
 ### Parameters
 
@@ -76,22 +83,25 @@ Makes a POST request to the specified URL with the given body read from a file.
 | `endpoint` | text | The URL to which the POST request is made |
 | `file` | text | The path to the file containing the body of the POST request |
 
-### Example
+### `en`
+
+**Expression:** `I make a POST request to {endpoint:text} with body from file {file:text}`
+
+**Example:**
 
 ```gherkin
 Given I make a POST request to "users" with body from file "user_data.json"
 ```
+
+### `es`
+
+**Expression:** `Hago una petición POST a {endpoint:text} con el cuerpo del archivo {file:text}`
 
 ---
 
 ## `rest.request.PUT`
 
 Makes a PUT request to the specified URL with the given body.
-
-| locale | expression |
-|----------|------------|
-| en | `I make a PUT request to {endpoint:text} with body:` |
-| es | `Hago una petición PUT a {endpoint:text} con el cuerpo:` |
 
 ### Parameters
 
@@ -103,28 +113,19 @@ Makes a PUT request to the specified URL with the given body.
 
 The body of the PUT request, provided as a multi-line text input
 
-### Example
+### `en`
 
-```gherkin
-Given I make a PUT request to "users/123" with body:
-"""json
-{
-  "name": "John",
-  "age": 31
-}
-"""
-```
+**Expression:** `I make a PUT request to {endpoint:text} with body:`
+
+### `es`
+
+**Expression:** `Hago una petición PUT a {endpoint:text} con el cuerpo:`
 
 ---
 
 ## `rest.request.PUT.file`
 
 Makes a PUT request to the specified URL with the given body read from a file.
-
-| locale | expression |
-|----------|------------|
-| en | `I make a PUT request to {endpoint:text} with body from file {file:text}` |
-| es | `Hago una petición PUT a {endpoint:text} con el cuerpo del archivo {file:text}` |
 
 ### Parameters
 
@@ -133,22 +134,19 @@ Makes a PUT request to the specified URL with the given body read from a file.
 | `endpoint` | text | The URL to which the PUT request is made |
 | `file` | text | The path to the file containing the body of the PUT request |
 
-### Example
+### `en`
 
-```gherkin
-Given I make a PUT request to "users/123" with body from file "updated_user_data.json"
-```
+**Expression:** `I make a PUT request to {endpoint:text} with body from file {file:text}`
+
+### `es`
+
+**Expression:** `Hago una petición PUT a {endpoint:text} con el cuerpo del archivo {file:text}`
 
 ---
 
 ## `rest.request.PATCH`
 
 Makes a PATCH request to the specified URL with the given body.
-
-| locale | expression |
-|----------|------------|
-| en | `I make a PATCH request to {endpoint:text} with body:` |
-| es | `Hago una petición PATCH a {endpoint:text} con el cuerpo:` |
 
 ### Parameters
 
@@ -160,27 +158,19 @@ Makes a PATCH request to the specified URL with the given body.
 
 The body of the PATCH request, provided as a multi-line text input
 
-### Example
+### `en`
 
-```gherkin
-Given I make a PATCH request to "users/123" with body:
-"""json
-{
-  "age": 32
-}
-"""
-```
+**Expression:** `I make a PATCH request to {endpoint:text} with body:`
+
+### `es`
+
+**Expression:** `Hago una petición PATCH a {endpoint:text} con el cuerpo:`
 
 ---
 
 ## `rest.request.PATCH.file`
 
 Makes a PATCH request to the specified URL with the given body read from a file.
-
-| locale | expression |
-|----------|------------|
-| en | `I make a PATCH request to {endpoint:text} with body from file {file:text}` |
-| es | `Hago una petición PATCH a {endpoint:text} con el cuerpo del archivo {file:text}` |
 
 ### Parameters
 
@@ -189,11 +179,13 @@ Makes a PATCH request to the specified URL with the given body read from a file.
 | `endpoint` | text | The URL to which the PATCH request is made |
 | `file` | text | The path to the file containing the body of the PATCH request |
 
-### Example
+### `en`
 
-```gherkin
-Given I make a PATCH request to "users/123" with body from file "partial_user_update.json"
-```
+**Expression:** `I make a PATCH request to {endpoint:text} with body from file {file:text}`
+
+### `es`
+
+**Expression:** `Hago una petición PATCH a {endpoint:text} con el cuerpo del archivo {file:text}`
 
 ---
 
@@ -201,22 +193,19 @@ Given I make a PATCH request to "users/123" with body from file "partial_user_up
 
 Makes a DELETE request to the specified URL.
 
-| locale | expression |
-|----------|------------|
-| en | `I make a DELETE request to {endpoint:text}` |
-| es | `Hago una petición DELETE a {endpoint:text}` |
-
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
 | `endpoint` | text | The URL to which the DELETE request is made |
 
-### Example
+### `en`
 
-```gherkin
-Given I make a DELETE request to "users/123"
-```
+**Expression:** `I make a DELETE request to {endpoint:text}`
+
+### `es`
+
+**Expression:** `Hago una petición DELETE a {endpoint:text}`
 
 ---
 
@@ -224,22 +213,19 @@ Given I make a DELETE request to "users/123"
 
 Asserts that the status code of the last REST response matches the expected value.
 
-| locale | expression |
-|----------|------------|
-| en | `the HTTP status code {integer-assertion}` |
-| es | `el código de estado HTTP {integer-assertion}` |
-
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
 | `statusCode` | integer | The expected HTTP status code of the response |
 
-### Example
+### `en`
 
-```gherkin
-Then the HTTP status code is greater than 200
-```
+**Expression:** `the HTTP status code {integer-assertion}`
+
+### `es`
+
+**Expression:** `el código de estado HTTP {integer-assertion}`
 
 ---
 
@@ -247,27 +233,17 @@ Then the HTTP status code is greater than 200
 
 Asserts that the body of the last REST response matches the expected value.
 
-| locale | expression |
-|----------|------------|
-| en | `the response body is:` |
-| es | `el cuerpo de la respuesta es:` |
-
 ### Additional data
 
 The expected body of the response, provided as a multi-line text input
 
-### Example
+### `en`
 
-```gherkin
-Then the response body is:
-"""json
-{
-  "id": 123,
-  "name": "John",
-  "age": 30
-}
-"""
-```
+**Expression:** `the response body is:`
+
+### `es`
+
+**Expression:** `el cuerpo de la respuesta es:`
 
 ---
 
@@ -275,22 +251,19 @@ Then the response body is:
 
 Asserts that the body of the last REST response matches the expected value read from a file.
 
-| locale | expression |
-|----------|------------|
-| en | `the response body is the content of file {file:text}` |
-| es | `el cuerpo de la respuesta es el contenido del archivo {file:text}` |
-
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
 | `file` | text | The path to the file containing the expected body of the response |
 
-### Example
+### `en`
 
-```gherkin
-Then the response body is the content of file "expected_response.json"
-```
+**Expression:** `the response body is the content of file {file:text}`
+
+### `es`
+
+**Expression:** `el cuerpo de la respuesta es el contenido del archivo {file:text}`
 
 ---
 
@@ -298,26 +271,17 @@ Then the response body is the content of file "expected_response.json"
 
 Asserts that the body of the last REST response contains the expected value.
 
-| locale | expression |
-|----------|------------|
-| en | `the response body contains:` |
-| es | `el cuerpo de la respuesta contiene:` |
-
 ### Additional data
 
 The expected content that should be present in the response body, provided as a multi-line text input
 
-### Example
+### `en`
 
-```gherkin
-Then the response body contains:
-"""json
-{
-  "id": 123,
-  "name": "John",
-}
-"""
-```
+**Expression:** `the response body contains:`
+
+### `es`
+
+**Expression:** `el cuerpo de la respuesta contiene:`
 
 ---
 
@@ -325,21 +289,15 @@ Then the response body contains:
 
 Asserts that the body of the last REST response contains the expected value.
 
-| locale | expression |
-|----------|------------|
-| en | `the response body contains:` |
-| es | `el cuerpo de la respuesta contiene:` |
-
 ### Additional data
 
 The expected content that should be present in the response body, provided as a data table
 
-### Example
+### `en`
 
-```gherkin
-Then the response body contains:
-| id | name  |
-| 123| John  |
-| 124| Alice |
-```
+**Expression:** `the response body contains:`
+
+### `es`
+
+**Expression:** `el cuerpo de la respuesta contiene:`
 

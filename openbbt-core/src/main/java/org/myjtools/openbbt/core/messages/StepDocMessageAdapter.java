@@ -37,9 +37,9 @@ public abstract class StepDocMessageAdapter implements MessageProvider {
 
 	private LocaleMessages createLocaleMessages(Locale locale) {
 		Map<String,String> messages = new HashMap<>();
-		entries.get().forEach((step, entry) -> entry.expressions().forEach((localeTag, expression) -> {
+		entries.get().forEach((step, entry) -> entry.language().forEach((localeTag, langEntry) -> {
 			if (locale.getLanguage().equalsIgnoreCase(localeTag)) {
-				messages.put(step, expression);
+				messages.put(step, langEntry.expression());
 			}
 		}));
 		return messages::get;

@@ -46,9 +46,10 @@ class StepDocLoaderTest {
     @Test
     void load_parsesExpressions() throws IOException, URISyntaxException {
         var steps = StepDocLoader.load(testResource("step-doc.yaml"));
-        assertThat(steps.get("rest.request.GET").expressions())
-            .containsEntry("en", "I make a GET request to {endpoint:text}")
-            .containsEntry("es", "Hago una petición GET a {endpoint:text}");
+        var language = steps.get("rest.request.GET").language();
+        assertThat(language).containsKey("en").containsKey("es");
+        assertThat(language.get("en").expression()).isEqualTo("I make a GET request to {endpoint:text}");
+        assertThat(language.get("es").expression()).isEqualTo("Hago una petición GET a {endpoint:text}");
     }
 
     @Test
@@ -87,25 +88,22 @@ class StepDocLoaderTest {
     @Test
     void load_parsesExample() throws IOException, URISyntaxException {
         var steps = StepDocLoader.load(testResource("step-doc.yaml"));
-        assertThat(steps.get("rest.request.GET").example())
+        assertThat(steps.get("rest.request.GET").language().get("en").example())
             .isEqualTo("Given I make a GET request to \"users\"");
     }
 
     @Test
     void load_stripsTrailingNewlinesFromExample() throws IOException, URISyntaxException {
         var steps = StepDocLoader.load(testResource("step-doc.yaml"));
-        assertThat(steps.get("rest.request.GET").example()).doesNotEndWith("\n");
+        assertThat(steps.get("rest.request.GET").language().get("en").example()).doesNotEndWith("\n");
     }
 
     @Test
-    void load_emptyExpressionsWhenAbsent() throws IOException, URISyntaxException {
-        var steps = StepDocLoader.load(testResource("step-doc.yaml"));
-        // All entries in step-doc.yaml have expressions, so use a hand-crafted minimal YAML
-        // via a temp file to verify the default
+    void load_emptyLanguageWhenAbsent() throws IOException, URISyntaxException {
         var tempFile = java.nio.file.Files.createTempFile("step-doc-minimal", ".yaml");
-        java.nio.file.Files.writeString(tempFile, "'my.step':\n  description: A step.\n  example: Given something\n");
-        var steps2 = StepDocLoader.load(tempFile);
-        assertThat(steps2.get("my.step").expressions()).isEmpty();
+        java.nio.file.Files.writeString(tempFile, "'my.step':\n  description: A step.\n");
+        var steps = StepDocLoader.load(tempFile);
+        assertThat(steps.get("my.step").language()).isEmpty();
         java.nio.file.Files.delete(tempFile);
     }
 
