@@ -4,6 +4,8 @@ import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
+import java.sql.Connection;
+import java.sql.SQLException;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
@@ -21,7 +23,7 @@ import java.util.stream.Stream;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-public class JooqPlanRepository implements TestPlanRepository {
+public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 
 	private static final Table<Record> TABLE_PLAN_NODE = DSL.table("plan_node");
 	private static final Table<Record> TABLE_PLAN_NODE_TAG = DSL.table("plan_node_tag");
@@ -61,7 +63,7 @@ public class JooqPlanRepository implements TestPlanRepository {
 	private static final Field<UUID> FIELD_PLAN_NODE_ROOT = DSL.field("plan_node_root", UUID.class);
 
 	private final DSLContext dsl;
-
+	private final Connection directConnection;
 
 	public JooqPlanRepository(DataSourceProvider dataSourceProvider) {
 		this(dataSourceProvider.obtainDataSource(), dataSourceProvider.dialect());
@@ -69,6 +71,19 @@ public class JooqPlanRepository implements TestPlanRepository {
 
 	public JooqPlanRepository(DataSource dataSource, SQLDialect dialect) {
 		this.dsl = DSL.using(new DataSourceConnectionProvider(dataSource), dialect);
+		this.directConnection = null;
+	}
+
+	public JooqPlanRepository(Connection connection, SQLDialect dialect) {
+		this.dsl = DSL.using(connection, dialect);
+		this.directConnection = connection;
+	}
+
+	@Override
+	public void close() {
+		if (directConnection != null) {
+			try { directConnection.close(); } catch (SQLException ignored) {}
+		}
 	}
 
 	public void clearAllData() {
@@ -772,6 +787,11 @@ public class JooqPlanRepository implements TestPlanRepository {
 			   .where(pid.isNotNull())
 		   ))
 		   .execute();
+		// Force HSQLDB to flush committed changes to disk so a subsequent
+		// JVM (e.g. 'openbbt serve') sees the updated HAS_ISSUES values.
+		if (dsl.dialect() == SQLDialect.HSQLDB) {
+			dsl.execute("CHECKPOINT");
+		}
 	}
 
 
@@ -857,6 +877,18 @@ public class JooqPlanRepository implements TestPlanRepository {
 		return new TestPlan(id, testPlan.projectID(), testPlan.createdAt(), testPlan.resourceSetHash(), testPlan.configurationHash(), testPlan.planNodeRoot());
 	}
 
+
+	@Override
+	public List<TestPlan> listPlans() {
+		return dsl.select(
+				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+			)
+			.from(TABLE_PLAN)
+			.orderBy(FIELD_CREATED_AT.desc())
+			.fetch()
+			.map(this::mapPlan);
+	}
 
 	@Override
 	public Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash) {

@@ -4,7 +4,7 @@ exports.formatFeatureText = formatFeatureText;
 const FEATURE_RE = /^(Feature|Funcionalidad|Característica)\s*:/;
 const SCENARIO_RE = /^(Background|Antecedentes|Fondo|Scenario|Scenario Outline|Scenario Template|Example|Escenario|Esquema del escenario|Plantilla del escenario)\s*:/;
 const EXAMPLES_RE = /^(Examples|Scenarios|Ejemplos)\s*:/;
-const STEP_RE = /^(Given|When|Then|And|But|Dado|Cuando|Entonces|Y|E)\b/;
+const STEP_RE = /^(Given|When|Then|And|But|Dado|Cuando|Entonces|Y|E|\*)\b/;
 function parseTableRow(line) {
     return line.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
 }

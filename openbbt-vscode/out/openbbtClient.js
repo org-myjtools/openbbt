@@ -1,0 +1,155 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.OpenBBTClient = void 0;
+const child_process_1 = require("child_process");
+/**
+ * Manages an `openbbt serve` subprocess and communicates with it
+ * via JSON-RPC 2.0 over stdio with Content-Length framing (same as LSP).
+ */
+class OpenBBTClient {
+    process;
+    buffer = Buffer.alloc(0);
+    nextId = 1;
+    pending = new Map();
+    cwd;
+    executable;
+    log;
+    constructor(executable, cwd, log = () => { }) {
+        this.executable = executable;
+        this.cwd = cwd;
+        this.log = log;
+    }
+    get connected() {
+        return this.process !== undefined && !this.process.killed;
+    }
+    connect() {
+        if (this.connected) {
+            return;
+        }
+        this.log(`[serve] spawning: ${this.executable} serve (cwd=${this.cwd})`);
+        const proc = (0, child_process_1.spawn)(this.executable, ['serve'], {
+            cwd: this.cwd,
+            stdio: ['pipe', 'pipe', 'pipe'],
+        });
+        proc.stdout.on('data', (chunk) => this.onData(chunk));
+        proc.stderr.on('data', (chunk) => {
+            this.log(`[serve stderr] ${chunk.toString('utf8').trimEnd()}`);
+        });
+        proc.on('error', (err) => {
+            this.log(`[serve error] ${err.message}`);
+            this.process = undefined;
+            this.rejectAll(err);
+        });
+        proc.on('close', (code) => {
+            this.log(`[serve] process closed (exit code ${code})`);
+            this.process = undefined;
+            this.rejectAll(new Error(`openbbt serve process exited (code ${code})`));
+        });
+        this.process = proc;
+    }
+    async refresh() {
+        await this.call('refresh', {});
+    }
+    async listPlans() {
+        return this.call('browse/plans', {});
+    }
+    async getNode(nodeId) {
+        return this.call('browse/node', { nodeId });
+    }
+    async getChildren(nodeId) {
+        return this.call('browse/children', { nodeId });
+    }
+    async shutdown() {
+        if (!this.connected) {
+            return;
+        }
+        try {
+            await this.call('shutdown', {});
+        }
+        catch {
+            // ignore — process may have already exited
+        }
+        this.process?.kill();
+        this.process = undefined;
+    }
+    // --- Internal ---
+    call(method, params) {
+        if (!this.connected) {
+            this.connect();
+        }
+        return new Promise((resolve, reject) => {
+            const id = this.nextId++;
+            this.pending.set(id, { resolve, reject });
+            const body = JSON.stringify({ jsonrpc: '2.0', id, method, params });
+            const header = `Content-Length: ${Buffer.byteLength(body, 'utf8')}\r\n\r\n`;
+            this.log(`[serve →] ${method} (id=${id})`);
+            this.process.stdin.write(header + body, 'utf8');
+        });
+    }
+    onData(chunk) {
+        this.buffer = Buffer.concat([this.buffer, chunk]);
+        while (true) {
+            const msg = this.tryReadMessage();
+            if (msg === null) {
+                break;
+            }
+            this.handleMessage(msg);
+        }
+    }
+    tryReadMessage() {
+        const headerEnd = this.buffer.indexOf('\r\n\r\n');
+        if (headerEnd === -1) {
+            return null;
+        }
+        const headerStr = this.buffer.subarray(0, headerEnd).toString('utf8');
+        let contentLength = -1;
+        for (const line of headerStr.split('\r\n')) {
+            if (line.toLowerCase().startsWith('content-length:')) {
+                contentLength = parseInt(line.substring(15).trim(), 10);
+            }
+        }
+        if (contentLength < 0) {
+            return null;
+        }
+        const bodyStart = headerEnd + 4;
+        if (this.buffer.length < bodyStart + contentLength) {
+            return null;
+        }
+        const body = this.buffer.subarray(bodyStart, bodyStart + contentLength).toString('utf8');
+        this.buffer = this.buffer.subarray(bodyStart + contentLength);
+        return body;
+    }
+    handleMessage(body) {
+        let msg;
+        try {
+            msg = JSON.parse(body);
+        }
+        catch {
+            this.log(`[serve ←] unparseable response: ${body}`);
+            return;
+        }
+        if (msg.id === undefined) {
+            return; // notification — ignore
+        }
+        this.log(`[serve ←] response id=${msg.id} ${msg.error ? 'ERROR: ' + msg.error.message : 'OK'}`);
+        const pending = this.pending.get(msg.id);
+        if (!pending) {
+            return;
+        }
+        this.pending.delete(msg.id);
+        if (msg.error) {
+            pending.reject(new Error(`JSON-RPC error ${msg.error.code}: ${msg.error.message}`));
+        }
+        else {
+            pending.resolve(msg.result);
+        }
+    }
+    rejectAll(err) {
+        for (const p of this.pending.values()) {
+            p.reject(err);
+        }
+        this.pending.clear();
+    }
+}
+exports.OpenBBTClient = OpenBBTClient;
+//# sourceMappingURL=openbbtClient.js.map

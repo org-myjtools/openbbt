@@ -3,7 +3,6 @@ package org.myjtools.openbbt.core.docgen;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,10 +35,10 @@ public class StepDocLoader {
 
     @SuppressWarnings("unchecked")
     private static StepDocEntry parseEntry(Map<String, Object> map) {
-        String description = trimTrailingNewline((String) map.get("description"));
-        Map<String, String> expressions = (Map<String, String>) map.getOrDefault("expressions", Map.of());
-        String additionalData = trimTrailingNewline((String) map.get("additional-data"));
-        String example = trimTrailingNewline((String) map.get("example"));
+        String role = (String) map.get("role");
+        String description = trimTrailingWhitespace((String) map.get("description"));
+        String additionalData = trimTrailingWhitespace((String) map.get("additional-data"));
+
         List<ParameterDoc> parameters = new ArrayList<>();
         var rawParams = (List<Map<String, Object>>) map.get("parameters");
         if (rawParams != null) {
@@ -51,10 +50,44 @@ public class StepDocLoader {
                 ));
             }
         }
-        return new StepDocEntry(description, expressions, parameters, additionalData, example);
+
+        Map<String, StepLanguageEntry> language = new LinkedHashMap<>();
+        var rawLanguage = (Map<String, Map<String, Object>>) map.get("language");
+        if (rawLanguage != null) {
+            for (var langEntry : rawLanguage.entrySet()) {
+                language.put(langEntry.getKey(), parseLanguageEntry(langEntry.getValue()));
+            }
+        }
+
+        return new StepDocEntry(role, description, parameters, additionalData, language);
     }
 
-    private static String trimTrailingNewline(String s) {
+    @SuppressWarnings("unchecked")
+    private static StepLanguageEntry parseLanguageEntry(Map<String, Object> map) {
+        String expression = (String) map.get("expression");
+        String example = trimTrailingWhitespace((String) map.get("example"));
+
+        List<ScenarioExample> scenarios = new ArrayList<>();
+        var rawScenarios = (List<Map<String, Object>>) map.get("scenarios");
+        if (rawScenarios != null) {
+            for (var s : rawScenarios) {
+                scenarios.add(new ScenarioExample(
+                    (String) s.get("title"),
+                    trimTrailingWhitespace((String) s.get("gherkin"))
+                ));
+            }
+        }
+
+        List<String> assertionHints = new ArrayList<>();
+        var rawHints = (List<String>) map.get("assertion-hints");
+        if (rawHints != null) {
+            assertionHints.addAll(rawHints);
+        }
+
+        return new StepLanguageEntry(expression, example, scenarios, assertionHints);
+    }
+
+    private static String trimTrailingWhitespace(String s) {
         if (s == null) return null;
         return s.stripTrailing();
     }

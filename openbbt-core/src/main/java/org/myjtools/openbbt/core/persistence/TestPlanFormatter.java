@@ -17,9 +17,15 @@ public class TestPlanFormatter {
     }
 
     private final TestPlanRepository repository;
+    private final int maxDepth;
 
     public TestPlanFormatter(TestPlanRepository repository) {
+        this(repository, -1);
+    }
+
+    public TestPlanFormatter(TestPlanRepository repository, int maxDepth) {
         this.repository = repository;
+        this.maxDepth = maxDepth;
     }
 
     public void format(TestPlan testPlan, Appender appender) throws IOException {
@@ -27,10 +33,14 @@ public class TestPlanFormatter {
         appender.append("Project ID: " + testPlan.projectID() + "\n");
         appender.append("Created at: " + testPlan.createdAt() + "\n");
         appender.append("\n");
-        formatNode(testPlan.planNodeRoot(), appender, 0);
+        formatNode(testPlan.planNodeRoot(), appender, 0, 0);
     }
 
-    private void formatNode(UUID nodeID, Appender appender, int indent) throws IOException {
+    public void formatFromNode(TestPlanNode node, Appender appender) throws IOException {
+        formatNode(node.nodeID(), appender, 0, 0);
+    }
+
+    private void formatNode(UUID nodeID, Appender appender, int indent, int depth) throws IOException {
         TestPlanNode node = repository.getNodeData(nodeID).orElseThrow();
         appender.append("  ".repeat(indent));
         appender.append("[");
@@ -42,13 +52,20 @@ public class TestPlanFormatter {
             appender.append(") ");
         }
         appender.append(node.toString());
+        if (node.source() != null) {
+            appender.append("  <");
+            appender.append(node.source());
+            appender.append(">");
+        }
         if (node.validationStatus() == ValidationStatus.ERROR) {
             appender.append("  !! ");
             appender.append(node.validationMessage());
         }
         appender.append("\n");
-        for (UUID childID : repository.getNodeChildren(nodeID).toList()) {
-            formatNode(childID, appender, indent + 1);
+        if (maxDepth < 0 || depth < maxDepth) {
+            for (UUID childID : repository.getNodeChildren(nodeID).toList()) {
+                formatNode(childID, appender, indent + 1, depth + 1);
+            }
         }
     }
 }

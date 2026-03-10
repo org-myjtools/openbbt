@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 public record StepDocEntry(
+    String role,
     String description,
-    Map<String, String> expressions,
     List<ParameterDoc> parameters,
     String additionalData,
-    String example
+    Map<String, StepLanguageEntry> language
 ) {
 }

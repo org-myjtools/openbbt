@@ -31,7 +31,8 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final ResourceFinder resourceFinder;
 	private final ResourceSet resourceSet;
 	private final RepositoryFactory repositoryFactory;
-	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(() -> createRepository(TestPlanRepository.class));
+	private boolean readOnly;
+	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(this::openRepository);
 
 
 	public OpenBBTRuntime(Config configuration) {
@@ -40,6 +41,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 
 	public OpenBBTRuntime(Config configuration, Clock clock) {
+		this.readOnly = false;
 		this.clock = clock;
 		this.pluginManager = new OpenBBTPluginManager(configuration);
 		this.extensionManager = ExtensionManager
@@ -58,6 +60,34 @@ public class OpenBBTRuntime implements InjectionProvider {
 			()-> new OpenBBTException("Resource filter not configured {}: ",OpenBBTConfig.RESOURCE_FILTER)
 		));
 		this.planBuilder = new PlanBuilder(this);
+	}
+
+
+	/**
+	 * Creates a lightweight runtime that only initializes the repository, skipping plugin
+	 * loading and resource scanning. Use this when only read access to stored plans is needed.
+	 */
+	public static OpenBBTRuntime repositoryOnly(Config configuration) {
+		return new OpenBBTRuntime(configuration, false);
+	}
+
+
+	private OpenBBTRuntime(Config configuration, boolean ignored) {
+		this.readOnly = true;
+		this.clock = Instant::now;
+		this.pluginManager = null;
+		this.extensionManager = ExtensionManager
+			.create(ModuleLayerProvider.boot())
+			.withInjectionProvider(this);
+		this.config = extensionManager.getExtensions(ConfigProvider.class)
+			.map(ConfigProvider::config)
+			.reduce(Config.empty(), Config::append)
+			.append(configuration);
+		this.repositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
+			.orElse(null);
+		this.resourceFinder = null;
+		this.resourceSet = null;
+		this.planBuilder = null;
 	}
 
 
@@ -90,9 +120,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 					getExtensions(MessageProvider.class).filter(it -> it.providerFor(name)).toList()
 			));
 		} else if (type == ResourceFinder.class) {
-			return Stream.of(resourceFinder);
+			return resourceFinder != null ? Stream.of(resourceFinder) : Stream.empty();
 		} else if (type == ResourceSet.class) {
-			return Stream.of(resourceSet);
+			return resourceSet != null ? Stream.of(resourceSet) : Stream.empty();
 		} else if (type == Clock.class) {
 			return Stream.of(clock);
 		}
@@ -116,6 +146,13 @@ public class OpenBBTRuntime implements InjectionProvider {
 		}
 	}
 
+
+	private TestPlanRepository openRepository() {
+		if (readOnly) {
+			return repositoryFactory.createReadOnlyRepository(TestPlanRepository.class);
+		}
+		return createRepository(TestPlanRepository.class);
+	}
 
 	private <T extends Repository> T createRepository(Class<T> type) {
 		if (repositoryFactory == null) {

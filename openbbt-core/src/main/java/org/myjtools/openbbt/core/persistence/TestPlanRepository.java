@@ -238,6 +238,8 @@ public interface TestPlanRepository extends Repository {
 	Map<String, String> getNodeProperties(UUID nodeID);
 
 
+	List<TestPlan> listPlans();
+
 	Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash);
 
 	Optional<TestPlan> getPlan(UUID planID);

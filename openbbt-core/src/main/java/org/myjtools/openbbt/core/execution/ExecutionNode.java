@@ -8,10 +8,10 @@ public class ExecutionNode {
 	private UUID execID;
 	private Instant startTime;
 	private Instant endTime;
-	private Result result;
+	private ExecutionResult result;
 	private String message;
 
-	public ExecutionNode(UUID execID, Instant startTime, Instant endTime, Result result, String message) {
+	public ExecutionNode(UUID execID, Instant startTime, Instant endTime, ExecutionResult result, String message) {
 		this.execID = execID;
 		this.startTime = startTime;
 		this.endTime = endTime;

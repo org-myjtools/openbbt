@@ -3,6 +3,7 @@ package org.myjtools.openbbt.core.testplan;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.myjtools.openbbt.core.execution.ExecutionResult;
 import java.time.Instant;
 
 /**

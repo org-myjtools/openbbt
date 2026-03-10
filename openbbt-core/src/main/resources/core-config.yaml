@@ -46,14 +46,14 @@ core.persistence.mode:
     type: text
     constraints:
         enum: [transient, file, remote]
-    defaultValue: transient
+    defaultValue: file
 
 core.persistence.file:
   description: |
     File path used when `core.persistence.mode` is set to `file`.
     This is the filesystem location of the persistence storage (for example an H2 file or JSON file).
   type: text
-  defaultValue: 'openbbt.db'
+  defaultValue: 'db/openbbt.db'
 
 core.persistence.db.url:
   description: |

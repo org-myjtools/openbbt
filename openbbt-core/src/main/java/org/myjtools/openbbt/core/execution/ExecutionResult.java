@@ -1,6 +1,6 @@
 package org.myjtools.openbbt.core.execution;
 
-public enum Result {
+public enum ExecutionResult {
 
 
 	PASSED(1),
@@ -11,7 +11,7 @@ public enum Result {
 
 	final int value;
 
-	Result(int value) {
+	ExecutionResult(int value) {
 		this.value = value;
 	}
 

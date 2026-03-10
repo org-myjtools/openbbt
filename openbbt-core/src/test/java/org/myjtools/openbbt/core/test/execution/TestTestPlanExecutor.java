@@ -6,7 +6,7 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.execution.PlanExecutor;
-import org.myjtools.openbbt.core.execution.Result;
+import org.myjtools.openbbt.core.execution.ExecutionResult;
 import org.myjtools.openbbt.core.testplan.NodeType;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.util.Pair;
@@ -33,7 +33,7 @@ class TestTestPlanExecutor {
 					.name("Step with one parameter: 5")
 					.language("en");
 			var future = executor.submitExecution(node);
-			assertThat(future.get()).isEqualTo(Pair.of(Result.PASSED,null));
+			assertThat(future.get()).isEqualTo(Pair.of(ExecutionResult.PASSED,null));
 		}
 
 
@@ -45,7 +45,7 @@ class TestTestPlanExecutor {
 				.name("XX Step with one parameter: 5")
 				.language("en");
 		var future = executor.submitExecution(node);
-		assertThat(future.get().left()).isEqualTo(Result.UNDEFINED);
+		assertThat(future.get().left()).isEqualTo(ExecutionResult.UNDEFINED);
 	}
 
 
@@ -57,7 +57,7 @@ class TestTestPlanExecutor {
 				.name("stepThatAlwaysFails")
 				.language("en");
 		var future = executor.submitExecution(node);
-		assertThat(future.get().left()).isEqualTo(Result.FAILED);
+		assertThat(future.get().left()).isEqualTo(ExecutionResult.FAILED);
 		assertThat(future.get().right()).hasMessage("This step is designed to always fail");
 	}
 
@@ -70,7 +70,7 @@ class TestTestPlanExecutor {
 				.name("stepWithUnexpectedError")
 				.language("en");
 		var future = executor.submitExecution(node);
-		assertThat(future.get().left()).isEqualTo(Result.ERROR);
+		assertThat(future.get().left()).isEqualTo(ExecutionResult.ERROR);
 		assertThat(future.get().right()).hasMessage("java.lang.IllegalArgumentException: This step is designed to throw an unexpected error");
 	}
 

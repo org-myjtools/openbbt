@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public abstract sealed class AbstractCommand implements Callable<Integer> permits BrowseCommand, InitCommand, InstallCommand, LspCommand, PlanCommand, PurgeCommand, ShowConfigCommand, TuiCommand {
+public abstract sealed class AbstractCommand implements Callable<Integer> permits BrowseCommand, InitCommand, InstallCommand, LspCommand, PlanCommand, PurgeCommand, ServeCommand, ShowConfigCommand, TuiCommand {
 
 	@CommandLine.ParentCommand
 	MainCommand parent;

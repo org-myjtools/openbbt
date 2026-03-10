@@ -2,8 +2,8 @@ package org.myjtools.openbbt.cli;
 
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
+import org.myjtools.openbbt.core.persistence.TestPlanFormatter;
 import org.myjtools.openbbt.core.persistence.TestPlanHierarchyFormatter;
-import org.myjtools.openbbt.core.persistence.TestPlanJsonFormatter;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
@@ -38,31 +38,28 @@ public final class BrowseCommand extends AbstractCommand {
     }
 
     @CommandLine.Option(
-        names = {"--detail"},
-        description = "Show the node tree as hierarchical JSON",
-        defaultValue = "false"
-    )
-    boolean detail;
-
-    @CommandLine.Option(
         names = {"--json"},
-        description = "Output the test plan as flat JSON (only with --plan)",
+        description = "Output the test plan as hierarchical JSON (only with --plan)",
         defaultValue = "false"
     )
     boolean json;
 
     @CommandLine.Option(
         names = {"--depth"},
-        description = "Maximum depth of the node tree (only with --detail). No limit by default.",
+        description = "Maximum depth of the node tree. No limit by default.",
         defaultValue = "-1"
     )
     int depth;
 
     @Override
     protected void execute() {
+        long t0 = System.currentTimeMillis();
         OpenBBTContext context = getContext();
-        OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration());
+        log.info("[t] getContext: {}ms", System.currentTimeMillis() - t0); t0 = System.currentTimeMillis();
+        OpenBBTRuntime runtime = OpenBBTRuntime.repositoryOnly(context.configuration());
+        log.info("[t] repositoryOnly: {}ms", System.currentTimeMillis() - t0); t0 = System.currentTimeMillis();
         TestPlanRepository repository = runtime.getRepository(TestPlanRepository.class);
+        log.info("[t] getRepository: {}ms", System.currentTimeMillis() - t0); t0 = System.currentTimeMillis();
         try {
             if (target.planID != null) {
                 executePlan(repository);
@@ -82,13 +79,9 @@ public final class BrowseCommand extends AbstractCommand {
             .orElseThrow(() -> new IllegalArgumentException("Test plan not found: " + target.planID));
         try {
             if (json) {
-                new TestPlanJsonFormatter(repository).format(testPlan, System.out::print);
-            } else if (detail) {
                 new TestPlanHierarchyFormatter(repository, depth).format(testPlan, System.out::print);
             } else {
-                System.out.println("Plan ID:    " + testPlan.planID());
-                System.out.println("Project ID: " + testPlan.projectID());
-                System.out.println("Created at: " + testPlan.createdAt());
+                new TestPlanFormatter(repository, depth).format(testPlan, System.out::print);
             }
         } catch (Exception e) {
             log.warn("Error formatting test plan: {}", e.getMessage());
@@ -100,12 +93,10 @@ public final class BrowseCommand extends AbstractCommand {
         TestPlanNode node = repository.getNodeData(uuid)
             .orElseThrow(() -> new IllegalArgumentException("Node not found: " + target.nodeID));
         try {
-            if (detail) {
+            if (json) {
                 new TestPlanHierarchyFormatter(repository, depth).formatFromNode(node, System.out::print);
             } else {
-                System.out.println("Node ID:   " + node.nodeID());
-                System.out.println("Node type: " + node.nodeType());
-                System.out.println("Name:      " + node.name());
+                new TestPlanFormatter(repository, depth).formatFromNode(node, System.out::print);
             }
         } catch (Exception e) {
             log.warn("Error formatting node: {}", e.getMessage());

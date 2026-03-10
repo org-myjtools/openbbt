@@ -88,17 +88,7 @@ class BrowseCommandTest {
     }
 
     @Test
-    void browseDetailShowsHierarchicalNodes() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--plan", planID, "--detail")
-        ));
-        assertEquals(0, out.exitCode);
-        assertTrue(out.text.contains("\"planID\""));
-        assertTrue(out.text.contains("\"nodes\""), "--detail output should contain nodes array");
-    }
-
-    @Test
-    void browseJsonShowsFlatNodes() {
+    void browseJsonShowsHierarchicalNodes() {
         var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
             args("browse", "--plan", planID, "--json")
         ));
@@ -108,12 +98,12 @@ class BrowseCommandTest {
     }
 
     @Test
-    void browseDetailWithDepthLimitsTree() {
+    void browseJsonWithDepthLimitsTree() {
         var fullOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--plan", planID, "--detail")
+            args("browse", "--plan", planID, "--json")
         ));
         var depthOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--plan", planID, "--detail", "--depth", "1")
+            args("browse", "--plan", planID, "--json", "--depth", "1")
         ));
         assertEquals(0, fullOut.exitCode);
         assertEquals(0, depthOut.exitCode);
@@ -122,20 +112,19 @@ class BrowseCommandTest {
     }
 
     @Test
-    void browseNodeShowsNodeSummaryWithoutChildren() {
+    void browseNodeShowsHierarchicalText() {
         var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
             args("browse", "--node", rootNodeID)
         ));
         assertEquals(0, out.exitCode);
-        assertTrue(out.text.contains("Node ID:"));
-        assertTrue(out.text.contains("Node type:"));
-        assertFalse(out.text.contains("nodes"), "Default node output should not contain nodes");
+        assertTrue(out.text.contains("[TEST_SUITE]") || out.text.contains("[TEST_PLAN]")
+            || out.text.contains("[TEST_FEATURE]") || out.text.contains("[TEST_CASE]"));
     }
 
     @Test
-    void browseNodeDetailShowsSubtree() {
+    void browseNodeJsonShowsSubtree() {
         var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--node", rootNodeID, "--detail")
+            args("browse", "--node", rootNodeID, "--json")
         ));
         assertEquals(0, out.exitCode);
         assertTrue(out.text.contains("\"nodeID\""));
@@ -143,12 +132,12 @@ class BrowseCommandTest {
     }
 
     @Test
-    void browseNodeDetailWithDepthLimitsSubtree() {
+    void browseNodeJsonWithDepthLimitsSubtree() {
         var fullOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--node", rootNodeID, "--detail")
+            args("browse", "--node", rootNodeID, "--json")
         ));
         var depthOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--node", rootNodeID, "--detail", "--depth", "1")
+            args("browse", "--node", rootNodeID, "--json", "--depth", "1")
         ));
         assertEquals(0, fullOut.exitCode);
         assertEquals(0, depthOut.exitCode);

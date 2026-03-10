@@ -6,6 +6,9 @@ import org.flywaydb.core.Flyway;
 import org.jooq.SQLDialect;
 import javax.sql.DataSource;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class DataSourceProvider {
 
@@ -140,6 +143,19 @@ public class DataSourceProvider {
 
 	public SQLDialect dialect() {
 		return jdbcUrlProvider.databaseType().dialect();
+	}
+
+	/**
+	 * Opens a direct JDBC connection without HikariCP pool or Flyway migration.
+	 * For HSQLDB, opens in read-only mode (no lock file, no transaction log) for faster startup.
+	 * Intended for read-only operations where fast startup is required.
+	 */
+	public Connection openConnection() throws SQLException {
+		String url = jdbcUrlProvider.jdbcUrl();
+		if (jdbcUrlProvider.databaseType() == DatabaseType.HSQLDB) {
+			url += ";readonly=true";
+		}
+		return DriverManager.getConnection(url, jdbcUrlProvider.username(), jdbcUrlProvider.password());
 	}
 
 
