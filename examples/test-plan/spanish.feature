@@ -1,4 +1,5 @@
 # language: es
+# 
 Característica: Mi Feature
 
   Escenario: My Scenario
@@ -6,7 +7,4 @@ Característica: Mi Feature
       """json
       { "nombre": "hola" }
       """
-
-    Y el cuerpo de la respuesta es:
-      | tabla | x |
-      | a     | 3 |
+    Y el cuerpo de la respuesta es el contenido del archivo 'a'

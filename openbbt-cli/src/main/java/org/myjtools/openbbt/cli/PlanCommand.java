@@ -39,7 +39,7 @@ public final class PlanCommand extends AbstractCommand {
 				writer.write(testPlan.planNodeRoot(), System.out::print);
 			}
 		} catch (Exception e) {
-			log.warn("No test plan assembled");
+			log.warn("No test plan assembled: {}", e.getMessage());
 		}
 	}
 

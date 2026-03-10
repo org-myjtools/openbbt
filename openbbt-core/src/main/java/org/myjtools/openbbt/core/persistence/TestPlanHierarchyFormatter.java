@@ -39,9 +39,9 @@ public class TestPlanHierarchyFormatter {
         appender.append("  \"planID\": " + quoted(testPlan.planID()) + ",\n");
         appender.append("  \"projectID\": " + quoted(testPlan.projectID()) + ",\n");
         appender.append("  \"createdAt\": " + quoted(testPlan.createdAt()) + ",\n");
-        appender.append("  \"nodes\": ");
-        formatChildren(testPlan.planNodeRoot(), appender, 1, 0);
-        appender.append("\n}\n");
+        appender.append("  \"nodes\": [\n");
+        formatNode(testPlan.planNodeRoot(), appender, 2, 0);
+        appender.append("\n  ]\n}\n");
     }
 
     /** Format the tree starting from the given node (depth counter resets to 0 at this node). */

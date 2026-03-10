@@ -10,7 +10,7 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.execution.PlanExecutor;
-import org.myjtools.openbbt.core.execution.Result;
+import org.myjtools.openbbt.core.execution.ExecutionResult;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.tui.mock.MockData;
@@ -466,7 +466,7 @@ public class MainWindow extends BasicWindow {
         return PlanNode.Status.PASS;
     }
 
-    private static PlanNode.Status mapResult(Result result) {
+    private static PlanNode.Status mapResult(ExecutionResult result) {
         return switch (result) {
             case PASSED    -> PlanNode.Status.PASS;
             case FAILED    -> PlanNode.Status.FAIL;

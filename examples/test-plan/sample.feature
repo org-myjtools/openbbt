@@ -10,3 +10,4 @@ Feature: Mi Feature
     And the response body contains:
       | tabla | x |
       | a     | 3 |
+    And I make a DELETE request to 'a'

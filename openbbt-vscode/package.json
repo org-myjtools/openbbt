@@ -37,6 +37,10 @@
         "command": "openbbt.testPlan.refresh",
         "title": "OpenBBT: Refresh Test Plan",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "openbbt.openSource",
+        "title": "OpenBBT: Open Source Location"
       }
     ],
     "viewsContainers": {

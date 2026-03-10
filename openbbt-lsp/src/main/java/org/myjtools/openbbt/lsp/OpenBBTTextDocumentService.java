@@ -181,6 +181,18 @@ public class OpenBBTTextDocumentService implements TextDocumentService {
             );
             return stepCompletions(stepPrefix, locale, replaceRange);
         }
+
+        // Comment line → config property completions
+        if (trimmed.startsWith("#")) {
+            String afterHash = trimmed.substring(1).stripLeading();
+            int propStartCol = linePrefix.length() - afterHash.length();
+            var replaceRange = new Range(
+                new Position(pos.getLine(), propStartCol),
+                new Position(pos.getLine(), linePrefix.length())
+            );
+            return configFlatKeyCompletions(afterHash, replaceRange);
+        }
+
         return gherkinKeywordCompletions(trimmed, locale);
     }
 
@@ -203,10 +215,27 @@ public class OpenBBTTextDocumentService implements TextDocumentService {
             .map(s -> {
                 var item = new CompletionItem(s);
                 item.setKind(CompletionItemKind.Function);
-                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, s)));
+                String snippet = toSnippet(s);
+                item.setInsertTextFormat(InsertTextFormat.Snippet);
+                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, snippet)));
                 return item;
             })
             .toList();
+    }
+
+    /** Converts step parameters like {@code {name}} to LSP snippet tabstops like {@code ${1:name}}. */
+    private static String toSnippet(String stepText) {
+        var sb = new StringBuilder();
+        var matcher = java.util.regex.Pattern.compile("\\{([^}]+)\\}").matcher(stepText);
+        int counter = 1;
+        int last = 0;
+        while (matcher.find()) {
+            sb.append(stepText, last, matcher.start());
+            sb.append("${").append(counter++).append(':').append(matcher.group(1)).append('}');
+            last = matcher.end();
+        }
+        sb.append(stepText, last, stepText.length());
+        return sb.toString();
     }
 
     private List<CompletionItem> gherkinKeywordCompletions(String prefix, Locale locale) {
@@ -303,6 +332,31 @@ public class OpenBBTTextDocumentService implements TextDocumentService {
             }
             return item;
         }).toList();
+    }
+
+    /**
+     * Flat config-key completions for feature file comment lines.
+     * Offers full dotted keys (e.g. {@code core.resourceFilter: }) that match the given prefix.
+     */
+    private List<CompletionItem> configFlatKeyCompletions(String prefix, Range replaceRange) {
+        if (config == null) return List.of();
+        return config.getDefinitions().entrySet().stream()
+            .filter(e -> e.getKey().toLowerCase().startsWith(prefix.toLowerCase()))
+            .map(e -> {
+                String key = e.getKey();
+                PropertyDefinition def = e.getValue();
+                var item = new CompletionItem(key + ": ");
+                item.setKind(CompletionItemKind.Property);
+                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, key + ": ")));
+                String detail = def.description();
+                String hint = def.defaultValue()
+                    .map(dv -> detail + " [default: " + dv + "]")
+                    .orElse(detail);
+                if (def.required()) hint += " (required)";
+                item.setDetail(hint);
+                return item;
+            })
+            .toList();
     }
 
     private List<CompletionItem> staticCompletions(List<String> keys, String prefix, CompletionItemKind kind) {

@@ -33,71 +33,137 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TestPlanProvider = exports.TestPlanItem = void 0;
+exports.TestPlanProvider = exports.TestPlanItem = exports.ISSUE_URI_SCHEME = void 0;
 const vscode = __importStar(require("vscode"));
+exports.ISSUE_URI_SCHEME = 'openbbt-node-issue';
 class TestPlanItem extends vscode.TreeItem {
-    label;
-    kind;
-    children;
-    constructor(label, kind, collapsibleState, children = []) {
+    nodeId;
+    nodeType;
+    constructor(nodeId, vsCodeId, label, nodeType, collapsibleState, hasIssues, source, description) {
         super(label, collapsibleState);
-        this.label = label;
-        this.kind = kind;
-        this.children = children;
-        this.contextValue = kind;
-        this.iconPath = this.resolveIcon();
+        this.nodeId = nodeId;
+        this.nodeType = nodeType;
+        this.id = vsCodeId; // serial-scoped so VSCode forgets expansion on refresh
+        this.contextValue = nodeType ?? 'unknown';
+        this.iconPath = resolveIcon(nodeType, hasIssues);
         this.tooltip = label;
-    }
-    resolveIcon() {
-        switch (this.kind) {
-            case 'suite': return new vscode.ThemeIcon('folder-library');
-            case 'feature': return new vscode.ThemeIcon('file-text');
-            case 'scenario': return new vscode.ThemeIcon('circle-outline');
-            case 'scenarioOutline': return new vscode.ThemeIcon('symbol-array');
+        if (hasIssues) {
+            // resourceUri drives the FileDecorationProvider to color the label
+            this.resourceUri = vscode.Uri.parse(`${exports.ISSUE_URI_SCHEME}://${nodeId}`);
+        }
+        if (source) {
+            this.command = {
+                command: 'openbbt.openSource',
+                title: 'Open Source Location',
+                arguments: [source],
+            };
+        }
+        if (description) {
+            this.description = description;
         }
     }
 }
 exports.TestPlanItem = TestPlanItem;
-const MOCK_PLAN = [
-    new TestPlanItem('Regression Suite', 'suite', vscode.TreeItemCollapsibleState.Expanded, [
-        new TestPlanItem('Login', 'feature', vscode.TreeItemCollapsibleState.Expanded, [
-            new TestPlanItem('Successful login with valid credentials', 'scenario', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Failed login with wrong password', 'scenario', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Login with multiple user types', 'scenarioOutline', vscode.TreeItemCollapsibleState.None),
-        ]),
-        new TestPlanItem('Checkout', 'feature', vscode.TreeItemCollapsibleState.Collapsed, [
-            new TestPlanItem('Add item to cart', 'scenario', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Remove item from cart', 'scenario', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Pay with different payment methods', 'scenarioOutline', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Apply discount coupon', 'scenario', vscode.TreeItemCollapsibleState.None),
-        ]),
-        new TestPlanItem('User Profile', 'feature', vscode.TreeItemCollapsibleState.Collapsed, [
-            new TestPlanItem('Update profile information', 'scenario', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Change password', 'scenario', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Upload avatar with different formats', 'scenarioOutline', vscode.TreeItemCollapsibleState.None),
-        ]),
-    ]),
-    new TestPlanItem('Smoke Suite', 'suite', vscode.TreeItemCollapsibleState.Expanded, [
-        new TestPlanItem('Landing Page', 'feature', vscode.TreeItemCollapsibleState.Expanded, [
-            new TestPlanItem('Page loads correctly', 'scenario', vscode.TreeItemCollapsibleState.None),
-            new TestPlanItem('Navigation links are accessible', 'scenario', vscode.TreeItemCollapsibleState.None),
-        ]),
-        new TestPlanItem('API Health', 'feature', vscode.TreeItemCollapsibleState.Expanded, [
-            new TestPlanItem('Health check endpoint responds 200', 'scenario', vscode.TreeItemCollapsibleState.None),
-        ]),
-    ]),
-];
+function resolveIcon(nodeType, hasIssues) {
+    const color = hasIssues ? new vscode.ThemeColor('list.errorForeground') : undefined;
+    switch (nodeType) {
+        case 'TEST_PLAN': return new vscode.ThemeIcon('list-tree', color);
+        case 'TEST_SUITE': return new vscode.ThemeIcon('folder-library', color);
+        case 'TEST_FEATURE': return new vscode.ThemeIcon('file-text', color);
+        case 'TEST_CASE': return new vscode.ThemeIcon('circle-outline', color);
+        case 'STEP': return new vscode.ThemeIcon('symbol-event', color);
+        default: return new vscode.ThemeIcon('circle-outline', color);
+    }
+}
 class TestPlanProvider {
     _onDidChangeTreeData = new vscode.EventEmitter();
     onDidChangeTreeData = this._onDidChangeTreeData.event;
-    refresh() {
+    client;
+    rootItems;
+    loadingPromise;
+    refreshSerial = 0;
+    log;
+    constructor(log = () => { }) {
+        this.log = log;
+    }
+    setClient(client) {
+        this.client = client;
+    }
+    /**
+     * Called after `openbbt plan` has run and the serve process is ready.
+     * Increments the refresh serial so all tree item IDs change, forcing
+     * VSCode to discard its expansion memory and show a clean tree.
+     */
+    invalidate() {
+        this.refreshSerial++;
+        this.rootItems = undefined;
+        this.loadingPromise = undefined;
         this._onDidChangeTreeData.fire();
     }
     getTreeItem(element) {
         return element;
     }
-    getChildren(element) {
-        return element ? element.children : MOCK_PLAN;
+    async getChildren(element) {
+        if (!this.client) {
+            return [];
+        }
+        if (!element) {
+            return this.getRoots();
+        }
+        try {
+            const children = await this.client.getChildren(element.nodeId);
+            return children.map(n => this.nodeToItem(n));
+        }
+        catch (err) {
+            vscode.window.showErrorMessage(`OpenBBT: failed to load children — ${err}`);
+            return [];
+        }
+    }
+    nodeToItem(node) {
+        const label = node.name ?? node.identifier ?? node.nodeId;
+        const collapsible = node.childCount > 0
+            ? vscode.TreeItemCollapsibleState.Collapsed
+            : vscode.TreeItemCollapsibleState.None;
+        // ID is scoped to the current refresh serial so VSCode treats all items
+        // as new after each refresh, giving a clean expansion state.
+        const vsCodeId = `${this.refreshSerial}-${node.nodeId}`;
+        return new TestPlanItem(node.nodeId, vsCodeId, label, node.nodeType, collapsible, node.hasIssues, node.source);
+    }
+    getRoots() {
+        if (this.rootItems !== undefined) {
+            return Promise.resolve(this.rootItems);
+        }
+        if (this.loadingPromise) {
+            return this.loadingPromise;
+        }
+        this.loadingPromise = this.fetchRoots();
+        return this.loadingPromise;
+    }
+    async fetchRoots() {
+        try {
+            this.log('[tree] calling listPlans()');
+            const plans = await this.client.listPlans();
+            this.log(`[tree] listPlans() returned ${plans.length} plan(s)`);
+            if (plans.length === 0) {
+                this.rootItems = [];
+                return [];
+            }
+            const plan = plans[0];
+            this.log(`[tree] fetching root node ${plan.planNodeRoot}`);
+            const rootNode = await this.client.getNode(plan.planNodeRoot);
+            this.log(`[tree] root node: ${rootNode.nodeType} "${rootNode.name}" childCount=${rootNode.childCount}`);
+            this.rootItems = [this.nodeToItem(rootNode)];
+            return this.rootItems;
+        }
+        catch (err) {
+            this.log(`[tree] fetchRoots error: ${err}`);
+            vscode.window.showErrorMessage(`OpenBBT: failed to load test plan — ${err}`);
+            this.rootItems = [];
+            return [];
+        }
+        finally {
+            this.loadingPromise = undefined;
+        }
     }
 }
 exports.TestPlanProvider = TestPlanProvider;

@@ -1,9 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { spawnSync } from 'child_process';
+import { execFile, spawnSync } from 'child_process';
 import * as vscode from 'vscode';
 import { formatFeatureText } from './featureFormatter';
-import { TestPlanProvider } from './testPlanProvider';
+import { GherkinSymbolProvider } from './gherkinSymbolProvider';
+import { OpenBBTClient } from './openbbtClient';
+import { ISSUE_URI_SCHEME, TestPlanProvider } from './testPlanProvider';
 import {
     CloseAction,
     ErrorAction,
@@ -13,8 +15,14 @@ import {
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient | undefined;
+let serveClient: OpenBBTClient | undefined;
 let extensionContext: vscode.ExtensionContext | undefined;
 let errorNotificationShowing = false;
+const outputChannel = vscode.window.createOutputChannel('OpenBBT');
+
+function logOutput(msg: string): void {
+    outputChannel.appendLine(`[${new Date().toISOString()}] ${msg}`);
+}
 
 const OPENBBT_YAML_SKELETON = `project:
   organization: My Organization
@@ -197,17 +205,141 @@ async function startClient(): Promise<void> {
     extensionContext.subscriptions.push(client);
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+interface PlanResult {
+    planId: string | undefined;
+    hasValidationErrors: boolean;
+}
+
+function runPlan(executable: string, cwd: string): Promise<PlanResult> {
+    return new Promise((resolve) => {
+        logOutput(`[plan] running: ${executable} plan (cwd=${cwd})`);
+        execFile(executable, ['plan'], { cwd }, (_err, stdout, stderr) => {
+            const combined = stdout + '\n' + stderr;
+            logOutput(`[plan] stdout: ${stdout.trim() || '(empty)'}`);
+            logOutput(`[plan] stderr: ${stderr.trim() || '(empty)'}`);
+            if (_err) {
+                logOutput(`[plan] exit error: ${_err.message}`);
+            }
+            let planId: string | undefined;
+            for (const line of combined.split('\n')) {
+                const trimmed = line.trim();
+                if (UUID_PATTERN.test(trimmed)) {
+                    planId = trimmed;
+                }
+            }
+            logOutput(`[plan] planId=${planId ?? '(not found)'} hasValidationErrors=${combined.toLowerCase().includes('validation')}`);
+            const hasValidationErrors = combined.toLowerCase().includes('validation');
+            resolve({ planId, hasValidationErrors });
+        });
+    });
+}
+
 export function activate(context: vscode.ExtensionContext): void {
     extensionContext = context;
     startClient();
     vscode.workspace.textDocuments.forEach(updateDiagnostics);
 
-    const testPlanProvider = new TestPlanProvider();
+    const testPlanProvider = new TestPlanProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
 
+    // Auto-populate the tree on startup using existing plan data (no plan re-run).
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (workspaceFolder) {
+        const config = vscode.workspace.getConfiguration('openbbt');
+        const executable = config.get<string>('executablePath', 'openbbt');
+        if (executableExists(executable)) {
+            logOutput('[startup] starting serve connection');
+            serveClient = new OpenBBTClient(executable, workspaceFolder.uri.fsPath, logOutput);
+            serveClient.connect();
+            testPlanProvider.setClient(serveClient);
+            testPlanProvider.invalidate();
+        }
+    }
+
     context.subscriptions.push(
-        vscode.commands.registerCommand('openbbt.testPlan.refresh', () => {
-            testPlanProvider.refresh();
+        vscode.window.registerFileDecorationProvider({
+            provideFileDecoration(uri: vscode.Uri): vscode.FileDecoration | undefined {
+                if (uri.scheme === ISSUE_URI_SCHEME) {
+                    return {
+                        color: new vscode.ThemeColor('list.errorForeground'),
+                        propagate: false,
+                    };
+                }
+            },
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.testPlan.refresh', async () => {
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder) {
+                vscode.window.showErrorMessage('OpenBBT: no workspace folder open.');
+                return;
+            }
+            const config = vscode.workspace.getConfiguration('openbbt');
+            const executable = config.get<string>('executablePath', 'openbbt');
+            const cwd = workspaceFolder.uri.fsPath;
+
+            // Stop any running serve process before running plan.
+            // This avoids resource contention and ensures the new serve process
+            // opens a fresh HSQLDB engine that reads from disk (not a cached
+            // in-memory state from the previous session).
+            if (serveClient) {
+                logOutput(`[refresh] stopping existing serve process`);
+                serveClient.shutdown().catch(() => {});
+                serveClient = undefined;
+            }
+
+            // Run openbbt plan to regenerate the plan
+            const planResult = await vscode.window.withProgress(
+                { location: vscode.ProgressLocation.Window, title: 'OpenBBT: running plan…' },
+                () => runPlan(executable, cwd)
+            );
+
+            if (!planResult.planId) {
+                vscode.window.showErrorMessage(
+                    'OpenBBT: plan generation failed. See the OpenBBT output channel for details.'
+                );
+                outputChannel.show(true);
+                return;
+            }
+            if (planResult.hasValidationErrors) {
+                vscode.window.showWarningMessage('OpenBBT: test plan has validation issues.');
+            }
+
+            // Start a fresh serve process. The new process opens a fresh HSQLDB
+            // engine and reads the plan data just written by 'openbbt plan'.
+            logOutput(`[refresh] starting new serve connection`);
+            serveClient = new OpenBBTClient(executable, cwd, logOutput);
+            serveClient.connect();
+            testPlanProvider.setClient(serveClient);
+            logOutput(`[refresh] invalidating tree`);
+            testPlanProvider.invalidate();
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.openSource', async (source: string) => {
+            const match = source.match(/^(.*)\[(\d+),(\d+)\]$/);
+            if (!match) {
+                return;
+            }
+            const [, filePath, lineStr, colStr] = match;
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder) {
+                return;
+            }
+            const fullPath = path.join(workspaceFolder.uri.fsPath, filePath);
+            const uri = vscode.Uri.file(fullPath);
+            const line = parseInt(lineStr, 10) - 1;   // VSCode uses 0-based lines
+            const col  = parseInt(colStr,  10) - 1;   // VSCode uses 0-based columns
+            const pos = new vscode.Position(line, col);
+            const doc = await vscode.workspace.openTextDocument(uri);
+            await vscode.window.showTextDocument(doc, {
+                selection: new vscode.Range(pos, pos),
+            });
         })
     );
 
@@ -249,6 +381,10 @@ export function activate(context: vscode.ExtensionContext): void {
             }
         }),
         diagnosticCollection,
+        vscode.languages.registerDocumentSymbolProvider(
+            { scheme: 'file', language: 'feature' },
+            new GherkinSymbolProvider()
+        ),
         vscode.languages.registerDocumentFormattingEditProvider(
             { scheme: 'file', language: 'feature' },
             {
@@ -266,5 +402,7 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): Thenable<void> | undefined {
+    serveClient?.shutdown();
+    serveClient = undefined;
     return client?.stop();
 }

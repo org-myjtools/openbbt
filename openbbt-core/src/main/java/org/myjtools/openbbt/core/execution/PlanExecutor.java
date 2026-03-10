@@ -32,19 +32,19 @@ public class PlanExecutor {
 	}
 
 
-	public Future<Pair<Result,Throwable>> submitExecution(TestPlanNode node) {
+	public Future<Pair<ExecutionResult,Throwable>> submitExecution(TestPlanNode node) {
 		return this.executor.submit(() -> {
 			try {
 				backend.run(node.name(), locale(node.language()), nodeArgument(node));
-				return Pair.of(Result.PASSED, null);
+				return Pair.of(ExecutionResult.PASSED, null);
 			} catch (AssertionError e) {
-				return Pair.of(Result.FAILED, e);
+				return Pair.of(ExecutionResult.FAILED, e);
 			} catch (NoMatchingStepException e) {
-				return Pair.of(Result.UNDEFINED, e);
+				return Pair.of(ExecutionResult.UNDEFINED, e);
 			} catch (Exception e) {
 				log.error(e);
 				// TODO save the stack trace in the execution repository for reporting
-				return Pair.of(Result.ERROR, e);
+				return Pair.of(ExecutionResult.ERROR, e);
 			}
 		});
 	}

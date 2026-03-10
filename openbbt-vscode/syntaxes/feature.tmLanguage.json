@@ -72,7 +72,7 @@
       }
     },
     "step": {
-      "match": "^\\s*(Given that|Given|When|Then|And|But|Dado que|Dado|Dada|Dados|Dadas|Cuando|Entonces|Y|E|Pero)(?=\\s|$)(.*)",
+      "match": "^\\s*(Given that|Given|When|Then|And|But|Dado que|Dado|Dada|Dados|Dadas|Cuando|Entonces|Y|E|Pero|\\*)(?=\\s|$)(.*)",
       "captures": {
         "1": { "name": "keyword.control.step.feature" },
         "2": {

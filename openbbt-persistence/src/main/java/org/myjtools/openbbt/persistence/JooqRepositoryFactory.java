@@ -11,6 +11,7 @@ import org.myjtools.openbbt.persistence.plan.JooqPlanRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.util.List;
 import static org.myjtools.openbbt.core.OpenBBTConfig.*;
 
@@ -34,10 +35,13 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 				}
 			}
 			case PERSISTENCE_MODE_FILE -> {
+				Path envPath = config.get(ENV_PATH, Path::of).orElseThrow(
+						() -> new OpenBBTException("Repository environment path not configured {}: ", ENV_PATH)
+				);
 				Path filePath = config.get(PERSISTENCE_FILE, Path::of).orElseThrow(
 						() -> new OpenBBTException("Repository file path not configured {}: ", PERSISTENCE_FILE)
 				);
-				return (T) createFileRepository(type,filePath);
+				return (T) createFileRepository(type,envPath.resolve(filePath));
 			}
 			case PERSISTENCE_MODE_REMOTE -> {
 				String url = config.get(PERSISTENCE_DB_URL, String::toString).orElseThrow(
@@ -57,6 +61,47 @@ public class JooqRepositoryFactory implements RepositoryFactory {
 			);
 		}
 
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T extends Repository> T createReadOnlyRepository(Class<T> type) {
+		String mode = config.get(PERSISTENCE_MODE, String.class).orElse(PERSISTENCE_MODE_FILE);
+		try {
+			DataSourceProvider provider = switch (mode) {
+				case PERSISTENCE_MODE_FILE -> {
+					Path envPath = config.get(ENV_PATH, Path::of).orElseThrow(
+						() -> new OpenBBTException("Repository environment path not configured: {}", ENV_PATH)
+					);
+					Path filePath = config.get(PERSISTENCE_FILE, Path::of).orElseThrow(
+						() -> new OpenBBTException("Repository file path not configured: {}", PERSISTENCE_FILE)
+					);
+					yield DataSourceProvider.hsqldb(envPath.resolve(filePath));
+				}
+				case PERSISTENCE_MODE_REMOTE -> {
+					String url = config.get(PERSISTENCE_DB_URL, String::toString).orElseThrow(
+						() -> new OpenBBTException("Repository remote URL not configured: {}", PERSISTENCE_DB_URL)
+					);
+					String username = config.get(PERSISTENCE_DB_USERNAME, String::toString).orElseThrow(
+						() -> new OpenBBTException("Repository remote username not configured: {}", PERSISTENCE_DB_USERNAME)
+					);
+					String password = config.get(PERSISTENCE_DB_PASSWORD, String::toString).orElseThrow(
+						() -> new OpenBBTException("Repository remote password not configured: {}", PERSISTENCE_DB_PASSWORD)
+					);
+					yield DataSourceProvider.postgresql(url, username, password);
+				}
+				default -> throw new OpenBBTException("Unsupported repository mode for read-only access: {}", mode);
+			};
+			Connection connection = provider.openConnection();
+			if (type.equals(TestPlanRepository.class)) {
+				return (T) new JooqPlanRepository(connection, provider.dialect());
+			}
+			throw new OpenBBTException("Unsupported repository type: {}", type.getName());
+		} catch (OpenBBTException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new OpenBBTException(e, "Failed to open read-only repository connection");
+		}
 	}
 
 	private Object createRemoteRepository(Class<?> type, String url, String username, String password) {
