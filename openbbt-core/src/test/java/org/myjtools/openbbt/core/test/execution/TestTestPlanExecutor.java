@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
-import org.myjtools.openbbt.core.execution.PlanExecutor;
+import org.myjtools.openbbt.core.execution.BackendExecutor;
 import org.myjtools.openbbt.core.execution.ExecutionResult;
 import org.myjtools.openbbt.core.testplan.NodeType;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
@@ -28,11 +28,11 @@ class TestTestPlanExecutor {
 		@Test
 		void testRunStepWithOneParameter() throws ExecutionException, InterruptedException {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
-			var executor = new PlanExecutor(cm);
+			var executor = new BackendExecutor(cm);
 			TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 					.name("Step with one parameter: 5")
 					.language("en");
-			var future = executor.submitExecution(node);
+			var future = executor.submitStepExecution(node);
 			assertThat(future.get()).isEqualTo(Pair.of(ExecutionResult.PASSED,null));
 		}
 
@@ -40,11 +40,11 @@ class TestTestPlanExecutor {
 	@Test
 	void testRunStepWithInvalidStep() throws ExecutionException, InterruptedException {
 		var cm = new OpenBBTRuntime(TEST_CONFIG);
-		var executor = new PlanExecutor(cm);
+		var executor = new BackendExecutor(cm);
 		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("XX Step with one parameter: 5")
 				.language("en");
-		var future = executor.submitExecution(node);
+		var future = executor.submitStepExecution(node);
 		assertThat(future.get().left()).isEqualTo(ExecutionResult.UNDEFINED);
 	}
 
@@ -52,11 +52,11 @@ class TestTestPlanExecutor {
 	@Test
 	void testStepThatAlwaysFails() throws ExecutionException, InterruptedException {
 		var cm = new OpenBBTRuntime(TEST_CONFIG);
-		var executor = new PlanExecutor(cm);
+		var executor = new BackendExecutor(cm);
 		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("stepThatAlwaysFails")
 				.language("en");
-		var future = executor.submitExecution(node);
+		var future = executor.submitStepExecution(node);
 		assertThat(future.get().left()).isEqualTo(ExecutionResult.FAILED);
 		assertThat(future.get().right()).hasMessage("This step is designed to always fail");
 	}
@@ -65,11 +65,11 @@ class TestTestPlanExecutor {
 	@Test
 	void stepWithUnexpectedError() throws ExecutionException, InterruptedException {
 		var cm = new OpenBBTRuntime(TEST_CONFIG);
-		var executor = new PlanExecutor(cm);
+		var executor = new BackendExecutor(cm);
 		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("stepWithUnexpectedError")
 				.language("en");
-		var future = executor.submitExecution(node);
+		var future = executor.submitStepExecution(node);
 		assertThat(future.get().left()).isEqualTo(ExecutionResult.ERROR);
 		assertThat(future.get().right()).hasMessage("java.lang.IllegalArgumentException: This step is designed to throw an unexpected error");
 	}

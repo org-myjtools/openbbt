@@ -1,5 +1,5 @@
 import org.myjtools.openbbt.core.contributors.RepositoryFactory;
-import org.myjtools.openbbt.persistence.JooqRepositoryFactory;
+import org.myjtools.openbbt.persistence.DefaultRepositoryFactory;
 
 module org.myjtools.openbbt.persistence {
 	requires org.myjtools.openbbt.core;
@@ -19,7 +19,13 @@ module org.myjtools.openbbt.persistence {
 	opens org.myjtools.openbbt.persistence.migration.postgresql;
 	exports org.myjtools.openbbt.persistence.plan;
 	opens org.myjtools.openbbt.persistence.plan;
+	exports org.myjtools.openbbt.persistence.execution;
+	opens org.myjtools.openbbt.persistence.execution;
+	exports org.myjtools.openbbt.persistence.attachment;
+	opens org.myjtools.openbbt.persistence.attachment;
+
+	requires minio;
 
 	provides RepositoryFactory
-			with JooqRepositoryFactory;
+			with DefaultRepositoryFactory;
 }

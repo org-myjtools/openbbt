@@ -8,6 +8,8 @@ import org.myjtools.openbbt.core.contributors.ConfigProvider;
 import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
+import org.myjtools.openbbt.core.persistence.AttachmentRepository;
+import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.persistence.Repository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
@@ -33,6 +35,8 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final RepositoryFactory repositoryFactory;
 	private boolean readOnly;
 	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(this::openRepository);
+	private final Lazy<TestExecutionRepository> executionRepository = Lazy.of(this::openExecutionRepository);
+	private final Lazy<AttachmentRepository> attachmentRepository = Lazy.of(this::openAttachmentRepository);
 
 
 	public OpenBBTRuntime(Config configuration) {
@@ -141,6 +145,10 @@ public class OpenBBTRuntime implements InjectionProvider {
 		}
 		if (type == TestPlanRepository.class) {
 			return (T) planNodeRepository.get();
+		} else if (type == TestExecutionRepository.class) {
+			return (T) executionRepository.get();
+		} else if (type == AttachmentRepository.class) {
+			return (T) attachmentRepository.get();
 		} else {
 			throw new OpenBBTException("Unsupported repository type requested: {}", type.getSimpleName());
 		}
@@ -152,6 +160,17 @@ public class OpenBBTRuntime implements InjectionProvider {
 			return repositoryFactory.createReadOnlyRepository(TestPlanRepository.class);
 		}
 		return createRepository(TestPlanRepository.class);
+	}
+
+	private TestExecutionRepository openExecutionRepository() {
+		if (readOnly) {
+			return repositoryFactory.createReadOnlyRepository(TestExecutionRepository.class);
+		}
+		return createRepository(TestExecutionRepository.class);
+	}
+
+	private AttachmentRepository openAttachmentRepository() {
+		return createRepository(AttachmentRepository.class);
 	}
 
 	private <T extends Repository> T createRepository(Class<T> type) {

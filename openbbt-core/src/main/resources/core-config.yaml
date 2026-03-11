@@ -40,6 +40,15 @@ core.implementationTag:
     pattern: "[\\w\\-\\_]+"
   defaultValue: implementation
 
+core.parallelExecutionTag:
+  description: |
+    Tag used to mark a test case as eligible for parallel execution.
+    Test cases with this tag will run concurrently; others will be serialized.
+  type: text
+  constraints:
+    pattern: "[\\w\\-\\_]+"
+  defaultValue: parallel
+
 core.persistence.mode:
     description: |
         Persistence mode for the application. It can be transient, file-based, or remote (database).
@@ -107,5 +116,25 @@ core.artifacts.repository.proxy.username:
 core.artifacts.repository.proxy.password:
   description: |
     Password for proxy authentication when contacting the artifacts repository.
+  type: text
+
+core.attachments.server.url:
+  description: |
+    URL of the remote attachment server (Minio/S3-compatible).
+    Required when `core.persistence.mode` is set to `remote`.
+    Example: http://minio-host:9000
+  type: text
+
+core.attachments.server.username:
+  description: |
+    Access key (username) for the remote attachment server.
+    Required when `core.persistence.mode` is set to `remote`.
+  type: text
+
+core.attachments.server.password:
+  description: |
+    Secret key (password) for the remote attachment server.
+    Required when `core.persistence.mode` is set to `remote`.
+    Prefer injecting this value via environment variables in production.
   type: text
 

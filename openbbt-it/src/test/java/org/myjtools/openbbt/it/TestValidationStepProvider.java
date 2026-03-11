@@ -15,4 +15,14 @@ public class TestValidationStepProvider implements StepProvider {
 	@StepExpression("a valid step")
 	public void aValidStep() {}
 
+	@StepExpression("a failing step")
+	public void aFailingStep() {
+		throw new AssertionError("step assertion failed");
+	}
+
+	@StepExpression("an error step")
+	public void anErrorStep() {
+		throw new RuntimeException("step unexpected error");
+	}
+
 }

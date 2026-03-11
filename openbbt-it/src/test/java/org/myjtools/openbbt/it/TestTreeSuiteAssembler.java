@@ -25,6 +25,12 @@ public class TestTreeSuiteAssembler implements SuiteAssembler {
 			case "invalidStep"                  -> suiteWithStep("this step does not exist");
 			case "testCaseNoSteps"              -> suiteWithTestCaseNoSteps();
 			case "stepAggregatorNoStepChildren" -> suiteWithEmptyAggregator();
+			case "execPassingStep"              -> suiteWithStep("a valid step");
+			case "execFailingStep"              -> suiteWithStep("a failing step");
+			case "execErrorStep"                -> suiteWithStep("an error step");
+			case "execUndefinedStep"            -> suiteWithStep("this step does not exist");
+			case "execVirtualStep"              -> suiteWithVirtualStep();
+			case "execTwoTestCases"             -> suiteWithTwoTestCases();
 			default                             -> Optional.empty();
 		};
 	}
@@ -65,6 +71,46 @@ public class TestTreeSuiteAssembler implements SuiteAssembler {
 		repository.attachChildNodeLast(suite, feature);
 		repository.attachChildNodeLast(feature, testCase);
 		repository.attachChildNodeLast(testCase, aggregator);
+		return Optional.of(suite);
+	}
+
+	// TEST_SUITE → TEST_FEATURE → TEST_CASE → STEP_AGGREGATOR → STEP("a valid step")
+	//                                                         → VIRTUAL_STEP
+	private Optional<UUID> suiteWithVirtualStep() {
+		UUID suite       = node(NodeType.TEST_SUITE,       "suite");
+		UUID feature     = node(NodeType.TEST_FEATURE,     "feature");
+		UUID testCase    = node(NodeType.TEST_CASE,        "test case");
+		UUID aggregator  = node(NodeType.STEP_AGGREGATOR,  "steps");
+		UUID step        = node(NodeType.STEP,             "a valid step");
+		UUID virtualStep = node(NodeType.VIRTUAL_STEP,     "virtual step");
+
+		repository.attachChildNodeLast(suite, feature);
+		repository.attachChildNodeLast(feature, testCase);
+		repository.attachChildNodeLast(testCase, aggregator);
+		repository.attachChildNodeLast(aggregator, step);
+		repository.attachChildNodeLast(aggregator, virtualStep);
+		return Optional.of(suite);
+	}
+
+	// TEST_SUITE → TEST_FEATURE → TEST_CASE_1 → STEP_AGGREGATOR → STEP
+	//                           → TEST_CASE_2 → STEP_AGGREGATOR → STEP
+	private Optional<UUID> suiteWithTwoTestCases() {
+		UUID suite    = node(NodeType.TEST_SUITE,   "suite");
+		UUID feature  = node(NodeType.TEST_FEATURE, "feature");
+		UUID testCase1 = node(NodeType.TEST_CASE,   "test case 1");
+		UUID aggregator1 = node(NodeType.STEP_AGGREGATOR, "steps");
+		UUID step1    = node(NodeType.STEP,         "a valid step");
+		UUID testCase2 = node(NodeType.TEST_CASE,   "test case 2");
+		UUID aggregator2 = node(NodeType.STEP_AGGREGATOR, "steps");
+		UUID step2    = node(NodeType.STEP,         "a valid step");
+
+		repository.attachChildNodeLast(suite, feature);
+		repository.attachChildNodeLast(feature, testCase1);
+		repository.attachChildNodeLast(testCase1, aggregator1);
+		repository.attachChildNodeLast(aggregator1, step1);
+		repository.attachChildNodeLast(feature, testCase2);
+		repository.attachChildNodeLast(testCase2, aggregator2);
+		repository.attachChildNodeLast(aggregator2, step2);
 		return Optional.of(suite);
 	}
 
