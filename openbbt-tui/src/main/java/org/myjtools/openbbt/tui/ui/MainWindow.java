@@ -9,7 +9,7 @@ import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
-import org.myjtools.openbbt.core.execution.PlanExecutor;
+import org.myjtools.openbbt.core.execution.BackendExecutor;
 import org.myjtools.openbbt.core.execution.ExecutionResult;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
@@ -327,7 +327,7 @@ public class MainWindow extends BasicWindow {
 
         if (runtime != null) {
             var repo     = (TestPlanRepository) runtime.getRepository(TestPlanRepository.class);
-            var executor = new PlanExecutor(runtime);
+            var executor = new BackendExecutor(runtime);
             Thread.ofVirtual().name("run-executor").start(() -> {
                 executor.setUp();
                 try {
@@ -352,7 +352,7 @@ public class MainWindow extends BasicWindow {
         }
     }
 
-    private boolean runNode(PlanNode node, PlanExecutor executor, TestPlanRepository repo) {
+    private boolean runNode(PlanNode node, BackendExecutor executor, TestPlanRepository repo) {
         return switch (node.getType()) {
             case STEP -> {
                 executeStep(node, executor, repo);
@@ -389,7 +389,7 @@ public class MainWindow extends BasicWindow {
         };
     }
 
-    private void executeStep(PlanNode step, PlanExecutor executor, TestPlanRepository repo) {
+    private void executeStep(PlanNode step, BackendExecutor executor, TestPlanRepository repo) {
         step.setStatus(PlanNode.Status.RUNNING);
         refreshExecUi(null);
 
@@ -428,7 +428,7 @@ public class MainWindow extends BasicWindow {
         }
 
         try {
-            var pair = executor.submitExecution(coreNode).get();
+            var pair = executor.submitStepExecution(coreNode).get();
             step.setStatus(mapResult(pair.left()));
             if (pair.right() != null) {
                 step.setValidationMessage(pair.right().getMessage());

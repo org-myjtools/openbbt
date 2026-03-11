@@ -10,7 +10,7 @@ module org.myjtools.openbbt.it {
 	requires org.junit.jupiter.api;
 	requires org.assertj.core;
 
-	opens org.myjtools.openbbt.it to org.junit.platform.commons, org.myjtools.jexten;
+	opens org.myjtools.openbbt.it to org.junit.platform.commons, org.myjtools.jexten, org.myjtools.openbbt.core;
 
 	provides StepProvider    with org.myjtools.openbbt.it.TestValidationStepProvider;
 	provides SuiteAssembler  with org.myjtools.openbbt.it.TestTreeSuiteAssembler;

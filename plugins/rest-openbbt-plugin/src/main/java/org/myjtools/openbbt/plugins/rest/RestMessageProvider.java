@@ -9,7 +9,7 @@ public class RestMessageProvider extends StepDocMessageAdapter implements Messag
 
 
 	public RestMessageProvider() {
-		super("rest-steps.yaml");
+		super("steps.yaml");
 	}
 
 	@Override

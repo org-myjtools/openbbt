@@ -11,14 +11,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class PlanExecutor {
+public class BackendExecutor {
 
-	private final static Log log  = Log.of();
+	private static final Log log  = Log.of();
 
 	private final StepProviderBackend backend;
 	private final ExecutorService executor;
 
-	public PlanExecutor(OpenBBTRuntime runtime) {
+	private boolean testCaseFailed = false;
+
+
+	public BackendExecutor(OpenBBTRuntime runtime) {
 		this.backend = new StepProviderBackend(runtime);
 		this.executor = Executors.newSingleThreadExecutor(); // TODO: make this configurable for parallel execution in the future
 	}
@@ -32,18 +35,20 @@ public class PlanExecutor {
 	}
 
 
-	public Future<Pair<ExecutionResult,Throwable>> submitExecution(TestPlanNode node) {
+	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node) {
 		return this.executor.submit(() -> {
 			try {
 				backend.run(node.name(), locale(node.language()), nodeArgument(node));
 				return Pair.of(ExecutionResult.PASSED, null);
 			} catch (AssertionError e) {
+				testCaseFailed = true;
 				return Pair.of(ExecutionResult.FAILED, e);
 			} catch (NoMatchingStepException e) {
+				testCaseFailed = true;
 				return Pair.of(ExecutionResult.UNDEFINED, e);
 			} catch (Exception e) {
+				testCaseFailed = true;
 				log.error(e);
-				// TODO save the stack trace in the execution repository for reporting
 				return Pair.of(ExecutionResult.ERROR, e);
 			}
 		});

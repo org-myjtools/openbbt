@@ -23,6 +23,9 @@ public class OpenBBTConfig extends ConfigAdapter implements ConfigProvider {
 	/** Configuration key for the tag that marks a feature as an implementation. */
 	public static final String IMPLEMENTATION_TAG = "core.implementationTag";
 
+	/** Configuration key for the tag that marks a test case as eligible for parallel execution. */
+	public static final String PARALLEL_EXECUTION_TAG = "core.parallelExecutionTag";
+
 	public static final String PERSISTENCE_MODE = "core.persistence.mode";
 	public static final String PERSISTENCE_MODE_TRANSIENT = "transient";
 	public static final String PERSISTENCE_MODE_FILE = "file";
@@ -39,6 +42,15 @@ public class OpenBBTConfig extends ConfigAdapter implements ConfigProvider {
 	public static final String ARTIFACTS_REPOSITORY_PROXY_URL = "core.artifacts.repository.proxy.url";
 	public static final String ARTIFACTS_REPOSITORY_PROXY_USERNAME= "core.artifacts.repository.proxy.username";
 	public static final String ARTIFACTS_REPOSITORY_PROXY_PASSWORD= "core.artifacts.repository.proxy.password";
+
+	/** Configuration key for the URL of the remote attachment server (Minio/S3). Used when persistence mode is {@code remote}. */
+	public static final String ATTACHMENT_SERVER_URL = "core.attachments.server.url";
+
+	/** Configuration key for the username (access key) of the remote attachment server. */
+	public static final String ATTACHMENT_SERVER_USERNAME = "core.attachments.server.username";
+
+	/** Configuration key for the password (secret key) of the remote attachment server. */
+	public static final String ATTACHMENT_SERVER_PASSWORD = "core.attachments.server.password";
 
 	public static final Path ENV_DEFAULT_PATH = Path.of(".openbbt");
 	public static final Path PLUGINS_PATH = Path.of("plugins");
