@@ -9,7 +9,7 @@ public class RestConfigProvider extends ConfigAdapter implements ConfigProvider 
 	
 	@Override
 	protected String resource() {
-		return "rest-config.yaml";
+		return "config.yaml";
 	}
 
 }

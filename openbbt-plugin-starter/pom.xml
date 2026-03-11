@@ -20,7 +20,7 @@
         <openbbt-core.version>1.0.0-alpha1</openbbt-core.version>
         <jexten.version>1.0.0-alpha2</jexten.version>
         <!-- Doc generation: override in child pom to customise paths and titles -->
-        <openbbt.docgen.stepDocFile>${project.basedir}/src/main/resources/step-doc.yaml</openbbt.docgen.stepDocFile>
+        <openbbt.docgen.stepDocFile>${project.basedir}/src/main/resources/steps.yaml</openbbt.docgen.stepDocFile>
         <openbbt.docgen.configFile>${project.basedir}/src/main/resources/config.yaml</openbbt.docgen.configFile>
         <openbbt.docgen.outputDirectory>${project.basedir}/docs</openbbt.docgen.outputDirectory>
         <openbbt.docgen.stepTitle>Step Reference</openbbt.docgen.stepTitle>
