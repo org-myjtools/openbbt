@@ -9,11 +9,11 @@ import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.persistence.AttachmentRepository;
+import org.myjtools.openbbt.core.persistence.Repository;
 import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
-import org.myjtools.openbbt.core.persistence.Repository;
-import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.testplan.PlanBuilder;
+import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
@@ -114,23 +114,44 @@ public class OpenBBTRuntime implements InjectionProvider {
 			} else {
 				return Stream.of(config.inner(name));
 			}
-		} else if (type == TestPlanRepository.class) {
-			if (repositoryFactory == null) {
-				return Stream.empty();
-			}
+		}
+
+		if (repositoryFactory == null &&
+				(type == TestPlanRepository.class ||
+				type == TestExecutionRepository.class ||
+				type == AttachmentRepository.class)) {
+			return Stream.empty();
+		}
+
+		if (type == TestPlanRepository.class) {
 			return Stream.of(planNodeRepository.get());
-		} else if (type == Messages.class) {
+		}
+
+		if (type == TestExecutionRepository.class) {
+			return Stream.of(executionRepository.get());
+		}
+		if (type == AttachmentRepository.class) {
+			return Stream.of(attachmentRepository.get());
+		}
+		if (type == Messages.class) {
 			return Stream.of(Messages.of(
 					getExtensions(MessageProvider.class).filter(it -> it.providerFor(name)).toList()
 			));
-		} else if (type == ResourceFinder.class) {
-			return resourceFinder != null ? Stream.of(resourceFinder) : Stream.empty();
-		} else if (type == ResourceSet.class) {
-			return resourceSet != null ? Stream.of(resourceSet) : Stream.empty();
-		} else if (type == Clock.class) {
+		}
+		if (type == ResourceFinder.class) {
+			return streamOf(resourceFinder);
+		}
+		if (type == ResourceSet.class) {
+			return streamOf(resourceSet);
+		}
+		if (type == Clock.class) {
 			return Stream.of(clock);
 		}
 		return Stream.empty();
+	}
+
+	private <T> Stream<T> streamOf(T instance) {
+		return instance != null ? Stream.of(instance) : Stream.empty();
 	}
 
 

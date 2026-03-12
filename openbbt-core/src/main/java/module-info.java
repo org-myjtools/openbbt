@@ -53,6 +53,7 @@ module org.myjtools.openbbt.core {
 	uses org.myjtools.openbbt.core.contributors.StepProvider;
 	uses RepositoryFactory;
 	uses TestPlanValidator;
+	uses ReportBuilder;
 
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 	provides DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;

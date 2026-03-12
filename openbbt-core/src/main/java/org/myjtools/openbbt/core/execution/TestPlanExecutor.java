@@ -208,6 +208,7 @@ public class TestPlanExecutor {
 		String stackTrace = getStackTraceAsString(error);
 		attachmentRepository.storeAttachment(
 			executionID,
+			executionNodeID,
 			attachmentID,
 			stackTrace.getBytes(StandardCharsets.UTF_8),
 			"text/plain"

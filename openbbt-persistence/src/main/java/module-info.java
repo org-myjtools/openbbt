@@ -25,6 +25,7 @@ module org.myjtools.openbbt.persistence {
 	opens org.myjtools.openbbt.persistence.attachment;
 
 	requires minio;
+	requires okhttp3;
 
 	provides RepositoryFactory
 			with DefaultRepositoryFactory;
