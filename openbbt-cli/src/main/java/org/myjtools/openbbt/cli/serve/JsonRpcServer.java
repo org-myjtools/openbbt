@@ -1,6 +1,10 @@
 package org.myjtools.openbbt.cli.serve;
 
 import com.google.gson.*;
+import org.myjtools.openbbt.core.execution.TestExecution;
+import org.myjtools.openbbt.core.execution.TestExecutionNode;
+import org.myjtools.openbbt.core.persistence.AttachmentRepository;
+import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
@@ -8,7 +12,12 @@ import org.myjtools.openbbt.core.util.Log;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * JSON-RPC 2.0 server over stdio using Content-Length framing (same as LSP).
@@ -20,22 +29,44 @@ public class JsonRpcServer {
 
     public interface RepositoryFactory {
         TestPlanRepository open();
+        default TestExecutionRepository openExecution() { return null; }
+        default AttachmentRepository openAttachment() { return null; }
+    }
+
+    @FunctionalInterface
+    public interface ExecHandler {
+        /**
+         * Execute the current plan synchronously.
+         * {@code onExecutionCreated} is called with the executionID as soon as the
+         * execution record exists, before any test steps run.
+         */
+        TestExecution exec(Consumer<UUID> onExecutionCreated);
     }
 
     private final InputStream in;
     private final OutputStream out;
     private final RepositoryFactory factory;
+    private final ExecHandler execHandler;
     private TestPlanRepository repository;
+    private TestExecutionRepository executionRepository;
+    private AttachmentRepository attachmentRepository;
     private volatile boolean running = true;
 
     public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory) {
+        this(in, out, factory, null);
+    }
+
+    public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler) {
         this.in = in;
         this.out = out;
         this.factory = factory;
+        this.execHandler = execHandler;
     }
 
     public void run() {
         repository = factory.open();
+        executionRepository = factory.openExecution();
+        attachmentRepository = factory.openAttachment();
         log.info("OpenBBT serve: ready");
         while (running) {
             try {
@@ -106,6 +137,13 @@ public class JsonRpcServer {
                 case "browse/plans"    -> handlePlans();
                 case "browse/node"     -> handleNode(params);
                 case "browse/children" -> handleChildren(params);
+                case "plans/list"      -> handleListPlans(params);
+                case "plans/get"       -> handleGetPlan(params);
+                case "executions/list" -> handleListExecutions(params);
+                case "executions/node"        -> handleExecutionNode(params);
+                case "executions/attachments" -> handleListAttachments(params);
+                case "executions/attachment"  -> handleGetAttachment(params);
+                case "exec"                   -> handleExec(params);
                 case "refresh"         -> { handleRefresh(); yield JsonNull.INSTANCE; }
                 case "shutdown"        -> { running = false; yield JsonNull.INSTANCE; }
                 default -> throw new IllegalArgumentException("Method not found: " + method);
@@ -151,6 +189,177 @@ public class JsonRpcServer {
         return arr;
     }
 
+    private JsonArray handleListPlans(JsonObject params) {
+        String organization = params.get("organization").getAsString();
+        String project = params.get("project").getAsString();
+        int offset = params.has("offset") ? params.get("offset").getAsInt() : 0;
+        int max = params.has("max") ? params.get("max").getAsInt() : 0;
+        JsonArray arr = new JsonArray();
+        for (TestPlan plan : repository.listPlans(organization, project, offset, max)) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("planId", plan.planID().toString());
+            obj.addProperty("createdAt", plan.createdAt().toString());
+            boolean hasIssues = repository.getNodeData(plan.planNodeRoot())
+                .map(n -> n.hasIssues()).orElse(false);
+            obj.addProperty("hasIssues", hasIssues);
+            arr.add(obj);
+        }
+        return arr;
+    }
+
+    private JsonObject handleGetPlan(JsonObject params) {
+        UUID planId = UUID.fromString(params.get("planId").getAsString());
+        TestPlan plan = repository.getPlan(planId)
+            .orElseThrow(() -> new IllegalArgumentException("Plan not found: " + planId));
+        JsonObject obj = new JsonObject();
+        obj.addProperty("planId",      plan.planID().toString());
+        obj.addProperty("createdAt",   plan.createdAt().toString());
+        obj.addProperty("planNodeRoot", plan.planNodeRoot().toString());
+        repository.getProject(plan.projectID()).ifPresent(p -> {
+            obj.addProperty("organization", p.organization());
+            obj.addProperty("project",      p.name());
+        });
+        return obj;
+    }
+
+    private JsonArray handleListExecutions(JsonObject params) {
+        if (executionRepository == null)
+            throw new IllegalStateException("Execution repository not available");
+        UUID planId = UUID.fromString(params.get("planId").getAsString());
+        int offset = params.has("offset") ? params.get("offset").getAsInt() : 0;
+        int max = params.has("max") ? params.get("max").getAsInt() : 0;
+        UUID planNodeRoot = repository.getPlan(planId)
+            .orElseThrow(() -> new IllegalArgumentException("Plan not found: " + planId))
+            .planNodeRoot();
+        JsonArray arr = new JsonArray();
+        for (TestExecution ex : executionRepository.listExecutions(planId, planNodeRoot, offset, max)) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("executionId", ex.executionID().toString());
+            obj.addProperty("planId", ex.planID().toString());
+            obj.addProperty("planNodeRoot", planNodeRoot.toString());
+            obj.add("executionRootNodeId", ex.executionRootNodeID() != null
+                ? new JsonPrimitive(ex.executionRootNodeID().toString()) : JsonNull.INSTANCE);
+            obj.addProperty("executedAt", ex.executedAt().toString());
+            executionRepository.getExecutionNodeResult(ex.executionRootNodeID() != null
+                    ? ex.executionRootNodeID() : UUID.randomUUID())
+                .ifPresent(r -> obj.addProperty("result", r.name()));
+            arr.add(obj);
+        }
+        return arr;
+    }
+
+    private JsonObject handleExecutionNode(JsonObject params) {
+        if (executionRepository == null)
+            throw new IllegalStateException("Execution repository not available");
+        UUID executionId = UUID.fromString(params.get("executionId").getAsString());
+        UUID planNodeId  = UUID.fromString(params.get("planNodeId").getAsString());
+        TestExecutionNode node = executionRepository.getExecutionNode(executionId, planNodeId)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Execution node not found for executionId=" + executionId + " planNodeId=" + planNodeId));
+        JsonObject obj = new JsonObject();
+        obj.addProperty("executionNodeId", node.executionNodeID().toString());
+        obj.addProperty("executionId",     node.executionID().toString());
+        obj.addProperty("planNodeId",      node.planNodeID().toString());
+        obj.add("result",     node.result()    != null ? new JsonPrimitive(node.result().name())         : JsonNull.INSTANCE);
+        obj.add("startedAt",  node.startTime() != null ? new JsonPrimitive(node.startTime().toString())  : JsonNull.INSTANCE);
+        obj.add("finishedAt", node.endTime()   != null ? new JsonPrimitive(node.endTime().toString())    : JsonNull.INSTANCE);
+        obj.add("durationMs", node.startTime() != null && node.endTime() != null ? new JsonPrimitive(node.duration()) : JsonNull.INSTANCE);
+        obj.add("message",    node.message()   != null ? new JsonPrimitive(node.message())               : JsonNull.INSTANCE);
+        int attachmentCount = executionRepository.listAttachmentIds(node.executionNodeID()).size();
+        obj.addProperty("attachmentCount", attachmentCount);
+        return obj;
+    }
+
+    private JsonArray handleListAttachments(JsonObject params) {
+        if (executionRepository == null || attachmentRepository == null)
+            throw new IllegalStateException("Execution or attachment repository not available");
+        UUID executionId = UUID.fromString(params.get("executionId").getAsString());
+        UUID planNodeId  = UUID.fromString(params.get("planNodeId").getAsString());
+        UUID executionNodeId = executionRepository.getExecutionNodeByPlanNode(executionId, planNodeId)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Execution node not found for executionId=" + executionId + " planNodeId=" + planNodeId));
+        List<UUID> ids = executionRepository.listAttachmentIds(executionNodeId);
+        JsonArray arr = new JsonArray();
+        for (UUID attachmentId : ids) {
+            attachmentRepository.retrieveAttachment(executionId, executionNodeId, attachmentId).ifPresent(a -> {
+                JsonObject obj = new JsonObject();
+                obj.addProperty("attachmentId",    a.attachmentID().toString());
+                obj.addProperty("executionId",     executionId.toString());
+                obj.addProperty("executionNodeId", executionNodeId.toString());
+                obj.addProperty("contentType",     a.contentType());
+                arr.add(obj);
+            });
+        }
+        return arr;
+    }
+
+    private JsonObject handleGetAttachment(JsonObject params) {
+        if (executionRepository == null || attachmentRepository == null)
+            throw new IllegalStateException("Execution or attachment repository not available");
+        UUID executionId     = UUID.fromString(params.get("executionId").getAsString());
+        UUID executionNodeId = UUID.fromString(params.get("executionNodeId").getAsString());
+        UUID attachmentId    = UUID.fromString(params.get("attachmentId").getAsString());
+        AttachmentRepository.Attachment a = attachmentRepository
+            .retrieveAttachment(executionId, executionNodeId, attachmentId)
+            .orElseThrow(() -> new IllegalArgumentException("Attachment not found: " + attachmentId));
+        JsonObject obj = new JsonObject();
+        obj.addProperty("attachmentId",    a.attachmentID().toString());
+        obj.addProperty("contentType",     a.contentType());
+        obj.addProperty("data",            Base64.getEncoder().encodeToString(a.bytes()));
+        return obj;
+    }
+
+    private JsonObject handleExec(JsonObject params) {
+        if (execHandler == null) {
+            throw new IllegalStateException("exec handler not configured");
+        }
+        boolean detach = params.has("detach") && params.get("detach").getAsBoolean();
+
+        if (!detach) {
+            TestExecution ex = execHandler.exec(null);
+            JsonObject result = new JsonObject();
+            result.addProperty("executionId", ex.executionID().toString());
+            if (ex.executionRootNodeID() != null && executionRepository != null) {
+                executionRepository.getExecutionNodeResult(ex.executionRootNodeID())
+                    .ifPresent(r -> result.addProperty("result", r.name()));
+            }
+            return result;
+        }
+
+        // Detach mode: return executionId as soon as the record is created
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<UUID> idRef = new AtomicReference<>();
+        AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        Thread thread = new Thread(() -> {
+            try {
+                execHandler.exec(id -> {
+                    idRef.set(id);
+                    latch.countDown();
+                });
+            } catch (Throwable t) {
+                errorRef.set(t);
+                latch.countDown();
+            }
+        }, "openbbt-exec");
+        thread.setDaemon(false);
+        thread.start();
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted waiting for execution to start");
+        }
+        if (errorRef.get() != null) {
+            throw new RuntimeException("Execution failed to start", errorRef.get());
+        }
+
+        JsonObject result = new JsonObject();
+        result.addProperty("executionId", idRef.get().toString());
+        return result;
+    }
+
     private void handleRefresh() {
         closeRepository();
         repository = factory.open();
@@ -163,6 +372,7 @@ public class JsonRpcServer {
         JsonObject obj = new JsonObject();
         obj.addProperty("nodeId", node.nodeID().toString());
         obj.add("nodeType", node.nodeType() != null ? new JsonPrimitive(node.nodeType().name()) : JsonNull.INSTANCE);
+        obj.addProperty("display", node.toString());
         obj.add("name", str(node.name()));
         obj.add("identifier", str(node.identifier()));
         obj.add("source", str(node.source()));
@@ -181,6 +391,28 @@ public class JsonRpcServer {
         obj.add("properties", props);
 
         obj.addProperty("childCount", repository.countNodeChildren(node.nodeID()));
+
+        if (node.document() != null) {
+            JsonObject doc = new JsonObject();
+            doc.addProperty("mimeType", node.document().mimeType());
+            doc.addProperty("content",  node.document().content());
+            obj.add("document", doc);
+        } else {
+            obj.add("document", JsonNull.INSTANCE);
+        }
+
+        if (node.dataTable() != null) {
+            JsonArray rows = new JsonArray();
+            for (var row : node.dataTable().values()) {
+                JsonArray rowArr = new JsonArray();
+                row.forEach(rowArr::add);
+                rows.add(rowArr);
+            }
+            obj.add("dataTable", rows);
+        } else {
+            obj.add("dataTable", JsonNull.INSTANCE);
+        }
+
         return obj;
     }
 

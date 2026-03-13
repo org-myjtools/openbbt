@@ -59,6 +59,32 @@ class OpenBBTClient {
     async getChildren(nodeId) {
         return this.call('browse/children', { nodeId });
     }
+    async getPlan(planId) {
+        return this.call('plans/get', { planId });
+    }
+    async listPlansByProject(organization, project, offset = 0, max = 0) {
+        return this.call('plans/list', { organization, project, offset, max });
+    }
+    async listExecutionsByPlan(planId, offset = 0, max = 0) {
+        return this.call('executions/list', { planId, offset, max });
+    }
+    async exec(detach = false) {
+        return this.call('exec', { detach });
+    }
+    async getExecutionNode(executionId, planNodeId) {
+        try {
+            return await this.call('executions/node', { executionId, planNodeId });
+        }
+        catch {
+            return null;
+        }
+    }
+    async listAttachments(executionId, planNodeId) {
+        return this.call('executions/attachments', { executionId, planNodeId });
+    }
+    async getAttachment(executionId, executionNodeId, attachmentId) {
+        return this.call('executions/attachment', { executionId, executionNodeId, attachmentId });
+    }
     async shutdown() {
         if (!this.connected) {
             return;

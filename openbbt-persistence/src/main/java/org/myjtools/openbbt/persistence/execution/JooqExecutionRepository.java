@@ -6,6 +6,7 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.myjtools.openbbt.core.execution.ExecutionResult;
 import org.myjtools.openbbt.core.execution.TestExecution;
+import org.myjtools.openbbt.core.execution.TestExecutionNode;
 import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.util.UUIDGenerator;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
@@ -15,6 +16,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -129,6 +131,65 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 	}
 
 
+	@Override
+	public List<TestExecution> listExecutions(UUID planID, UUID planNodeRoot, int offset, int max) {
+		// Two-table JOIN: execution LEFT JOIN execution_node.
+		// planNodeRoot is a parameter, so no cross-domain join to the plan table is needed.
+		// Table-qualified column names avoid ambiguity on execution_id without aliases.
+		var fExecId    = DSL.field("execution.execution_id",            UUID.class);
+		var fEnExecId  = DSL.field("execution_node.execution_id",       UUID.class);
+		var fEnNodeId  = DSL.field("execution_node.execution_node_id",  UUID.class);
+
+		var query = dsl
+			.select(fExecId, FIELD_PLAN_ID, FIELD_EXECUTED_AT, fEnNodeId)
+			.from(TABLE_EXECUTION)
+			.leftJoin(TABLE_EXECUTION_NODE)
+				.on(fEnExecId.eq(fExecId)
+					.and(FIELD_PLAN_NODE_ID.eq(planNodeRoot)))
+			.where(FIELD_PLAN_ID.eq(planID))
+			.orderBy(FIELD_EXECUTED_AT.desc())
+			.offset(offset);
+
+		return (max > 0 ? query.limit(max) : query).fetch().map(rec -> {
+			TestExecution ex = new TestExecution();
+			ex.executionID(rec.value1());
+			ex.planID(rec.value2());
+			ex.executedAt(rec.value3().toInstant(ZoneOffset.UTC));
+			ex.executionRootNodeID(rec.value4());
+			return ex;
+		});
+	}
+
+	@Override
+	public Optional<TestExecutionNode> getExecutionNode(UUID executionID, UUID planNodeID) {
+		return dsl.select(
+				FIELD_EXECUTION_NODE_ID, FIELD_PLAN_NODE_ID,
+				FIELD_STARTED_AT, FIELD_FINISHED_AT, FIELD_RESULT, FIELD_MESSAGE)
+			.from(TABLE_EXECUTION_NODE)
+			.where(FIELD_EXECUTION_ID.eq(executionID))
+			.and(FIELD_PLAN_NODE_ID.eq(planNodeID))
+			.fetchOptional(rec -> {
+				TestExecutionNode node = new TestExecutionNode();
+				node.executionID(executionID);
+				node.executionNodeID(rec.value1());
+				node.planNodeID(rec.value2());
+				node.startTime(rec.value3() != null ? rec.value3().toInstant(java.time.ZoneOffset.UTC) : null);
+				node.endTime(rec.value4() != null ? rec.value4().toInstant(java.time.ZoneOffset.UTC) : null);
+				node.result(rec.value5() != null ? ExecutionResult.of(rec.value5()) : null);
+				node.message(rec.value6());
+				return node;
+			});
+	}
+
+	@Override
+	public Optional<ExecutionResult> getExecutionNodeResult(UUID executionNodeID) {
+		return dsl.select(FIELD_RESULT)
+			.from(TABLE_EXECUTION_NODE)
+			.where(FIELD_EXECUTION_NODE_ID.eq(executionNodeID))
+			.fetchOptional(FIELD_RESULT)
+			.map(ExecutionResult::of);
+	}
+
 	public void clearAllData() {
 		dsl.deleteFrom(TABLE_EXECUTION_ATTACHMENT).execute();
 		dsl.deleteFrom(TABLE_EXECUTION_NODE).execute();
@@ -154,13 +215,6 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 	}
 
 
-	public Optional<ExecutionResult> getExecutionNodeResult(UUID executionNodeID) {
-		return dsl.select(FIELD_RESULT)
-			.from(TABLE_EXECUTION_NODE)
-			.where(FIELD_EXECUTION_NODE_ID.eq(executionNodeID))
-			.fetchOptional(FIELD_RESULT)
-			.map(v -> ExecutionResult.of(v));
-	}
 
 
 	public Optional<String> getExecutionNodeMessage(UUID executionNodeID) {
@@ -170,6 +224,14 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 			.fetchOptional(FIELD_MESSAGE);
 	}
 
+
+	@Override
+	public List<UUID> listAttachmentIds(UUID executionNodeID) {
+		return dsl.select(FIELD_ATTACHMENT_ID)
+			.from(TABLE_EXECUTION_ATTACHMENT)
+			.where(FIELD_EXECUTION_NODE_ID.eq(executionNodeID))
+			.fetch(FIELD_ATTACHMENT_ID);
+	}
 
 	public boolean existsAttachment(UUID attachmentID) {
 		return dsl.fetchExists(

@@ -7,9 +7,58 @@ export interface PlanInfo {
     planNodeRoot: string;
 }
 
+export interface PlanListItem {
+    planId: string;
+    createdAt: string;
+    hasIssues: boolean;
+}
+
+export interface ExecutionListItem {
+    executionId: string;
+    planId: string;
+    planNodeRoot: string;
+    executionRootNodeId: string | null;
+    executedAt: string;
+    result?: string;
+}
+
+export interface ExecNodeInfo {
+    executionNodeId: string;
+    executionId: string;
+    planNodeId: string;
+    result: string | null;
+    startedAt: string | null;
+    finishedAt: string | null;
+    durationMs: number | null;
+    message: string | null;
+    attachmentCount: number;
+}
+
+export interface AttachmentMeta {
+    attachmentId: string;
+    executionId: string;
+    executionNodeId: string;
+    contentType: string;
+}
+
+export interface AttachmentData extends AttachmentMeta {
+    data: string; // base64
+}
+
+export interface ExecResult {
+    executionId: string;
+    result?: string;
+}
+
+export interface NodeDocument {
+    mimeType: string;
+    content: string;
+}
+
 export interface NodeInfo {
     nodeId: string;
     nodeType: string | null;
+    display: string;
     name: string | null;
     identifier: string | null;
     source: string | null;
@@ -21,6 +70,8 @@ export interface NodeInfo {
     tags: string[];
     properties: Record<string, string>;
     childCount: number;
+    document: NodeDocument | null;
+    dataTable: string[][] | null;
 }
 
 type PendingRequest = {
@@ -92,6 +143,38 @@ export class OpenBBTClient {
 
     async getChildren(nodeId: string): Promise<NodeInfo[]> {
         return this.call('browse/children', { nodeId }) as Promise<NodeInfo[]>;
+    }
+
+    async getPlan(planId: string): Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string }> {
+        return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string }>;
+    }
+
+    async listPlansByProject(organization: string, project: string, offset = 0, max = 0): Promise<PlanListItem[]> {
+        return this.call('plans/list', { organization, project, offset, max }) as Promise<PlanListItem[]>;
+    }
+
+    async listExecutionsByPlan(planId: string, offset = 0, max = 0): Promise<ExecutionListItem[]> {
+        return this.call('executions/list', { planId, offset, max }) as Promise<ExecutionListItem[]>;
+    }
+
+    async exec(detach = false): Promise<ExecResult> {
+        return this.call('exec', { detach }) as Promise<ExecResult>;
+    }
+
+    async getExecutionNode(executionId: string, planNodeId: string): Promise<ExecNodeInfo | null> {
+        try {
+            return await this.call('executions/node', { executionId, planNodeId }) as ExecNodeInfo;
+        } catch {
+            return null;
+        }
+    }
+
+    async listAttachments(executionId: string, planNodeId: string): Promise<AttachmentMeta[]> {
+        return this.call('executions/attachments', { executionId, planNodeId }) as Promise<AttachmentMeta[]>;
+    }
+
+    async getAttachment(executionId: string, executionNodeId: string, attachmentId: string): Promise<AttachmentData> {
+        return this.call('executions/attachment', { executionId, executionNodeId, attachmentId }) as Promise<AttachmentData>;
     }
 
     async shutdown(): Promise<void> {

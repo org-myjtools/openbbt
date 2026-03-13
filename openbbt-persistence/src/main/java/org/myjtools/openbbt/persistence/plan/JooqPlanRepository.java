@@ -891,6 +891,21 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	}
 
 	@Override
+	public List<TestPlan> listPlans(String organization, String project, int offset, int max) {
+		var query = dsl.select(
+				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+			)
+			.from(TABLE_PLAN)
+			.join(TABLE_PROJECT).using(FIELD_PROJECT_ID)
+			.where(FIELD_ORGANIZATION_NAME.eq(organization))
+			.and(FIELD_PROJECT_NAME.eq(project))
+			.orderBy(FIELD_CREATED_AT.desc())
+			.offset(offset);
+		return (max > 0 ? query.limit(max) : query).fetch().map(this::mapPlan);
+	}
+
+	@Override
 	public Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash) {
 		return dsl.select(FIELD_PROJECT_ID)
 			.from(TABLE_PROJECT)
@@ -914,6 +929,19 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 
 
 	@Override
+	public Optional<org.myjtools.openbbt.core.testplan.TestProject> getProject(UUID projectID) {
+		return dsl.select(FIELD_ORGANIZATION_NAME, FIELD_PROJECT_NAME)
+			.from(TABLE_PROJECT)
+			.where(FIELD_PROJECT_ID.eq(projectID))
+			.fetchOptional()
+			.map(rec -> new org.myjtools.openbbt.core.testplan.TestProject(
+				rec.get(FIELD_PROJECT_NAME),
+				null,
+				rec.get(FIELD_ORGANIZATION_NAME),
+				java.util.List.of()
+			));
+	}
+
 	public Optional<TestPlan> getPlan(UUID planID) {
 		return dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,

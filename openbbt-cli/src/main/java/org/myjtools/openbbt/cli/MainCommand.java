@@ -9,8 +9,12 @@ import java.util.Map;
 	description = "OpenBBT CLI utility",
 	subcommands = {
 		BrowseCommand.class,
+		ExecCommand.class,
+		GetExecutionNodeCommand.class,
 		InitCommand.class,
 		InstallCommand.class,
+		ListExecutionsCommand.class,
+		ListPlansCommand.class,
 		VersionCommand.class,
 		PurgeCommand.class,
 		PlanCommand.class,
@@ -21,6 +25,9 @@ import java.util.Map;
 	}
 )
 public class MainCommand implements Runnable {
+
+	/** Set to true by ExecCommand in --detach mode to prevent System.exit(). */
+	public static volatile boolean detachModeActive = false;
 
 	@CommandLine.Option(
 		names = {"-f", "--file"},
@@ -71,7 +78,9 @@ public class MainCommand implements Runnable {
 
 	public static void main(String[] args) {
 		int exitCode = new CommandLine(new MainCommand()).execute(args);
-		System.exit(exitCode);
+		if (!detachModeActive) {
+			System.exit(exitCode);
+		}
 	}
 
 	@Override

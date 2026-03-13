@@ -38,6 +38,9 @@ public class BackendExecutor {
 	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node) {
 		return this.executor.submit(() -> {
 			try {
+				if (testCaseFailed) {
+					return Pair.of(ExecutionResult.SKIPPED, null);
+				}
 				backend.run(node.name(), locale(node.language()), nodeArgument(node));
 				return Pair.of(ExecutionResult.PASSED, null);
 			} catch (AssertionError e) {

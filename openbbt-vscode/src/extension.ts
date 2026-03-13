@@ -5,6 +5,8 @@ import * as vscode from 'vscode';
 import { formatFeatureText } from './featureFormatter';
 import { GherkinSymbolProvider } from './gherkinSymbolProvider';
 import { OpenBBTClient } from './openbbtClient';
+import { ExecutionProvider } from './executionProvider';
+import { openExecutionDetail } from './executionDetailPanel';
 import { ISSUE_URI_SCHEME, TestPlanProvider } from './testPlanProvider';
 import {
     CloseAction,
@@ -246,6 +248,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Auto-populate the tree on startup using existing plan data (no plan re-run).
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+
+    const executionProvider = new ExecutionProvider(workspaceFolder?.uri.fsPath);
+    vscode.window.registerTreeDataProvider('openbbt.executions', executionProvider);
     if (workspaceFolder) {
         const config = vscode.workspace.getConfiguration('openbbt');
         const executable = config.get<string>('executablePath', 'openbbt');
@@ -255,6 +260,8 @@ export function activate(context: vscode.ExtensionContext): void {
             serveClient.connect();
             testPlanProvider.setClient(serveClient);
             testPlanProvider.invalidate();
+            executionProvider.setClient(serveClient);
+            executionProvider.refresh();
         }
     }
 
@@ -315,8 +322,10 @@ export function activate(context: vscode.ExtensionContext): void {
             serveClient = new OpenBBTClient(executable, cwd, logOutput);
             serveClient.connect();
             testPlanProvider.setClient(serveClient);
+            executionProvider.setClient(serveClient);
             logOutput(`[refresh] invalidating tree`);
             testPlanProvider.invalidate();
+            executionProvider.refresh();
         })
     );
 
@@ -344,16 +353,78 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('openbbt.installPlugins', () => {
+        vscode.commands.registerCommand('openbbt.executions.run', async () => {
+            if (!serveClient) {
+                vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+                return;
+            }
+            try {
+                const result = await vscode.window.withProgress(
+                    { location: vscode.ProgressLocation.Notification, title: 'OpenBBT: running tests…', cancellable: false },
+                    () => serveClient!.exec(false)
+                );
+                const resultLabel = result.result ?? 'unknown';
+                vscode.window.showInformationMessage(`OpenBBT: execution ${result.executionId.substring(0, 8)} — ${resultLabel}`);
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                vscode.window.showErrorMessage(`OpenBBT: execution failed — ${msg}`);
+            } finally {
+                executionProvider.refresh();
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.executions.openDetail', async (execution) => {
+            if (!serveClient) {
+                vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+                return;
+            }
+            const label = execution.executedAt ? execution.executedAt.substring(0, 19) : execution.executionId.substring(0, 8);
+            await openExecutionDetail(context, serveClient, execution, label);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.restartLsp', async () => {
+            await startClient();
+            vscode.window.showInformationMessage('OpenBBT: LSP connection restarted.');
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.installPlugins', async () => {
             const config = vscode.workspace.getConfiguration('openbbt');
             const executable = config.get<string>('executablePath', 'openbbt');
             const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            const terminal = vscode.window.createTerminal({
-                name: 'OpenBBT Install',
-                cwd: workspaceFolder?.uri.fsPath,
-            });
-            terminal.show();
-            terminal.sendText(`${executable} install`);
+            const cwd = workspaceFolder?.uri.fsPath;
+
+            const success = await vscode.window.withProgress(
+                { location: vscode.ProgressLocation.Window, title: 'OpenBBT: installing plugins…' },
+                () => new Promise<boolean>((resolve) => {
+                    logOutput(`[install] running: ${executable} install (cwd=${cwd})`);
+                    execFile(executable, ['install'], { cwd }, (err, stdout, stderr) => {
+                        logOutput(`[install] stdout: ${stdout.trim() || '(empty)'}`);
+                        logOutput(`[install] stderr: ${stderr.trim() || '(empty)'}`);
+                        if (err) {
+                            logOutput(`[install] exit error: ${err.message}`);
+                        }
+                        resolve(!err);
+                    });
+                })
+            );
+
+            if (!success) {
+                vscode.window.showErrorMessage(
+                    'OpenBBT: plugin installation failed. See the OpenBBT output channel for details.'
+                );
+                outputChannel.show(true);
+                return;
+            }
+
+            logOutput('[install] restarting LSP after plugin installation');
+            await startClient();
+            vscode.window.showInformationMessage('OpenBBT: plugins installed and LSP connection restarted.');
         })
     );
 
@@ -378,6 +449,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.workspace.onDidSaveTextDocument(doc => {
             if (doc.fileName.endsWith('openbbt.yaml')) {
                 startClient();
+                executionProvider.refresh();
             }
         }),
         diagnosticCollection,

@@ -309,6 +309,178 @@ abstract class AbstractExecutionRepositoryTest {
 		assertThat(repo.existsAttachment(att2)).isTrue();
 	}
 
+	// --- listExecutions ---
+
+	private UUID rootPlanNodeOf(UUID planID) {
+		return planRepo.getPlan(planID).orElseThrow().planNodeRoot();
+	}
+
+	private TestExecution executionWithRootNode(UUID planID, UUID planNodeRoot, Instant executedAt, ExecutionResult result) {
+		TestExecution ex = repo.newExecution(planID, executedAt);
+		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), planNodeRoot);
+		repo.updateExecutionNodeFinish(rootExecNodeID, result, executedAt.plusSeconds(1));
+		return ex;
+	}
+
+	@Test
+	void listExecutions_returnsExecutionsForPlan() {
+		UUID planID = persistPlanWithRoot();
+		UUID root = rootPlanNodeOf(planID);
+		executionWithRootNode(planID, root, Instant.now().minusSeconds(10), ExecutionResult.PASSED);
+		executionWithRootNode(planID, root, Instant.now(), ExecutionResult.FAILED);
+
+		assertThat(repo.listExecutions(planID, root, 0, 0)).hasSize(2);
+	}
+
+	@Test
+	void listExecutions_returnsEmptyForUnknownPlan() {
+		UUID root = UUID.randomUUID();
+		assertThat(repo.listExecutions(UUID.randomUUID(), root, 0, 0)).isEmpty();
+	}
+
+	@Test
+	void listExecutions_excludesExecutionsFromOtherPlans() {
+		UUID planA = persistPlanWithRoot();
+		UUID planB = persistPlanWithRoot();
+		UUID rootA = rootPlanNodeOf(planA);
+		UUID rootB = rootPlanNodeOf(planB);
+		executionWithRootNode(planA, rootA, Instant.now(), ExecutionResult.PASSED);
+		executionWithRootNode(planB, rootB, Instant.now(), ExecutionResult.FAILED);
+
+		List<TestExecution> result = repo.listExecutions(planA, rootA, 0, 0);
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).planID()).isEqualTo(planA);
+	}
+
+	@Test
+	void listExecutions_orderedByExecutedAtDescending() {
+		UUID planID = persistPlanWithRoot();
+		UUID root = rootPlanNodeOf(planID);
+		Instant t1 = Instant.now().minusSeconds(200).truncatedTo(ChronoUnit.MILLIS);
+		Instant t2 = Instant.now().minusSeconds(100).truncatedTo(ChronoUnit.MILLIS);
+		Instant t3 = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+		TestExecution e1 = executionWithRootNode(planID, root, t1, ExecutionResult.PASSED);
+		TestExecution e2 = executionWithRootNode(planID, root, t2, ExecutionResult.FAILED);
+		TestExecution e3 = executionWithRootNode(planID, root, t3, ExecutionResult.ERROR);
+
+		List<TestExecution> result = repo.listExecutions(planID, root, 0, 0);
+		assertThat(result).hasSize(3);
+		assertThat(result.get(0).executionID()).isEqualTo(e3.executionID());
+		assertThat(result.get(1).executionID()).isEqualTo(e2.executionID());
+		assertThat(result.get(2).executionID()).isEqualTo(e1.executionID());
+	}
+
+	@Test
+	void listExecutions_populatesExecutionRootNodeID() {
+		UUID planID = persistPlanWithRoot();
+		UUID rootNodeID = rootPlanNodeOf(planID);
+		TestExecution ex = repo.newExecution(planID, Instant.now());
+		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), rootNodeID);
+
+		List<TestExecution> result = repo.listExecutions(planID, rootNodeID, 0, 0);
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).executionRootNodeID()).isEqualTo(rootExecNodeID);
+	}
+
+	@Test
+	void listExecutions_executionRootNodeIdIsNullWhenNoExecutionNodes() {
+		UUID planID = persistPlanWithRoot();
+		UUID rootNodeID = rootPlanNodeOf(planID);
+		repo.newExecution(planID, Instant.now());
+
+		List<TestExecution> result = repo.listExecutions(planID, rootNodeID, 0, 0);
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).executionRootNodeID()).isNull();
+	}
+
+	@Test
+	void listExecutions_withMax_limitsResults() {
+		UUID planID = persistPlanWithRoot();
+		UUID root = rootPlanNodeOf(planID);
+		executionWithRootNode(planID, root, Instant.now().minusSeconds(200), ExecutionResult.PASSED);
+		executionWithRootNode(planID, root, Instant.now().minusSeconds(100), ExecutionResult.FAILED);
+		executionWithRootNode(planID, root, Instant.now(), ExecutionResult.ERROR);
+
+		assertThat(repo.listExecutions(planID, root, 0, 2)).hasSize(2);
+	}
+
+	@Test
+	void listExecutions_withMaxZero_returnsAll() {
+		UUID planID = persistPlanWithRoot();
+		UUID root = rootPlanNodeOf(planID);
+		executionWithRootNode(planID, root, Instant.now().minusSeconds(200), ExecutionResult.PASSED);
+		executionWithRootNode(planID, root, Instant.now().minusSeconds(100), ExecutionResult.FAILED);
+		executionWithRootNode(planID, root, Instant.now(), ExecutionResult.ERROR);
+
+		assertThat(repo.listExecutions(planID, root, 0, 0)).hasSize(3);
+	}
+
+	@Test
+	void listExecutions_withOffset_skipsRecords() {
+		UUID planID = persistPlanWithRoot();
+		UUID root = rootPlanNodeOf(planID);
+		Instant t1 = Instant.now().minusSeconds(200).truncatedTo(ChronoUnit.MILLIS);
+		Instant t2 = Instant.now().minusSeconds(100).truncatedTo(ChronoUnit.MILLIS);
+		Instant t3 = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+		TestExecution e1 = executionWithRootNode(planID, root, t1, ExecutionResult.PASSED);
+		TestExecution e2 = executionWithRootNode(planID, root, t2, ExecutionResult.FAILED);
+		executionWithRootNode(planID, root, t3, ExecutionResult.ERROR);
+
+		// Desc order: [e3, e2, e1]. Offset=1 skips e3 -> [e2, e1]
+		List<TestExecution> result = repo.listExecutions(planID, root, 1, 0);
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0).executionID()).isEqualTo(e2.executionID());
+		assertThat(result.get(1).executionID()).isEqualTo(e1.executionID());
+	}
+
+	@Test
+	void listExecutions_withOffsetAndMax_paginates() {
+		UUID planID = persistPlanWithRoot();
+		UUID root = rootPlanNodeOf(planID);
+		Instant t1 = Instant.now().minusSeconds(300).truncatedTo(ChronoUnit.MILLIS);
+		Instant t2 = Instant.now().minusSeconds(200).truncatedTo(ChronoUnit.MILLIS);
+		Instant t3 = Instant.now().minusSeconds(100).truncatedTo(ChronoUnit.MILLIS);
+		Instant t4 = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+		TestExecution e1 = executionWithRootNode(planID, root, t1, ExecutionResult.PASSED);
+		TestExecution e2 = executionWithRootNode(planID, root, t2, ExecutionResult.FAILED);
+		TestExecution e3 = executionWithRootNode(planID, root, t3, ExecutionResult.ERROR);
+		TestExecution e4 = executionWithRootNode(planID, root, t4, ExecutionResult.SKIPPED);
+
+		// Desc: [e4, e3, e2, e1]. Page 1: offset=0, max=2 -> [e4, e3]
+		List<TestExecution> page1 = repo.listExecutions(planID, root, 0, 2);
+		assertThat(page1.get(0).executionID()).isEqualTo(e4.executionID());
+		assertThat(page1.get(1).executionID()).isEqualTo(e3.executionID());
+
+		// Page 2: offset=2, max=2 -> [e2, e1]
+		List<TestExecution> page2 = repo.listExecutions(planID, root, 2, 2);
+		assertThat(page2.get(0).executionID()).isEqualTo(e2.executionID());
+		assertThat(page2.get(1).executionID()).isEqualTo(e1.executionID());
+	}
+
+	@Test
+	void getExecutionNodeResult_returnsResultAfterFinish() {
+		UUID planID = persistPlanWithRoot();
+		UUID rootNodeID = rootPlanNodeOf(planID);
+		TestExecution ex = repo.newExecution(planID, Instant.now());
+		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), rootNodeID);
+		repo.updateExecutionNodeFinish(rootExecNodeID, ExecutionResult.PASSED, Instant.now());
+
+		assertThat(repo.getExecutionNodeResult(rootExecNodeID)).contains(ExecutionResult.PASSED);
+	}
+
+	@Test
+	void getExecutionNodeResult_returnsEmptyBeforeFinish() {
+		UUID planID = persistPlanWithRoot();
+		UUID rootNodeID = rootPlanNodeOf(planID);
+		TestExecution ex = repo.newExecution(planID, Instant.now());
+		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), rootNodeID);
+
+		assertThat(repo.getExecutionNodeResult(rootExecNodeID)).isEmpty();
+	}
+
 	// --- full lifecycle ---
 
 	@Test

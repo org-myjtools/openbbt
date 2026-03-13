@@ -88,6 +88,19 @@
 			<groupId>io.minio</groupId>
 			<artifactId>minio</artifactId>
 			<version>8.5.12</version>
+			<exclusions>
+				<!-- okio (metadata-only KMP wrapper) conflicts with okio-jvm in JPMS module path -->
+				<exclusion>
+					<groupId>com.squareup.okio</groupId>
+					<artifactId>okio</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- okio-jvm is the actual JVM implementation; declared explicitly because okio wrapper is excluded above -->
+		<dependency>
+			<groupId>com.squareup.okio</groupId>
+			<artifactId>okio-jvm</artifactId>
+			<version>3.6.0</version>
 		</dependency>
 		<!-- Test dependencies -->
 		<dependency>

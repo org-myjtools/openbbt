@@ -38,6 +38,7 @@ public class StepProviderBackend {
 	}
 
 	public void setUp() {
+		ExecutionContext.setCurrent(new ExecutionContext());
 		for (var service : services) {
 			service.setUp();
 		}
@@ -47,6 +48,7 @@ public class StepProviderBackend {
 		for (var service : services) {
 			service.tearDown();
 		}
+		ExecutionContext.clearCurrent();
 	}
 
 	private Optional<Pair<StepProviderMethod, Match>> matchingStep(String step, Locale locale) {

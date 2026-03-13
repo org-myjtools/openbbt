@@ -1,6 +1,6 @@
 project:
     name: Project name
-    organization: My organization
+    organization: My organization 2
     
 plugins:
     - gherkin

@@ -5,7 +5,7 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.ResourceFinder;
-import org.myjtools.openbbt.core.backend.TestCaseExecution;
+import org.myjtools.openbbt.core.backend.ExecutionContext;
 import org.myjtools.openbbt.core.contributors.StepExpression;
 import org.myjtools.openbbt.core.contributors.StepProvider;
 import org.myjtools.openbbt.core.testplan.Document;
@@ -97,7 +97,7 @@ public class RestStepProvider implements StepProvider  {
 	}
 
 	protected String interpolate(String text) {
-		return TestCaseExecution.current().interpolateString(text);
+		return ExecutionContext.current().interpolateString(text);
 	}
 
 }
