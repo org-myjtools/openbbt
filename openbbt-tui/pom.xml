@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.googlecode.lanterna</groupId>
             <artifactId>lanterna</artifactId>
-            <version>3.1.2</version>
+            <version>3.1.3</version>
         </dependency>
         <dependency>
             <groupId>org.myjtools.openbbt</groupId>
@@ -31,7 +31,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.6.3</version>
                 <configuration>
                     <mainClass>org.myjtools.openbbt.tui.Main</mainClass>
                 </configuration>
