@@ -19,6 +19,11 @@ module org.myjtools.openbbt.core {
 	requires org.yaml.snakeyaml;
 	requires org.hamcrest;
 	requires com.google.guice;
+	requires com.fasterxml.jackson.databind;
+	requires com.fasterxml.jackson.dataformat.yaml;
+	requires json.path;
+	requires com.networknt.schema;
+	requires java.xml;
 
 	exports org.myjtools.openbbt.core;
 	exports org.myjtools.openbbt.core.util;
@@ -37,6 +42,8 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.backend to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.comparators;
+	opens org.myjtools.openbbt.core.comparators to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.persistence;
 	opens org.myjtools.openbbt.core.persistence to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.execution;
@@ -44,6 +51,7 @@ module org.myjtools.openbbt.core {
 	exports org.myjtools.openbbt.core.validator;
 	opens org.myjtools.openbbt.core.validator to org.myjtools.jexten;
 
+	uses ContentComparator;
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;
 	uses TestPlanRepository;
@@ -55,6 +63,11 @@ module org.myjtools.openbbt.core {
 	uses TestPlanValidator;
 	uses ReportBuilder;
 
+	provides ContentComparator with
+		org.myjtools.openbbt.core.comparators.JSONComparator,
+		org.myjtools.openbbt.core.comparators.TextComparator,
+		org.myjtools.openbbt.core.comparators.XMLComparator,
+		org.myjtools.openbbt.core.comparators.YAMLComparator;
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 	provides DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;
 	provides MessageProvider with org.myjtools.openbbt.core.assertions.AssertionMessageProvider;
