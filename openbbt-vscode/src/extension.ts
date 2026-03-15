@@ -353,7 +353,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('openbbt.executions.run', async () => {
+        vscode.commands.registerCommand('openbbt.executions.run', async (_item) => {
             if (!serveClient) {
                 vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
                 return;
@@ -393,6 +393,76 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.executions.deleteExecution', async (item) => {
+            if (!serveClient) {
+                vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+                return;
+            }
+            const executionId: string = item?.execution?.executionId;
+            if (!executionId) { return; }
+            const label = item?.execution?.executedAt
+                ? item.execution.executedAt.substring(0, 19)
+                : executionId.substring(0, 8);
+            const confirm = await vscode.window.showWarningMessage(
+                `Delete execution ${label}? This cannot be undone.`,
+                { modal: true }, 'Delete'
+            );
+            if (confirm !== 'Delete') { return; }
+            try {
+                await serveClient.deleteExecution(executionId);
+                executionProvider.refresh();
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                vscode.window.showErrorMessage(`OpenBBT: failed to delete execution — ${msg}`);
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.executions.pruneEmpty', async () => {
+            if (!serveClient) {
+                vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+                return;
+            }
+            const confirm = await vscode.window.showWarningMessage(
+                'Delete all plans with no executions? This cannot be undone.',
+                { modal: true }, 'Delete'
+            );
+            if (confirm !== 'Delete') { return; }
+            try {
+                await serveClient.deleteUnexecutedPlans();
+                executionProvider.refresh();
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                vscode.window.showErrorMessage(`OpenBBT: failed to delete unexecuted plans — ${msg}`);
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.executions.deletePlan', async (item) => {
+            if (!serveClient) {
+                vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+                return;
+            }
+            const planId: string = item?.planId;
+            if (!planId) { return; }
+            const confirm = await vscode.window.showWarningMessage(
+                `Delete plan ${planId.substring(0, 8)}… and ALL its executions? This cannot be undone.`,
+                { modal: true }, 'Delete'
+            );
+            if (confirm !== 'Delete') { return; }
+            try {
+                await serveClient.deletePlan(planId);
+                executionProvider.refresh();
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                vscode.window.showErrorMessage(`OpenBBT: failed to delete plan — ${msg}`);
+            }
+        })
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('openbbt.installPlugins', async () => {
             const config = vscode.workspace.getConfiguration('openbbt');
             const executable = config.get<string>('executablePath', 'openbbt');
@@ -402,8 +472,8 @@ export function activate(context: vscode.ExtensionContext): void {
             const success = await vscode.window.withProgress(
                 { location: vscode.ProgressLocation.Window, title: 'OpenBBT: installing plugins…' },
                 () => new Promise<boolean>((resolve) => {
-                    logOutput(`[install] running: ${executable} install (cwd=${cwd})`);
-                    execFile(executable, ['install'], { cwd }, (err, stdout, stderr) => {
+                    logOutput(`[install] running: ${executable} install --clean (cwd=${cwd})`);
+                    execFile(executable, ['install', '--clean'], { cwd }, (err, stdout, stderr) => {
                         logOutput(`[install] stdout: ${stdout.trim() || '(empty)'}`);
                         logOutput(`[install] stderr: ${stderr.trim() || '(empty)'}`);
                         if (err) {

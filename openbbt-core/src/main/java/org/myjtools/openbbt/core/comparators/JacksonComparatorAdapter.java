@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.PathNotFoundException;
 import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.contributors.ContentComparator;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -52,11 +52,20 @@ public abstract class JacksonComparatorAdapter implements ContentComparator {
 	public void assertFragmentEquals(String content, String fragmentPath, Assertion assertion) {
 		Object value;
 		try {
-			value = JsonPath.read(content, fragmentPath);
-		} catch (PathNotFoundException e) {
-			throw new AssertionError("Fragment not found at path '" + fragmentPath + "': " + e.getMessage());
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			Class<?> jsonPathClass = cl.loadClass("com.jayway.jsonpath.JsonPath");
+			Method readMethod = findJsonPathReadMethod(jsonPathClass);
+			Object emptyPredicates = java.lang.reflect.Array.newInstance(readMethod.getParameterTypes()[2].getComponentType(), 0);
+			value = readMethod.invoke(null, content, fragmentPath, emptyPredicates);
+		} catch (InvocationTargetException e) {
+			Throwable cause = e.getCause();
+			String causeType = cause.getClass().getSimpleName();
+			if (causeType.contains("PathNotFound")) {
+				throw new AssertionError("Fragment not found at path '" + fragmentPath + "': " + cause.getMessage());
+			}
+			throw new AssertionError("Invalid JSON or path '" + fragmentPath + "': " + cause.getMessage());
 		} catch (Exception e) {
-			throw new AssertionError("Invalid JSON or path '" + fragmentPath + "': " + e.getMessage());
+			throw new AssertionError("JSON path evaluation failed at '" + fragmentPath + "': " + e.getMessage(), e);
 		}
 		if (!assertion.test(value)) {
 			throw new AssertionError(
@@ -154,6 +163,19 @@ public abstract class JacksonComparatorAdapter implements ContentComparator {
 			}
 		}
 		return true;
+	}
+
+
+	private static Method findJsonPathReadMethod(Class<?> jsonPathClass) throws NoSuchMethodException {
+		for (Method m : jsonPathClass.getMethods()) {
+			if (m.getName().equals("read") && m.getParameterCount() == 3
+					&& m.getParameterTypes()[0] == String.class
+					&& m.getParameterTypes()[1] == String.class
+					&& m.getParameterTypes()[2].isArray()) {
+				return m;
+			}
+		}
+		throw new NoSuchMethodException("JsonPath.read(String, String, Predicate[]) not found");
 	}
 
 

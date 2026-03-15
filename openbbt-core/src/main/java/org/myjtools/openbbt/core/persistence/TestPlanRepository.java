@@ -289,6 +289,12 @@ public interface TestPlanRepository extends Repository {
 	 */
 	boolean planHasIssues(UUID planId);
 
-
+	/**
+	 * Delete a plan and all its nodes (including tags and properties).
+	 * Executions must be deleted separately via {@link TestExecutionRepository}.
+	 *
+	 * @param planId the plan to delete
+	 */
+	void deletePlan(UUID planId);
 
 }

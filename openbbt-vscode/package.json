@@ -51,6 +51,21 @@
         "command": "openbbt.executions.run",
         "title": "OpenBBT: Run",
         "icon": "$(run-all)"
+      },
+      {
+        "command": "openbbt.executions.deleteExecution",
+        "title": "OpenBBT: Delete Execution",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "openbbt.executions.deletePlan",
+        "title": "OpenBBT: Delete Plan",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "openbbt.executions.pruneEmpty",
+        "title": "OpenBBT: Delete Plans Without Executions",
+        "icon": "$(clear-all)"
       }
     ],
     "viewsContainers": {
@@ -79,6 +94,16 @@
     "menus": {
       "view/title": [
         {
+          "command": "openbbt.executions.pruneEmpty",
+          "when": "view == openbbt.executions",
+          "group": "navigation"
+        },
+        {
+          "command": "openbbt.executions.run",
+          "when": "view == openbbt.testPlan",
+          "group": "navigation"
+        },
+        {
           "command": "openbbt.testPlan.refresh",
           "when": "view == openbbt.testPlan",
           "group": "navigation"
@@ -87,11 +112,23 @@
           "command": "openbbt.restartLsp",
           "when": "view == openbbt.testPlan",
           "group": "navigation"
-        },
+        }
+      ],
+      "view/item/context": [
         {
           "command": "openbbt.executions.run",
-          "when": "view == openbbt.executions",
-          "group": "navigation"
+          "when": "view == openbbt.executions && viewItem == plan",
+          "group": "inline@1"
+        },
+        {
+          "command": "openbbt.executions.deleteExecution",
+          "when": "view == openbbt.executions && viewItem == execution",
+          "group": "inline"
+        },
+        {
+          "command": "openbbt.executions.deletePlan",
+          "when": "view == openbbt.executions && viewItem == plan",
+          "group": "inline@2"
         }
       ]
     },

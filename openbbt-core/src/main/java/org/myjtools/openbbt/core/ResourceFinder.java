@@ -21,6 +21,9 @@ public class ResourceFinder {
 	}
 
 	public ResourceSet findResources(String globPattern) {
+		if (!globPattern.contains("**")) {
+			globPattern = "**/" + globPattern;
+		}
 		PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:"+globPattern);
 		try (var stream = Files.walk(startingPath)) {
 			var resources = stream.filter(Files::isRegularFile)

@@ -20,6 +20,7 @@ import org.myjtools.openbbt.tui.model.PlanNodeAdapter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class MainWindow extends BasicWindow {
@@ -329,7 +330,7 @@ public class MainWindow extends BasicWindow {
             var repo     = (TestPlanRepository) runtime.getRepository(TestPlanRepository.class);
             var executor = new BackendExecutor(runtime);
             Thread.ofVirtual().name("run-executor").start(() -> {
-                executor.setUp();
+                executor.setUp(Map.of());
                 try {
                     runNode(execRoot, executor, repo);
                     refreshExecUi(" Done");

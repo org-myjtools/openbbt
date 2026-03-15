@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.core.execution;
 
+import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.testplan.NodeArgument;
@@ -7,6 +8,8 @@ import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.util.Log;
 import org.myjtools.openbbt.core.util.Pair;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -26,12 +29,23 @@ public class BackendExecutor {
 		this.executor = Executors.newSingleThreadExecutor(); // TODO: make this configurable for parallel execution in the future
 	}
 
-	public void setUp() {
-		this.backend.setUp();
+	public void setUp(Map<String,String> properties) {
+		runInExecutor(()-> backend.setUp(properties));
 	}
 
 	public void tearDown() {
-		this.backend.tearDown();
+		runInExecutor(backend::tearDown);
+	}
+
+	private void runInExecutor(Runnable task) {
+		try {
+			executor.submit(task).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new OpenBBTException(e, "Interrupted while running task in executor");
+		} catch (ExecutionException e) {
+			throw new OpenBBTException(e.getCause(), "Task failed in executor");
+		}
 	}
 
 

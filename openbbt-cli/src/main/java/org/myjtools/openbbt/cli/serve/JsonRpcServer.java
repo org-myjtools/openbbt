@@ -139,10 +139,13 @@ public class JsonRpcServer {
                 case "browse/children" -> handleChildren(params);
                 case "plans/list"      -> handleListPlans(params);
                 case "plans/get"       -> handleGetPlan(params);
-                case "executions/list" -> handleListExecutions(params);
+                case "plans/delete"              -> { handleDeletePlan(params); yield JsonNull.INSTANCE; }
+                case "plans/deleteUnexecuted"    -> { handleDeleteUnexecutedPlans(); yield JsonNull.INSTANCE; }
+                case "executions/list"   -> handleListExecutions(params);
                 case "executions/node"        -> handleExecutionNode(params);
                 case "executions/attachments" -> handleListAttachments(params);
                 case "executions/attachment"  -> handleGetAttachment(params);
+                case "executions/delete" -> { handleDeleteExecution(params); yield JsonNull.INSTANCE; }
                 case "exec"                   -> handleExec(params);
                 case "refresh"         -> { handleRefresh(); yield JsonNull.INSTANCE; }
                 case "shutdown"        -> { running = false; yield JsonNull.INSTANCE; }
@@ -218,6 +221,7 @@ public class JsonRpcServer {
         repository.getProject(plan.projectID()).ifPresent(p -> {
             obj.addProperty("organization", p.organization());
             obj.addProperty("project",      p.name());
+            if (p.description() != null) obj.addProperty("description", p.description());
         });
         return obj;
     }
@@ -358,6 +362,44 @@ public class JsonRpcServer {
         JsonObject result = new JsonObject();
         result.addProperty("executionId", idRef.get().toString());
         return result;
+    }
+
+    private void handleDeleteExecution(JsonObject params) {
+        if (executionRepository == null)
+            throw new IllegalStateException("Execution repository not available");
+        UUID executionId = UUID.fromString(params.get("executionId").getAsString());
+        if (attachmentRepository != null) {
+            attachmentRepository.deleteAttachments(executionId);
+        }
+        executionRepository.deleteExecution(executionId);
+    }
+
+    private void handleDeletePlan(JsonObject params) {
+        UUID planId = UUID.fromString(params.get("planId").getAsString());
+        // Delete file-system attachments before the DB cascades remove the execution records
+        if (executionRepository != null && attachmentRepository != null) {
+            UUID planNodeRoot = repository.getPlan(planId)
+                .orElseThrow(() -> new IllegalArgumentException("Plan not found: " + planId))
+                .planNodeRoot();
+            executionRepository.listExecutions(planId, planNodeRoot, 0, 0)
+                .forEach(ex -> attachmentRepository.deleteAttachments(ex.executionID()));
+        }
+        // Deleting the plan cascades: executions, execution_nodes, attachment records, plan_nodes
+        repository.deletePlan(planId);
+    }
+
+    private void handleDeleteUnexecutedPlans() {
+        for (TestPlan plan : repository.listPlans()) {
+            boolean hasExecutions = executionRepository != null &&
+                !executionRepository.listExecutions(plan.planID(), plan.planNodeRoot(), 0, 1).isEmpty();
+            if (!hasExecutions) {
+                if (attachmentRepository != null) {
+                    // no executions means no attachments, but call for safety
+                    attachmentRepository.deleteAttachments(plan.planID());
+                }
+                repository.deletePlan(plan.planID());
+            }
+        }
     }
 
     private void handleRefresh() {

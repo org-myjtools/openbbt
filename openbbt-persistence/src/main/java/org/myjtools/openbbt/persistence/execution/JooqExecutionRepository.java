@@ -196,6 +196,23 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 		dsl.deleteFrom(TABLE_EXECUTION).execute();
 	}
 
+	@Override
+	public void deleteExecution(UUID executionId) {
+		// EXECUTION_NODE_EXECUTION_FK and EXECUTION_ATTACHMENT_EXECUTION_FK are
+		// ON DELETE CASCADE, so deleting the execution row is enough for the DB.
+		dsl.deleteFrom(TABLE_EXECUTION)
+		   .where(FIELD_EXECUTION_ID.eq(executionId))
+		   .execute();
+	}
+
+	@Override
+	public void deleteExecutionsByPlan(UUID planId) {
+		// Same as deleteExecution: cascades handle nodes and attachment records.
+		dsl.deleteFrom(TABLE_EXECUTION)
+		   .where(FIELD_PLAN_ID.eq(planId))
+		   .execute();
+	}
+
 
 	public Optional<Instant> getExecutionNodeStartedAt(UUID executionNodeID) {
 		return dsl.select(FIELD_STARTED_AT)

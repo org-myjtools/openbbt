@@ -43,6 +43,9 @@ public class FeatureDiagnosticsProvider {
         String[] lines = content.split("\n", -1);
         var diagnostics = new ArrayList<Diagnostic>();
         boolean inDocString = false;
+        // After a structure keyword (Feature, Scenario, etc.) free-text description
+        // lines are allowed until the first step keyword is encountered.
+        boolean inDescription = true;
 
         for (int i = 0; i < lines.length; i++) {
             String line    = lines[i];
@@ -61,10 +64,11 @@ public class FeatureDiagnosticsProvider {
             if (trimmed.startsWith("#") || trimmed.startsWith("@") || trimmed.startsWith("|")) continue;
 
             // --- Step keyword check ---
-            boolean foundKeyword = false;
+            boolean foundStepKeyword = false;
             for (String kw : stepKeywords) {
                 if (!trimmed.toLowerCase().startsWith((kw + " ").toLowerCase())) continue;
-                foundKeyword = true;
+                foundStepKeyword = true;
+                inDescription = false;
                 String stepText = trimmed.substring(kw.length() + 1).stripTrailing();
                 if (!stepText.isBlank()) {
                     try {
@@ -82,21 +86,26 @@ public class FeatureDiagnosticsProvider {
                 break;
             }
 
-            // --- Unrecognized keyword check ---
-            if (!foundKeyword) {
-                boolean recognized = allKeywords.stream()
-                    .anyMatch(kw -> trimmed.toLowerCase().startsWith(kw.toLowerCase()));
-                if (!recognized) {
-                    int end = trimmed.indexOf(':');
-                    if (end < 0) end = trimmed.indexOf(' ');
-                    if (end < 0) end = trimmed.length();
-                    int startCol = line.length() - trimmed.length();
-                    var range = new Range(new Position(i, startCol), new Position(i, startCol + end));
-                    diagnostics.add(new Diagnostic(range,
-                        "Unrecognized keyword: '" + trimmed.substring(0, end) + "'",
-                        DiagnosticSeverity.Error, SOURCE));
-                }
+            if (foundStepKeyword) continue;
+
+            // --- Structure keyword / description check ---
+            boolean recognized = allKeywords.stream()
+                .anyMatch(kw -> trimmed.toLowerCase().startsWith(kw.toLowerCase()));
+            if (recognized) {
+                // Entering a new section: description lines are allowed until the first step
+                inDescription = true;
+            } else if (!inDescription) {
+                // Not inside a description block → unrecognized keyword
+                int end = trimmed.indexOf(':');
+                if (end < 0) end = trimmed.indexOf(' ');
+                if (end < 0) end = trimmed.length();
+                int startCol = line.length() - trimmed.length();
+                var range = new Range(new Position(i, startCol), new Position(i, startCol + end));
+                diagnostics.add(new Diagnostic(range,
+                    "Unrecognized keyword: '" + trimmed.substring(0, end) + "'",
+                    DiagnosticSeverity.Error, SOURCE));
             }
+            // else: inDescription == true → free-text description line, skip silently
         }
         return diagnostics;
     }

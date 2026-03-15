@@ -145,8 +145,8 @@ export class OpenBBTClient {
         return this.call('browse/children', { nodeId }) as Promise<NodeInfo[]>;
     }
 
-    async getPlan(planId: string): Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string }> {
-        return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string }>;
+    async getPlan(planId: string): Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string }> {
+        return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string }>;
     }
 
     async listPlansByProject(organization: string, project: string, offset = 0, max = 0): Promise<PlanListItem[]> {
@@ -155,6 +155,10 @@ export class OpenBBTClient {
 
     async listExecutionsByPlan(planId: string, offset = 0, max = 0): Promise<ExecutionListItem[]> {
         return this.call('executions/list', { planId, offset, max }) as Promise<ExecutionListItem[]>;
+    }
+
+    async deleteUnexecutedPlans(): Promise<void> {
+        await this.call('plans/deleteUnexecuted', {});
     }
 
     async exec(detach = false): Promise<ExecResult> {
@@ -175,6 +179,14 @@ export class OpenBBTClient {
 
     async getAttachment(executionId: string, executionNodeId: string, attachmentId: string): Promise<AttachmentData> {
         return this.call('executions/attachment', { executionId, executionNodeId, attachmentId }) as Promise<AttachmentData>;
+    }
+
+    async deleteExecution(executionId: string): Promise<void> {
+        await this.call('executions/delete', { executionId });
+    }
+
+    async deletePlan(planId: string): Promise<void> {
+        await this.call('plans/delete', { planId });
     }
 
     async shutdown(): Promise<void> {

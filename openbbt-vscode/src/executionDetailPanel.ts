@@ -19,6 +19,7 @@ interface NodeWithResult extends NodeInfo {
 interface ExecutionHeader {
     organization: string;
     project: string;
+    description: string;
     planId: string;
     planCreatedAt: string;
     executedAt: string;
@@ -81,6 +82,7 @@ export async function openExecutionDetail(
                 const header: ExecutionHeader = {
                     organization:  planInfo?.organization          ?? '',
                     project:       planInfo?.project               ?? '',
+                    description:   planInfo?.description           ?? '',
                     planId:        execution.planId,
                     planCreatedAt: planInfo?.createdAt ? formatDate(planInfo.createdAt) : '',
                     executedAt:    formatDate(execution.executedAt),
@@ -120,6 +122,7 @@ export async function openExecutionDetail(
         }
     });
 }
+
 
 async function resolvePlanNodeRoot(client: OpenBBTClient, execution: ExecutionListItem): Promise<string> {
     if (execution.planNodeRoot) {
@@ -307,17 +310,58 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
     background: var(--vscode-editor-inactiveSelectionBackground);
     font-weight: bold;
   }
+  .tags { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: nowrap; overflow: hidden; }
+  .tag {
+    font-size: 0.75em;
+    padding: 1px 7px;
+    border-radius: 999px;
+    color: #fff;
+    white-space: nowrap;
+    opacity: 0.85;
+  }
   .children { list-style: none; padding: 0 0 0 20px; margin: 0; }
   .loading { opacity: 0.5; font-style: italic; padding-left: 20px; }
+  .project-description {
+    font-size: 0.9em;
+    color: var(--vscode-descriptionForeground);
+    border-left: 3px solid var(--vscode-editorWidget-border, #555);
+    padding: 6px 12px;
+    margin-bottom: 12px;
+    white-space: pre-wrap;
+  }
 </style>
 </head>
 <body>
 <div id="header"></div>
+<div id="description"></div>
 <ul class="tree" id="root"></ul>
 <script>
   const vscode = acquireVsCodeApi();
   let msgId = 0;
   const pendingExpand = new Map(); // msgId -> resolve
+
+  function tagColor(tag) {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) {
+      hash = (hash * 31 + tag.charCodeAt(i)) >>> 0;
+    }
+    const hue = hash % 360;
+    return 'hsl(' + hue + ', 55%, 38%)';
+  }
+
+  function createTagsEl(tags) {
+    if (!tags || tags.length === 0) { return null; }
+    const container = document.createElement('div');
+    container.className = 'tags';
+    for (const tag of tags) {
+      const span = document.createElement('span');
+      span.className = 'tag';
+      span.textContent = tag;
+      span.style.background = tagColor(tag);
+      container.appendChild(span);
+    }
+    return container;
+  }
 
   // Node type icon
   function nodeIcon(nodeType) {
@@ -392,12 +436,11 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
     row.className = 'node-row' + (highlighted ? ' test-case' : '');
     row.style.paddingLeft = (indentLevel * 20) + 'px';
 
-    const hasChildren = node.childCount > 0 || node.attachmentCount > 0 || !!node.document || !!node.dataTable;
+    const hasChildren = node.childCount > 0 || node.attachmentCount > 0 || !!node.document || !!node.dataTable || !!node.message;
     const expander = document.createElement('span');
     expander.className = 'expander' + (hasChildren ? '' : ' leaf');
     expander.textContent = hasChildren ? '▶' : ' ';
 
-    const typeIcon = nodeIcon(node.nodeType);
     const name = document.createElement('span');
     name.className = 'node-name';
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -407,22 +450,11 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
       || node.nodeId;
 
     row.appendChild(expander);
-    if (typeIcon) {
-      const icon = document.createElement('span');
-      icon.className = 'node-icon';
-      icon.textContent = typeIcon;
-      row.appendChild(icon);
-    }
     row.appendChild(statusIconEl(node.status, node.result));
     row.appendChild(name);
+    const tagsEl = createTagsEl(node.tags);
+    if (tagsEl) { row.appendChild(tagsEl); }
 
-    if (node.message) {
-      const msgSpan = document.createElement('span');
-      msgSpan.className = 'result-message';
-      msgSpan.textContent = node.message;
-      msgSpan.title = node.message;
-      row.appendChild(msgSpan);
-    }
 
     li.appendChild(row);
 
@@ -463,6 +495,9 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
           }
           for (const att of attachments) {
             childrenContainer.appendChild(createAttachmentEl(att, node));
+          }
+          if (node.message) {
+            childrenContainer.appendChild(createMessageEl(node.message));
           }
         }
       });
@@ -509,6 +544,17 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
     if (t.startsWith('text/'))       return '📝';
     if (t === 'application/pdf')     return '📋';
     return '📎';
+  }
+
+  function createMessageEl(message) {
+    const li = document.createElement('li');
+    li.className = 'arg-item';
+    const pre = document.createElement('pre');
+    pre.style.color = 'var(--vscode-testing-message-error-decorationForeground, #e51400)';
+    pre.style.borderColor = 'var(--vscode-testing-message-error-decorationForeground, #e51400)';
+    pre.textContent = message;
+    li.appendChild(pre);
+    return li;
   }
 
   function createAttachmentEl(att, parentNode) {
@@ -592,6 +638,15 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
       }
 
       headerEl.appendChild(box);
+
+      const descEl = document.getElementById('description');
+      descEl.innerHTML = '';
+      if (h.description) {
+        const desc = document.createElement('div');
+        desc.className = 'project-description';
+        desc.textContent = h.description;
+        descEl.appendChild(desc);
+      }
 
       const root = document.getElementById('root');
       root.innerHTML = '';

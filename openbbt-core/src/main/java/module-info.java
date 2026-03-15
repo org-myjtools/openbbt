@@ -21,7 +21,6 @@ module org.myjtools.openbbt.core {
 	requires com.google.guice;
 	requires com.fasterxml.jackson.databind;
 	requires com.fasterxml.jackson.dataformat.yaml;
-	requires json.path;
 	requires com.networknt.schema;
 	requires java.xml;
 

@@ -181,8 +181,6 @@ public class MarkdownSuiteAssembler implements SuiteAssembler {
                         .name(step.text)
                         .keyword(group.keyword)
                         .display("{keyword} {name}")
-                        .tags(new HashSet<>(testCaseTags))
-                        .addProperties(testCaseProperties)
                         .source(relativePath);
                     if (step.dataTable != null) stepData.dataTable(step.dataTable);
                     if (step.document != null) stepData.document(step.document);

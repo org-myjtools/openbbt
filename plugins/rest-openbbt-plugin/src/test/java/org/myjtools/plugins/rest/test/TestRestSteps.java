@@ -1,0 +1,81 @@
+package org.myjtools.plugins.rest.test;
+
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.myjtools.openbbt.test.FeatureDir;
+import org.myjtools.openbbt.test.JUnitOpenBBTPlan;
+import org.myjtools.openbbt.test.OpenBBTExtension;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+
+@ExtendWith(OpenBBTExtension.class)
+class TestRestSteps {
+
+	@RegisterExtension
+	static WireMockExtension wireMock = WireMockExtension.newInstance()
+		.options(wireMockConfig().dynamicPort())
+		.build();
+
+	@BeforeEach
+	void stubEndpoints() {
+		wireMock.stubFor(get("/users")
+			.willReturn(ok()
+				.withHeader("Content-Type", "application/json")
+				.withBody("[]")));
+
+		wireMock.stubFor(post("/users")
+			.willReturn(aResponse().withStatus(201)
+				.withHeader("Content-Type", "application/json")
+				.withBody("{\"name\":\"Alice\"}")));
+
+		wireMock.stubFor(delete("/users/1")
+			.willReturn(noContent()));
+
+		wireMock.stubFor(get("/users/1")
+			.willReturn(ok()
+				.withHeader("Content-Type", "application/json")
+				.withBody("{\"name\":\"Alice\"}")));
+
+		wireMock.stubFor(get("/missing")
+			.willReturn(notFound()));
+	}
+
+	private String baseUrl() {
+		return "http://localhost:" + wireMock.getPort();
+	}
+
+
+	@Test
+	@FeatureDir("get-200")
+	void get200_passes(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("post-201")
+	void post201_passes(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("delete-204")
+	void delete204_passes(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("wrong-status")
+	void wrongStatus_fails(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("wrong-body")
+	void wrongBody_fails(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllFailed();
+	}
+}

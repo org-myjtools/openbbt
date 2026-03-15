@@ -102,7 +102,7 @@ public class TestPlanExecutor {
 			ownResult = recordStepExecution(executionID, executionNodeID, backendExecutor, node);
 		} else if (node.nodeType() == NodeType.TEST_CASE) {
 			backendExecutor = new BackendExecutor(runtime);
-			backendExecutor.setUp();
+			backendExecutor.setUp(node.properties());
 		}
 
 		ExecutionResult childrenResult = executeChildren(executionID, testPlanNodeID, backendExecutor);

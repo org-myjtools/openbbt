@@ -9,6 +9,8 @@ import java.util.Map;
 	description = "OpenBBT CLI utility",
 	subcommands = {
 		BrowseCommand.class,
+		DeleteExecutionCommand.class,
+		DeletePlanCommand.class,
 		ExecCommand.class,
 		GetExecutionNodeCommand.class,
 		InitCommand.class,

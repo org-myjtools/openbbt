@@ -57,6 +57,7 @@ export class ExecutionItem extends vscode.TreeItem {
         this.description = description;
         this.iconPath = resolveIcon(kind, execution?.result);
         this.tooltip = label;
+        this.contextValue = kind;
         if (kind === 'plan' && description !== undefined) {
             this.resourceUri = vscode.Uri.parse(`${ISSUE_URI_SCHEME}://${planId}`);
         }

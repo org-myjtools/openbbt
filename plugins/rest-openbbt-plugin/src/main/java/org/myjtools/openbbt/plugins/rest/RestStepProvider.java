@@ -3,25 +3,35 @@ package org.myjtools.openbbt.plugins.rest;
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
+import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.Assertion;
+import org.myjtools.openbbt.core.Comparators;
 import org.myjtools.openbbt.core.ResourceFinder;
 import org.myjtools.openbbt.core.backend.ExecutionContext;
+import org.myjtools.openbbt.core.contributors.ContentComparator;
 import org.myjtools.openbbt.core.contributors.StepExpression;
 import org.myjtools.openbbt.core.contributors.StepProvider;
 import org.myjtools.openbbt.core.testplan.Document;
-import org.myjtools.openbbt.plugins.rest.restassured.RestAssuredEngine;
+import org.myjtools.openbbt.plugins.rest.jdk.JdkHttpEngine;
 
-@Extension
+@Extension(
+	name = "REST steps provider",
+	scope = Scope.TRANSIENT, // each test plan execution gets its own instance
+	extensionPointVersion = "1.0"
+)
 public class RestStepProvider implements StepProvider  {
 
 	@Inject
 	ResourceFinder resourceFinder;
 
+	@Inject
+	Comparators comparators;
+
 	private RestEngine restEngine;
 
 	@Override
 	public void init(Config config) {
-		this.restEngine = new RestAssuredEngine();
+		this.restEngine = new JdkHttpEngine();
 		restEngine.setBaseUrl(config.getString("rest.baseURL").orElse(""));
 		restEngine.setHttpCodeThreshold(config.getInteger("rest.httpCodeThreshold").orElse(500));
 		restEngine.setTimeout(config.getLong("rest.timeout").orElse(10000L));
@@ -83,21 +93,49 @@ public class RestStepProvider implements StepProvider  {
 
 	@StepExpression("rest.response.body")
 	public void checkResponseBody(Document body) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		assertCompareContentType(body.content(), body.mimeType(), ContentComparator.ComparisonMode.STRICT);
 	}
 
 	@StepExpression(value = "rest.response.body.file", args = {"file:text"})
 	public void checkResponseBodyFromFile(String file) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		assertCompareContentType(resourceFinder.readAsString(file), null, ContentComparator.ComparisonMode.STRICT);
 	}
+
 
 	@StepExpression("rest.response.body.contains")
 	public void checkResponseBodyContains(Document body) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		assertCompareContentType(body.content(), body.mimeType(), ContentComparator.ComparisonMode.LOOSE);
 	}
+
+
+	private void assertCompareContentType(
+		String expectedContent,
+		String expectedContentType,
+		ContentComparator.ComparisonMode comparisonMode
+	) {
+		String actualContentType = restEngine.responseContentType();
+		if (expectedContentType == null) {
+			expectedContentType = actualContentType;
+		}
+		assertEqualContentTypes(expectedContentType, actualContentType);
+		comparators.comparatorFor(expectedContentType).ifPresent(comparator ->
+			comparator.assertContentEquals(interpolate(expectedContent), restEngine.responseBody(), comparisonMode)
+		);
+	}
+
 
 	protected String interpolate(String text) {
 		return ExecutionContext.current().interpolateString(text);
+	}
+
+	private void assertEqualContentTypes(String expectedContentType, String actualContentType) {
+		if (comparators.comparatorFor(expectedContentType).map(it -> it.accepts(actualContentType)).isEmpty()) {
+			throw new AssertionError(
+				"Response content type mismatch:\n" +
+				"Expected: " + expectedContentType + "\n" +
+				"Actual: "   + actualContentType
+			);
+		}
 	}
 
 }

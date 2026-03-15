@@ -5,6 +5,7 @@ import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
+import org.myjtools.openbbt.core.contributors.ContentComparator;
 import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
@@ -32,8 +33,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final PlanBuilder planBuilder;
 	private final ResourceFinder resourceFinder;
 	private final ResourceSet resourceSet;
+	private final Comparators comparators;
 	private final RepositoryFactory repositoryFactory;
-	private boolean readOnly;
+	private final boolean readOnly;
 	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(this::openRepository);
 	private final Lazy<TestExecutionRepository> executionRepository = Lazy.of(this::openExecutionRepository);
 	private final Lazy<AttachmentRepository> attachmentRepository = Lazy.of(this::openAttachmentRepository);
@@ -63,6 +65,12 @@ public class OpenBBTRuntime implements InjectionProvider {
 		this.resourceSet = resourceFinder.findResources(configuration().getString(OpenBBTConfig.RESOURCE_FILTER).orElseThrow(
 			()-> new OpenBBTException("Resource filter not configured {}: ",OpenBBTConfig.RESOURCE_FILTER)
 		));
+		if (this.resourceSet.isEmpty()) {
+			log.warn("No resources found with path {} and filter {}",
+			configuration().getString(OpenBBTConfig.RESOURCE_PATH).orElse(""),
+			configuration().getString(OpenBBTConfig.RESOURCE_FILTER).orElse(""));
+		}
+		this.comparators = Comparators.of(extensionManager.getExtensions(ContentComparator.class).toList());
 		this.planBuilder = new PlanBuilder(this);
 	}
 
@@ -76,6 +84,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 	}
 
 
+	/*
+	 * Private constructor for repository-only runtime. The 'ignored' parameter is just a dummy to differentiate the signature.
+	 */
 	private OpenBBTRuntime(Config configuration, boolean ignored) {
 		this.readOnly = true;
 		this.clock = Instant::now;
@@ -92,6 +103,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 		this.resourceFinder = null;
 		this.resourceSet = null;
 		this.planBuilder = null;
+		this.comparators = null;
 	}
 
 
@@ -145,7 +157,10 @@ public class OpenBBTRuntime implements InjectionProvider {
 			return streamOf(resourceSet);
 		}
 		if (type == Clock.class) {
-			return Stream.of(clock);
+			return streamOf(clock);
+		}
+		if (type == Comparators.class) {
+			return streamOf(comparators);
 		}
 		return Stream.empty();
 	}

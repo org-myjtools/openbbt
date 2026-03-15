@@ -102,6 +102,18 @@ class ResourceFinderTest {
 	}
 
 	@Test
+	void testFindResources_withSimpleGlobPattern_matchesWithoutDoubleAsterisk() {
+		var resourceFinder = new ResourceFinder(Path.of("src/test/resources/files"));
+		var resourceSet = resourceFinder.findResources("*.txt");
+		assertThat(resourceSet.resources()).extracting(Resource::relativePath)
+			.containsExactly(
+				Path.of("src/test/resources/files/file_a.txt"),
+				Path.of("src/test/resources/files/file_b.txt"),
+				Path.of("src/test/resources/files/subdir/file_d.txt")
+			);
+	}
+
+	@Test
 	void testResourceSetFilter_withPredicate_matchesByExtension() {
 		var resourceFinder = new ResourceFinder(Path.of("src/test/resources/files"));
 		var resourceSet = resourceFinder.findResources("**/*");

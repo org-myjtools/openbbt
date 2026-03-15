@@ -53,4 +53,20 @@ public interface TestExecutionRepository extends Repository {
 	 * @return the result, or empty if the node has not finished yet
 	 */
 	Optional<ExecutionResult> getExecutionNodeResult(UUID executionNodeID);
+
+	/**
+	 * Delete a single execution and all its nodes and attachment records.
+	 * File-system attachments must be removed separately via {@link org.myjtools.openbbt.core.persistence.AttachmentRepository}.
+	 *
+	 * @param executionId the execution to delete
+	 */
+	void deleteExecution(UUID executionId);
+
+	/**
+	 * Delete all executions belonging to the given plan, including their nodes and attachment records.
+	 * File-system attachments must be removed separately via {@link org.myjtools.openbbt.core.persistence.AttachmentRepository}.
+	 *
+	 * @param planId the plan whose executions should be deleted
+	 */
+	void deleteExecutionsByPlan(UUID planId);
 }

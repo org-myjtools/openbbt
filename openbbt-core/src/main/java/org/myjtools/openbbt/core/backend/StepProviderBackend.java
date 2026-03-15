@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.core.backend;
 
+import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.*;
 import org.myjtools.openbbt.core.contributors.AssertionFactoryProvider;
 import org.myjtools.openbbt.core.contributors.DataTypeProvider;
@@ -18,6 +19,7 @@ public class StepProviderBackend {
 	private final List<StepProviderService> services = new ArrayList<>();
 	private final ConcurrentHashMap<String,Object> variables = new ConcurrentHashMap<>();
 	private final StepProviderHinter hinter;
+	private final Config config;
 
 	public StepProviderBackend(OpenBBTRuntime cm) {
 		var dataTypes = DataTypes.of(cm.getExtensions(DataTypeProvider.class)
@@ -35,12 +37,18 @@ public class StepProviderBackend {
 			services.add(new StepProviderService(stepProvider, dataTypes, assertionFactories, messages));
 		}
 		this.hinter = new StepProviderHinter(services);
+		this.config = cm.configuration();
 	}
 
+
 	public void setUp() {
+		setUp(Collections.emptyMap());
+	}
+
+	public void setUp(Map<String,String> properties) {
 		ExecutionContext.setCurrent(new ExecutionContext());
 		for (var service : services) {
-			service.setUp();
+			service.setUp(config.append(Config.ofMap(properties)));
 		}
 	}
 

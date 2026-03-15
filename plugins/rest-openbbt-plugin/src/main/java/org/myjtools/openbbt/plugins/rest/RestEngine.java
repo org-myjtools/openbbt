@@ -13,5 +13,6 @@ public interface RestEngine {
 	void requestDELETE(String endpoint);
 	Integer responseHttpCode();
 	String responseBody();
+	String responseContentType();
 
 }

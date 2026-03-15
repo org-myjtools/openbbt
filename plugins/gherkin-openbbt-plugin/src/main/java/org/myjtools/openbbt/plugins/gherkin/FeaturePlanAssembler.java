@@ -175,7 +175,7 @@ public class FeaturePlanAssembler {
 			.identifier(identifier)
 			.name(name)
 			.language(feature.language())
-			.display("{name}")
+			.display("{identifier} - {name}")
 			.keyword(keyword)
 			.description(scenarioDefinition.description())
 			.tags(tags(parent,scenarioDefinition))
@@ -233,9 +233,8 @@ public class FeaturePlanAssembler {
 			.language(feature.language())
 			.keyword(step.keyword())
 			.display("{keyword} {name}")
-			.tags(new HashSet<>(repository.getNodeTags(parent)))
 			.source(nodeLocation(step))
-			.addProperties(propertiesFromComments(step, parent))
+			.addProperties(propertiesFromComments(step))
 			.addProperty(GHERKIN_TYPE,GHERKIN_TYPE_STEP);
 		if (step.argument() instanceof DataTable dataTable) {
 			node.dataTable(tableOf(dataTable));

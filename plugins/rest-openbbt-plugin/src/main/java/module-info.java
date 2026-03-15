@@ -7,7 +7,7 @@ module org.myjtools.openbbt.plugins.rest {
     requires org.myjtools.jexten;
     requires org.myjtools.openbbt.core;
 	requires org.myjtools.imconfig;
-	requires rest.assured;
+	requires java.net.http;
 
 	provides org.myjtools.openbbt.core.contributors.StepProvider with RestStepProvider;
     provides org.myjtools.openbbt.core.contributors.ConfigProvider with RestConfigProvider;
