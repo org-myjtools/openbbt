@@ -68,6 +68,9 @@ class OpenBBTClient {
     async listExecutionsByPlan(planId, offset = 0, max = 0) {
         return this.call('executions/list', { planId, offset, max });
     }
+    async deleteUnexecutedPlans() {
+        await this.call('plans/deleteUnexecuted', {});
+    }
     async exec(detach = false) {
         return this.call('exec', { detach });
     }
@@ -84,6 +87,12 @@ class OpenBBTClient {
     }
     async getAttachment(executionId, executionNodeId, attachmentId) {
         return this.call('executions/attachment', { executionId, executionNodeId, attachmentId });
+    }
+    async deleteExecution(executionId) {
+        await this.call('executions/delete', { executionId });
+    }
+    async deletePlan(planId) {
+        await this.call('plans/delete', { planId });
     }
     async shutdown() {
         if (!this.connected) {

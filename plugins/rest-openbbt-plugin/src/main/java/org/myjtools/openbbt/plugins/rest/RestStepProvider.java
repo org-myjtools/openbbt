@@ -5,10 +5,10 @@ import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.Scope;
 import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.Comparators;
+import org.myjtools.openbbt.core.ContentTypes;
 import org.myjtools.openbbt.core.ResourceFinder;
 import org.myjtools.openbbt.core.backend.ExecutionContext;
-import org.myjtools.openbbt.core.contributors.ContentComparator;
+import org.myjtools.openbbt.core.contributors.ContentType;
 import org.myjtools.openbbt.core.contributors.StepExpression;
 import org.myjtools.openbbt.core.contributors.StepProvider;
 import org.myjtools.openbbt.core.testplan.Document;
@@ -25,7 +25,7 @@ public class RestStepProvider implements StepProvider  {
 	ResourceFinder resourceFinder;
 
 	@Inject
-	Comparators comparators;
+	ContentTypes contentTypes;
 
 	private RestEngine restEngine;
 
@@ -93,32 +93,32 @@ public class RestStepProvider implements StepProvider  {
 
 	@StepExpression("rest.response.body")
 	public void checkResponseBody(Document body) {
-		assertCompareContentType(body.content(), body.mimeType(), ContentComparator.ComparisonMode.STRICT);
+		assertCompareContentType(body.content(), body.mimeType(), ContentType.ComparisonMode.STRICT);
 	}
 
 	@StepExpression(value = "rest.response.body.file", args = {"file:text"})
 	public void checkResponseBodyFromFile(String file) {
-		assertCompareContentType(resourceFinder.readAsString(file), null, ContentComparator.ComparisonMode.STRICT);
+		assertCompareContentType(resourceFinder.readAsString(file), null, ContentType.ComparisonMode.STRICT);
 	}
 
 
 	@StepExpression("rest.response.body.contains")
 	public void checkResponseBodyContains(Document body) {
-		assertCompareContentType(body.content(), body.mimeType(), ContentComparator.ComparisonMode.LOOSE);
+		assertCompareContentType(body.content(), body.mimeType(), ContentType.ComparisonMode.LOOSE);
 	}
 
 
 	private void assertCompareContentType(
 		String expectedContent,
 		String expectedContentType,
-		ContentComparator.ComparisonMode comparisonMode
+		ContentType.ComparisonMode comparisonMode
 	) {
 		String actualContentType = restEngine.responseContentType();
 		if (expectedContentType == null) {
 			expectedContentType = actualContentType;
 		}
 		assertEqualContentTypes(expectedContentType, actualContentType);
-		comparators.comparatorFor(expectedContentType).ifPresent(comparator ->
+		contentTypes.get(expectedContentType).ifPresent(comparator ->
 			comparator.assertContentEquals(interpolate(expectedContent), restEngine.responseBody(), comparisonMode)
 		);
 	}
@@ -129,7 +129,7 @@ public class RestStepProvider implements StepProvider  {
 	}
 
 	private void assertEqualContentTypes(String expectedContentType, String actualContentType) {
-		if (comparators.comparatorFor(expectedContentType).map(it -> it.accepts(actualContentType)).isEmpty()) {
+		if (contentTypes.get(expectedContentType).map(it -> it.accepts(actualContentType)).isEmpty()) {
 			throw new AssertionError(
 				"Response content type mismatch:\n" +
 				"Expected: " + expectedContentType + "\n" +

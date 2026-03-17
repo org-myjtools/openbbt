@@ -78,4 +78,24 @@ class TestRestSteps {
 	void wrongBody_fails(JUnitOpenBBTPlan plan) {
 		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllFailed();
 	}
+
+	// --- DSL language ---
+
+	@Test
+	@FeatureDir("dsl-get-200")
+	void dsl_get200_passes(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-post-201")
+	void dsl_post201_passes(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-delete-204")
+	void dsl_delete204_passes(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
 }

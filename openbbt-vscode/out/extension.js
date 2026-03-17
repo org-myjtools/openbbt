@@ -316,7 +316,7 @@ function activate(context) {
             selection: new vscode.Range(pos, pos),
         });
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.run', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.run', async (_item) => {
         if (!serveClient) {
             vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
             return;
@@ -346,14 +346,79 @@ function activate(context) {
         await startClient();
         vscode.window.showInformationMessage('OpenBBT: LSP connection restarted.');
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.deleteExecution', async (item) => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        const executionId = item?.execution?.executionId;
+        if (!executionId) {
+            return;
+        }
+        const label = item?.execution?.executedAt
+            ? item.execution.executedAt.substring(0, 19)
+            : executionId.substring(0, 8);
+        const confirm = await vscode.window.showWarningMessage(`Delete execution ${label}? This cannot be undone.`, { modal: true }, 'Delete');
+        if (confirm !== 'Delete') {
+            return;
+        }
+        try {
+            await serveClient.deleteExecution(executionId);
+            executionProvider.refresh();
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`OpenBBT: failed to delete execution — ${msg}`);
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.pruneEmpty', async () => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        const confirm = await vscode.window.showWarningMessage('Delete all plans with no executions? This cannot be undone.', { modal: true }, 'Delete');
+        if (confirm !== 'Delete') {
+            return;
+        }
+        try {
+            await serveClient.deleteUnexecutedPlans();
+            executionProvider.refresh();
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`OpenBBT: failed to delete unexecuted plans — ${msg}`);
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.deletePlan', async (item) => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        const planId = item?.planId;
+        if (!planId) {
+            return;
+        }
+        const confirm = await vscode.window.showWarningMessage(`Delete plan ${planId.substring(0, 8)}… and ALL its executions? This cannot be undone.`, { modal: true }, 'Delete');
+        if (confirm !== 'Delete') {
+            return;
+        }
+        try {
+            await serveClient.deletePlan(planId);
+            executionProvider.refresh();
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`OpenBBT: failed to delete plan — ${msg}`);
+        }
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.installPlugins', async () => {
         const config = vscode.workspace.getConfiguration('openbbt');
         const executable = config.get('executablePath', 'openbbt');
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         const cwd = workspaceFolder?.uri.fsPath;
         const success = await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'OpenBBT: installing plugins…' }, () => new Promise((resolve) => {
-            logOutput(`[install] running: ${executable} install (cwd=${cwd})`);
-            (0, child_process_1.execFile)(executable, ['install'], { cwd }, (err, stdout, stderr) => {
+            logOutput(`[install] running: ${executable} install --clean (cwd=${cwd})`);
+            (0, child_process_1.execFile)(executable, ['install', '--clean'], { cwd }, (err, stdout, stderr) => {
                 logOutput(`[install] stdout: ${stdout.trim() || '(empty)'}`);
                 logOutput(`[install] stderr: ${stderr.trim() || '(empty)'}`);
                 if (err) {

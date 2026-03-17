@@ -11,6 +11,9 @@ import org.myjtools.openbbt.core.docgen.StepDocLoader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class GenerateStepDocsMojo extends AbstractMojo {
@@ -31,7 +34,11 @@ public class GenerateStepDocsMojo extends AbstractMojo {
             return;
         }
         try {
-            var steps = StepDocLoader.load(inputFile.toPath());
+            var inputPath = inputFile.toPath();
+            var langPaths = discoverLanguageFiles(inputPath);
+            var steps = langPaths.isEmpty()
+                ? StepDocLoader.load(inputPath)
+                : StepDocLoader.load(inputPath, langPaths);
             outputDirectory.mkdirs();
             String baseName = baseName(inputFile.getName());
             Files.writeString(
@@ -42,6 +49,25 @@ public class GenerateStepDocsMojo extends AbstractMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate step docs", e);
         }
+    }
+
+    private Map<String, Path> discoverLanguageFiles(Path inputPath) throws IOException {
+        String base = baseName(inputPath.getFileName().toString());
+        var result = new LinkedHashMap<String, Path>();
+        try (var siblings = Files.list(inputPath.getParent())) {
+            siblings
+                .filter(p -> {
+                    String name = p.getFileName().toString();
+                    return name.startsWith(base + "_") && name.endsWith(".yaml");
+                })
+                .sorted()
+                .forEach(p -> {
+                    String name = p.getFileName().toString();
+                    String langCode = name.substring(base.length() + 1, name.length() - ".yaml".length());
+                    result.put(langCode, p);
+                });
+        }
+        return result;
     }
 
     private static String baseName(String fileName) {
