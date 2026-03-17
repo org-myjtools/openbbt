@@ -5,7 +5,7 @@ import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.ConfigProvider;
-import org.myjtools.openbbt.core.contributors.ContentComparator;
+import org.myjtools.openbbt.core.contributors.ContentType;
 import org.myjtools.openbbt.core.contributors.RepositoryFactory;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
@@ -33,7 +33,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final PlanBuilder planBuilder;
 	private final ResourceFinder resourceFinder;
 	private final ResourceSet resourceSet;
-	private final Comparators comparators;
+	private final ContentTypes contentTypes;
 	private final RepositoryFactory repositoryFactory;
 	private final boolean readOnly;
 	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(this::openRepository);
@@ -70,7 +70,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 			configuration().getString(OpenBBTConfig.RESOURCE_PATH).orElse(""),
 			configuration().getString(OpenBBTConfig.RESOURCE_FILTER).orElse(""));
 		}
-		this.comparators = Comparators.of(extensionManager.getExtensions(ContentComparator.class).toList());
+		this.contentTypes = ContentTypes.of(extensionManager.getExtensions(ContentType.class).toList());
 		this.planBuilder = new PlanBuilder(this);
 	}
 
@@ -103,7 +103,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 		this.resourceFinder = null;
 		this.resourceSet = null;
 		this.planBuilder = null;
-		this.comparators = null;
+		this.contentTypes = null;
 	}
 
 
@@ -159,8 +159,8 @@ public class OpenBBTRuntime implements InjectionProvider {
 		if (type == Clock.class) {
 			return streamOf(clock);
 		}
-		if (type == Comparators.class) {
-			return streamOf(comparators);
+		if (type == ContentTypes.class) {
+			return streamOf(contentTypes);
 		}
 		return Stream.empty();
 	}

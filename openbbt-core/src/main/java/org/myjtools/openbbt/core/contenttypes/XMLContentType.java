@@ -1,8 +1,8 @@
-package org.myjtools.openbbt.core.comparators;
+package org.myjtools.openbbt.core.contenttypes;
 
 import org.myjtools.jexten.Extension;
 import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.contributors.ContentComparator;
+import org.myjtools.openbbt.core.contributors.ContentType;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Extension
-public class XMLComparator implements ContentComparator {
+public class XMLContentType implements ContentType {
 
 	@Override
 	public boolean accepts(String contentType) {
@@ -70,18 +70,27 @@ public class XMLComparator implements ContentComparator {
 
 	@Override
 	public void assertFragmentEquals(String content, String fragmentPath, Assertion assertion) {
+		String value = evaluateXPath(content, fragmentPath);
+		if (!assertion.test(value)) {
+			throw new AssertionError(
+				"Fragment assertion failed at XPath '" + fragmentPath + "':\n" +
+				assertion.describeFailure(value)
+			);
+		}
+	}
+
+
+	@Override
+	public String extractValue(String content, String fragmentPath) {
+		return evaluateXPath(content, fragmentPath);
+	}
+
+
+	private String evaluateXPath(String content, String fragmentPath) {
 		Document doc = parseXml(content, "content");
 		try {
 			XPath xpath = XPathFactory.newInstance().newXPath();
-			String value = (String) xpath.evaluate(fragmentPath, doc, XPathConstants.STRING);
-			if (!assertion.test(value)) {
-				throw new AssertionError(
-					"Fragment assertion failed at XPath '" + fragmentPath + "':\n" +
-					assertion.describeFailure(value)
-				);
-			}
-		} catch (AssertionError e) {
-			throw e;
+			return (String) xpath.evaluate(fragmentPath, doc, XPathConstants.STRING);
 		} catch (XPathExpressionException e) {
 			throw new AssertionError("Invalid XPath expression '" + fragmentPath + "': " + e.getMessage());
 		}

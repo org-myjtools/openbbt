@@ -175,7 +175,7 @@ public class FeaturePlanAssembler {
 			.identifier(identifier)
 			.name(name)
 			.language(feature.language())
-			.display("{identifier} - {name}")
+			.display(identifier != null ? "{identifier} - {name}" : "{name}")
 			.keyword(keyword)
 			.description(scenarioDefinition.description())
 			.tags(tags(parent,scenarioDefinition))

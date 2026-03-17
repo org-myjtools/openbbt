@@ -1,18 +1,18 @@
-package org.myjtools.openbbt.core.test.comparators;
+package org.myjtools.openbbt.core.test.contenttypes;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.assertions.AssertionAdapter;
-import org.myjtools.openbbt.core.comparators.XMLComparator;
-import org.myjtools.openbbt.core.contributors.ContentComparator.ComparisonMode;
+import org.myjtools.openbbt.core.contenttypes.XMLContentType;
+import org.myjtools.openbbt.core.contributors.ContentType.ComparisonMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class XMLComparatorTest {
+class XMLContentTypeTest {
 
-	private final XMLComparator comparator = new XMLComparator();
+	private final XMLContentType comparator = new XMLContentType();
 
 	// --- accepts ---
 
@@ -222,5 +222,48 @@ class XMLComparatorTest {
 		assertThatThrownBy(() -> comparator.assertContentEquals(
 			"not-xml", "<root/>", ComparisonMode.STRICT
 		)).isInstanceOf(AssertionError.class).hasMessageContaining("Invalid XML");
+	}
+
+
+	// --- extractValue ---
+
+	@Test
+	void extractValue_elementText_returnsString() {
+		assertThat(comparator.extractValue(
+			"<person><name>Alice</name><age>30</age></person>",
+			"/person/name"
+		)).isEqualTo("Alice");
+	}
+
+	@Test
+	void extractValue_attribute_returnsString() {
+		assertThat(comparator.extractValue(
+			"<item id=\"42\" type=\"product\"/>",
+			"/item/@id"
+		)).isEqualTo("42");
+	}
+
+	@Test
+	void extractValue_numericElement_returnsStringRepresentation() {
+		assertThat(comparator.extractValue(
+			"<person><name>Alice</name><age>30</age></person>",
+			"/person/age"
+		)).isEqualTo("30");
+	}
+
+	@Test
+	void extractValue_decimalElement_returnsStringRepresentation() {
+		assertThat(comparator.extractValue(
+			"<product><price>19.99</price></product>",
+			"/product/price"
+		)).isEqualTo("19.99");
+	}
+
+	@Test
+	void extractValue_invalidXPath_throws() {
+		assertThatThrownBy(() -> comparator.extractValue(
+			"<person/>",
+			"[invalid xpath"
+		)).isInstanceOf(AssertionError.class).hasMessageContaining("Invalid XPath");
 	}
 }

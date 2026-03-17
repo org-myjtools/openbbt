@@ -1,25 +1,20 @@
-package org.myjtools.openbbt.core.comparators;
+package org.myjtools.openbbt.core.contenttypes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.contributors.ContentComparator;
-
+import org.myjtools.openbbt.core.contributors.ContentType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public abstract class JacksonComparatorAdapter implements ContentComparator {
+public abstract class JacksonContentTypeAdapter implements ContentType {
 
 	private final ObjectMapper mapper;
 
-	protected JacksonComparatorAdapter(ObjectMapper mapper) {
+	protected JacksonContentTypeAdapter(ObjectMapper mapper) {
 		this.mapper = mapper;
 		this.mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 	}
@@ -50,13 +45,30 @@ public abstract class JacksonComparatorAdapter implements ContentComparator {
 
 	@Override
 	public void assertFragmentEquals(String content, String fragmentPath, Assertion assertion) {
-		Object value;
+		Object value = readJsonPath(content, fragmentPath);
+		if (!assertion.test(value)) {
+			throw new AssertionError(
+				"Fragment assertion failed at path '" + fragmentPath + "':\n" +
+				assertion.describeFailure(value)
+			);
+		}
+	}
+
+
+	@Override
+	public String extractValue(String content, String fragmentPath) {
+		Object value = readJsonPath(content, fragmentPath);
+		return value == null ? null : value.toString();
+	}
+
+
+	private Object readJsonPath(String content, String fragmentPath) {
 		try {
 			ClassLoader cl = Thread.currentThread().getContextClassLoader();
 			Class<?> jsonPathClass = cl.loadClass("com.jayway.jsonpath.JsonPath");
 			Method readMethod = findJsonPathReadMethod(jsonPathClass);
 			Object emptyPredicates = java.lang.reflect.Array.newInstance(readMethod.getParameterTypes()[2].getComponentType(), 0);
-			value = readMethod.invoke(null, content, fragmentPath, emptyPredicates);
+			return readMethod.invoke(null, content, fragmentPath, emptyPredicates);
 		} catch (InvocationTargetException e) {
 			Throwable cause = e.getCause();
 			String causeType = cause.getClass().getSimpleName();
@@ -66,12 +78,6 @@ public abstract class JacksonComparatorAdapter implements ContentComparator {
 			throw new AssertionError("Invalid JSON or path '" + fragmentPath + "': " + cause.getMessage());
 		} catch (Exception e) {
 			throw new AssertionError("JSON path evaluation failed at '" + fragmentPath + "': " + e.getMessage(), e);
-		}
-		if (!assertion.test(value)) {
-			throw new AssertionError(
-				"Fragment assertion failed at path '" + fragmentPath + "':\n" +
-				assertion.describeFailure(value)
-			);
 		}
 	}
 

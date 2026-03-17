@@ -4,7 +4,7 @@ import org.myjtools.jexten.ExtensionPoint;
 import org.myjtools.openbbt.core.Assertion;
 
 @ExtensionPoint
-public interface ContentComparator extends Contributor {
+public interface ContentType extends Contributor {
 
 	enum ComparisonMode {
 		STRICT,
@@ -52,5 +52,17 @@ public interface ContentComparator extends Contributor {
 	 * @throws AssertionError if the content does not comply with the schema
 	 */
 	void assertComplyWithSchema(String content, String schema);
+
+
+	/**
+	 * Extracts a specific value from the content based on the provided fragment path.
+	 * The fragment path is a way to specify the location of the value within the content (e.g., JSONPath for JSON, XPath for XML).
+	 *
+	 * @param content the content to extract the value from
+	 * @param fragmentPath the path to the value within the content (e.g., JSONPath, XPath)
+	 * @return the extracted value cast to the specified type
+	 * @throws AssertionError if the extraction fails or if the extracted value cannot be cast to the specified type
+	 */
+	String extractValue(String content, String fragmentPath);
 
 }

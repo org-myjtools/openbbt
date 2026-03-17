@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.comparators;
+package org.myjtools.openbbt.core.contenttypes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,17 +10,17 @@ import com.networknt.schema.ValidationMessage;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.myjtools.jexten.Extension;
 import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.contributors.ContentComparator;
+import org.myjtools.openbbt.core.contributors.ContentType;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Extension
-public class YAMLComparator extends JacksonComparatorAdapter implements ContentComparator {
+public class YAMLContentType extends JacksonContentTypeAdapter implements ContentType {
 
 	private final ObjectMapper jsonMapper = new ObjectMapper();
 
-	public YAMLComparator() {
+	public YAMLContentType() {
 		super(new YAMLMapper());
 	}
 
@@ -40,6 +40,12 @@ public class YAMLComparator extends JacksonComparatorAdapter implements ContentC
 	@Override
 	public void assertFragmentEquals(String content, String fragmentPath, Assertion assertion) {
 		super.assertFragmentEquals(toJson(content), fragmentPath, assertion);
+	}
+
+
+	@Override
+	public String extractValue(String content, String fragmentPath) {
+		return super.extractValue(toJson(content), fragmentPath);
 	}
 
 

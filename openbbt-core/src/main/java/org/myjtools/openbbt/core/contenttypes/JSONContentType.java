@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.core.comparators;
+package org.myjtools.openbbt.core.contenttypes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,15 +7,15 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersionDetector;
 import com.networknt.schema.ValidationMessage;
 import org.myjtools.jexten.Extension;
-import org.myjtools.openbbt.core.contributors.ContentComparator;
+import org.myjtools.openbbt.core.contributors.ContentType;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Extension
-public class JSONComparator extends JacksonComparatorAdapter implements ContentComparator {
+public class JSONContentType extends JacksonContentTypeAdapter implements ContentType {
 
-	public JSONComparator() {
+	public JSONContentType() {
 		super(new ObjectMapper());
 	}
 

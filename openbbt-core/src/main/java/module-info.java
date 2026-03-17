@@ -1,3 +1,7 @@
+import org.myjtools.openbbt.core.contenttypes.JSONContentType;
+import org.myjtools.openbbt.core.contenttypes.TextContentType;
+import org.myjtools.openbbt.core.contenttypes.XMLContentType;
+import org.myjtools.openbbt.core.contenttypes.YAMLContentType;
 import org.myjtools.openbbt.core.contributors.*;
 import org.myjtools.openbbt.core.validator.DefaultPlanValidator;
 import org.myjtools.openbbt.core.messages.MessageProvider;
@@ -41,8 +45,8 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.backend to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;
-	exports org.myjtools.openbbt.core.comparators;
-	opens org.myjtools.openbbt.core.comparators to org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.contenttypes;
+	opens org.myjtools.openbbt.core.contenttypes to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.persistence;
 	opens org.myjtools.openbbt.core.persistence to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.execution;
@@ -50,7 +54,7 @@ module org.myjtools.openbbt.core {
 	exports org.myjtools.openbbt.core.validator;
 	opens org.myjtools.openbbt.core.validator to org.myjtools.jexten;
 
-	uses ContentComparator;
+	uses ContentType;
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;
 	uses TestPlanRepository;
@@ -62,11 +66,11 @@ module org.myjtools.openbbt.core {
 	uses TestPlanValidator;
 	uses ReportBuilder;
 
-	provides ContentComparator with
-		org.myjtools.openbbt.core.comparators.JSONComparator,
-		org.myjtools.openbbt.core.comparators.TextComparator,
-		org.myjtools.openbbt.core.comparators.XMLComparator,
-		org.myjtools.openbbt.core.comparators.YAMLComparator;
+	provides ContentType with
+			JSONContentType,
+			TextContentType,
+			XMLContentType,
+			YAMLContentType;
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 	provides DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;
 	provides MessageProvider with org.myjtools.openbbt.core.assertions.AssertionMessageProvider;

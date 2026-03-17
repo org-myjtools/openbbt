@@ -19,6 +19,44 @@ public class StepDocLoader {
         return load(Files.newInputStream(path));
     }
 
+    public static Map<String, StepDocEntry> load(Path mainPath, Map<String, Path> langPaths) throws IOException {
+        var langStreams = new LinkedHashMap<String, InputStream>();
+        for (var entry : langPaths.entrySet()) {
+            langStreams.put(entry.getKey(), Files.newInputStream(entry.getValue()));
+        }
+        return load(Files.newInputStream(mainPath), langStreams);
+    }
+
+    public static Map<String, StepDocEntry> load(InputStream mainStream, Map<String, InputStream> langStreams) throws IOException {
+        var result = load(mainStream);
+        for (var langEntry : langStreams.entrySet()) {
+            var overlay = loadLanguageOverlay(langEntry.getValue());
+            overlay.forEach((stepId, langDef) -> {
+                var entry = result.get(stepId);
+                if (entry != null) {
+                    entry.language().put(langEntry.getKey(), langDef);
+                }
+            });
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, StepLanguageEntry> loadLanguageOverlay(InputStream inputStream) throws IOException {
+        Yaml yaml = new Yaml();
+        Map<String, Map<String, Object>> raw;
+        try (var reader = new BufferedInputStream(inputStream)) {
+            raw = yaml.load(reader);
+        }
+        var result = new LinkedHashMap<String, StepLanguageEntry>();
+        if (raw != null) {
+            for (var entry : raw.entrySet()) {
+                result.put(entry.getKey(), parseLanguageEntry(entry.getValue()));
+            }
+        }
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
     public static Map<String, StepDocEntry> load(InputStream inputStream) throws IOException {
         Yaml yaml = new Yaml();

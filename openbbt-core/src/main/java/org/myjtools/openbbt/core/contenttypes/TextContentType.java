@@ -1,8 +1,8 @@
-package org.myjtools.openbbt.core.comparators;
+package org.myjtools.openbbt.core.contenttypes;
 
 import org.myjtools.jexten.Extension;
 import org.myjtools.openbbt.core.Assertion;
-import org.myjtools.openbbt.core.contributors.ContentComparator;
+import org.myjtools.openbbt.core.contributors.ContentType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 @Extension
-public class TextComparator implements ContentComparator {
+public class TextContentType implements ContentType {
 
 	@Override
 	public boolean accepts(String contentType) {
@@ -49,6 +49,12 @@ public class TextComparator implements ContentComparator {
 				assertion.describeFailure(value)
 			);
 		}
+	}
+
+
+	@Override
+	public String extractValue(String content, String fragmentPath) {
+		return (String) extractFragment(content, fragmentPath);
 	}
 
 

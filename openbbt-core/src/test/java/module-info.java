@@ -21,7 +21,7 @@ module org.myjtools.openbbt.core.test {
 	opens org.myjtools.openbbt.core.test.docgen to org.junit.platform.commons;
 	opens org.myjtools.openbbt.core.test.messages to org.junit.platform.commons;
 	opens org.myjtools.openbbt.core.test.execution to org.junit.platform.commons;
-	opens org.myjtools.openbbt.core.test.comparators to org.junit.platform.commons;
+	opens org.myjtools.openbbt.core.test.contenttypes to org.junit.platform.commons;
 
 	exports org.myjtools.openbbt.core.test.backend to org.myjtools.openbbt.core, org.myjtools.jexten;
 

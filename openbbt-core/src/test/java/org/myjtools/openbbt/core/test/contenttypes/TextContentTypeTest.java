@@ -1,18 +1,18 @@
-package org.myjtools.openbbt.core.test.comparators;
+package org.myjtools.openbbt.core.test.contenttypes;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.assertions.AssertionAdapter;
-import org.myjtools.openbbt.core.comparators.TextComparator;
-import org.myjtools.openbbt.core.contributors.ContentComparator.ComparisonMode;
+import org.myjtools.openbbt.core.contenttypes.TextContentType;
+import org.myjtools.openbbt.core.contributors.ContentType.ComparisonMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class TextComparatorTest {
+class TextContentTypeTest {
 
-	private final TextComparator comparator = new TextComparator();
+	private final TextContentType comparator = new TextContentType();
 
 	// --- accepts ---
 
@@ -234,5 +234,38 @@ class TextComparatorTest {
 			"content",
 			"[invalid"
 		)).isInstanceOf(AssertionError.class).hasMessageContaining("Invalid pattern");
+	}
+
+
+	// --- extractValue ---
+
+	@Test
+	void extractValue_lineNumber_returnsString() {
+		assertThat(comparator.extractValue("line one\nline two\nline three", "2"))
+			.isEqualTo("line two");
+	}
+
+	@Test
+	void extractValue_regexWithCaptureGroup_returnsMatch() {
+		assertThat(comparator.extractValue("status: OK\ncode: 200", "code: (\\d+)"))
+			.isEqualTo("200");
+	}
+
+	@Test
+	void extractValue_regexNoCaptureGroup_returnsFullMatch() {
+		assertThat(comparator.extractValue("status: OK", "status: OK"))
+			.isEqualTo("status: OK");
+	}
+
+	@Test
+	void extractValue_lineNumberOutOfBounds_throws() {
+		assertThatThrownBy(() -> comparator.extractValue("only one line", "5"))
+			.isInstanceOf(AssertionError.class).hasMessageContaining("does not exist");
+	}
+
+	@Test
+	void extractValue_noRegexMatch_throws() {
+		assertThatThrownBy(() -> comparator.extractValue("no match here", "missing: (\\w+)"))
+			.isInstanceOf(AssertionError.class).hasMessageContaining("No line matches");
 	}
 }
