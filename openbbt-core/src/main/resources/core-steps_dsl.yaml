@@ -1,0 +1,127 @@
+'assert.variable.integer':
+  expression: 'assert ${variable:id}:integer {{integer-assertion}}'
+  assertion-hints:
+    - '= 0'
+    - 'not = 0'
+    - '> 0'
+    - '< 100'
+  example: |
+    * assert $count:integer = 5
+  scenarios:
+    - title: Assert an exact integer value
+      gherkin: |
+        * do HTTP GET "orders/42"
+        * assert $retries:integer = 3
+
+
+'assert.variable.decimal':
+  expression: 'assert ${variable:id}:decimal {{decimal-assertion}}'
+  assertion-hints:
+    - '= 0.0'
+    - 'not = 0.0'
+    - '> 0.0'
+    - '< 1.0'
+  example: |
+    * assert $price:decimal = 19.99
+  scenarios:
+    - title: Assert an exact decimal value
+      gherkin: |
+        * do HTTP GET "products/1"
+        * assert $price:decimal = 19.99
+    - title: Assert a decimal is positive
+      gherkin: |
+        * do HTTP POST "cart/apply-coupon":
+        """json
+        {"code": "SAVE10"}
+        """
+        * assert $discount:decimal > 0.0
+
+
+'assert.variable.date':
+  expression: 'assert ${variable:id}:date {{date-assertion}}'
+  assertion-hints:
+    - '= 2025-01-01'
+    - '< 2025-12-31'
+    - '> 2020-01-01'
+  example: |
+    * assert $expiryDate:date > 2025-01-01
+  scenarios:
+    - title: Assert a date is in the future
+      gherkin: |
+        * do HTTP GET "subscriptions/me"
+        * assert $expiryDate:date > 2025-01-01
+    - title: Assert an exact date
+      gherkin: |
+        * do HTTP POST "users":
+        """json
+        {"name": "Alice", "birthdate": "1990-06-15"}
+        """
+        * assert $createdAt:date = 2024-06-15
+
+
+'assert.variable.time':
+  expression: 'assert ${variable:id}:time {{time-assertion}}'
+  assertion-hints:
+    - '= 12:00:00'
+    - '< 18:00:00'
+    - '> 08:00:00'
+  example: |
+    * assert $openTime:time < 18:00:00
+  scenarios:
+    - title: Assert a time is before a given time
+      gherkin: |
+        * do HTTP GET "stores/1/schedule"
+        * assert $openTime:time < 18:00:00
+    - title: Assert an exact time
+      gherkin: |
+        * do HTTP POST "appointments":
+        """json
+        {"slot": "09:30:00"}
+        """
+        * assert $scheduledAt:time = 09:30:00
+
+
+'assert.variable.datetime':
+  expression: 'assert ${variable:id}:datetime {{datetime-assertion}}'
+  assertion-hints:
+    - '= 2025-01-01T00:00:00'
+    - '< 2025-12-31T23:59:59'
+    - '> 2020-01-01T00:00:00'
+  example: |
+    * assert $createdAt:datetime < 2025-12-31T23:59:59
+  scenarios:
+    - title: Assert a datetime is before a given instant
+      gherkin: |
+        * do HTTP POST "events":
+        """json
+        {"name": "Conference", "start": "2025-06-01T09:00:00"}
+        """
+        * assert $createdAt:datetime < 2025-12-31T23:59:59
+    - title: Assert an exact datetime
+      gherkin: |
+        * do HTTP GET "audit/latest"
+        * assert $timestamp:datetime = 2024-06-15T10:30:00
+
+
+'assert.variable.text':
+  expression: 'assert ${variable:id}:text {{text-assertion}}'
+  assertion-hints:
+    - '= "expected"'
+    - 'not = "unexpected"'
+    - 'contains "partial"'
+    - 'starts "prefix"'
+    - 'ends "suffix"'
+  example: |
+    * assert $status:text = "active"
+  scenarios:
+    - title: Assert an exact string value
+      gherkin: |
+        * do HTTP GET "users/1"
+        * assert $status:text = "active"
+    - title: Assert a string contains a substring
+      gherkin: |
+        * do HTTP POST "notifications/send":
+        """json
+        {"recipient": "alice@example.com", "template": "welcome"}
+        """
+        * assert $message:text contains "success"

@@ -54,6 +54,7 @@ export class ExecutionItem extends vscode.TreeItem {
         description?: string,
     ) {
         super(label, collapsibleState);
+        this.id = kind === 'plan' ? planId : kind === 'execution' ? execution?.executionId : 'project';
         this.description = description;
         this.iconPath = resolveIcon(kind, execution?.result);
         this.tooltip = label;
@@ -85,7 +86,7 @@ function executionIcon(result?: string): vscode.ThemeIcon {
         case 'FAILED':  return new vscode.ThemeIcon('error',          new vscode.ThemeColor('testing.iconFailed'));
         case 'ERROR':   return new vscode.ThemeIcon('warning',        new vscode.ThemeColor('testing.iconErrored'));
         case 'SKIPPED': return new vscode.ThemeIcon('debug-step-over',new vscode.ThemeColor('testing.iconSkipped'));
-        default:        return new vscode.ThemeIcon('run-all');
+        default:        return new vscode.ThemeIcon('loading~spin');
     }
 }
 
@@ -99,12 +100,22 @@ function formatDate(iso: string): string {
 // Provider
 // ---------------------------------------------------------------------------
 
-export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem> {
+const POLL_INTERVAL_MS = 1000;
+const POLL_MAX_ATTEMPTS = 300; // stop polling after 5 minutes
+
+export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>, vscode.Disposable {
 
     private readonly _onDidChangeTreeData = new vscode.EventEmitter<ExecutionItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private client: OpenBBTClient | undefined;
+    private _expandOnNextLoad = false;
+
+    /** executionIds currently being polled */
+    private _pendingExecs = new Set<string>();
+    /** executionId → number of poll attempts so far */
+    private _pollAttempts = new Map<string, number>();
+    private _pollTimer: ReturnType<typeof setInterval> | undefined;
 
     constructor(private readonly workspacePath: string | undefined) {}
 
@@ -112,8 +123,21 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
         this.client = client;
     }
 
-    refresh(): void {
+    refresh(expandPlans = false): void {
+        this._expandOnNextLoad = expandPlans;
         this._onDidChangeTreeData.fire();
+    }
+
+    startPolling(executionId: string): void {
+        this._pendingExecs.add(executionId);
+        this._pollAttempts.set(executionId, 0);
+        if (!this._pollTimer) {
+            this._pollTimer = setInterval(() => this._pollTick(), POLL_INTERVAL_MS);
+        }
+    }
+
+    dispose(): void {
+        this._stopPolling();
     }
 
     getTreeItem(element: ExecutionItem): vscode.TreeItem {
@@ -132,6 +156,41 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
     }
 
     // --- Private ---
+
+    private _pollTick(): void {
+        if (this._pendingExecs.size === 0) {
+            this._stopPolling();
+            return;
+        }
+
+        // Expire stale polls
+        for (const [execId, attempts] of this._pollAttempts) {
+            if (attempts + 1 >= POLL_MAX_ATTEMPTS) {
+                this._pendingExecs.delete(execId);
+                this._pollAttempts.delete(execId);
+            } else {
+                this._pollAttempts.set(execId, attempts + 1);
+            }
+        }
+
+        // Refresh tree — loadExecutions will detect completed executions
+        this._onDidChangeTreeData.fire();
+
+        if (this._pendingExecs.size === 0) {
+            this._stopPolling();
+        }
+    }
+
+    private _stopPolling(): void {
+        if (this._pollTimer) {
+            clearInterval(this._pollTimer);
+            this._pollTimer = undefined;
+        }
+        this._pendingExecs.clear();
+        this._pollAttempts.clear();
+        // Final refresh to show definitive result icons
+        this._onDidChangeTreeData.fire();
+    }
 
     private projectItem(): ExecutionItem {
         const { organization, projectName } = this.workspacePath
@@ -153,10 +212,12 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
             : { organization: '', projectName: '' };
         try {
             const plans: PlanListItem[] = await this.client.listPlansByProject(organization, projectName);
+            const expand = this._expandOnNextLoad || this._pendingExecs.size > 0;
+            this._expandOnNextLoad = false;
             return plans.map(plan => new ExecutionItem(
                 'plan',
                 formatDate(plan.createdAt),
-                vscode.TreeItemCollapsibleState.Collapsed,
+                expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
                 plan.planId,
                 undefined,
                 plan.hasIssues ? '⚠ issues' : undefined,
@@ -172,6 +233,18 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
         }
         try {
             const executions: ExecutionListItem[] = await this.client.listExecutionsByPlan(planId);
+            // Detect executions that have finished and remove them from the pending set
+            if (this._pendingExecs.size > 0) {
+                for (const ex of executions) {
+                    if (this._pendingExecs.has(ex.executionId) && ex.result !== undefined) {
+                        this._pendingExecs.delete(ex.executionId);
+                        this._pollAttempts.delete(ex.executionId);
+                    }
+                }
+                if (this._pendingExecs.size === 0) {
+                    this._stopPolling();
+                }
+            }
             return executions.map(ex => new ExecutionItem(
                 'execution',
                 formatDate(ex.executedAt),

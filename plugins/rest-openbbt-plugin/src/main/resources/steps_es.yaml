@@ -219,7 +219,7 @@
 'rest.response.extracts.field':
   expression: 'almaceno el valor del campo {field:text} del cuerpo de la respuesta en la variable {variable:id}'
   example: |
-    Entonces almaceno el valor del campo "id" del cuerpo de la respuesta en la variable "userId"
+    Entonces almaceno el valor del campo "id" del cuerpo de la respuesta en la variable userId
   scenarios:
     - title: Almacenar un campo y usarlo en la siguiente petición
       gherkin: |
@@ -227,13 +227,13 @@
         """json
         {"name": "Carol"}
         """
-        Entonces almaceno el valor del campo "id" del cuerpo de la respuesta en la variable "newUserId"
+        Entonces almaceno el valor del campo "id" del cuerpo de la respuesta en la variable newUserId
         Y hago una petición GET a "users/${newUserId}"
         Entonces el código de estado HTTP es igual a 200
     - title: Usar una variable almacenada en una petición posterior
       gherkin: |
         Cuando hago una petición GET a "users/1"
         Entonces el código de estado HTTP es igual a 200
-        Y almaceno el valor del campo "id" del cuerpo de la respuesta en la variable "existingUserId"
+        Y almaceno el valor del campo "id" del cuerpo de la respuesta en la variable existingUserId
         Y hago una petición GET a "users/${existingUserId}"
         Entonces el código de estado HTTP es igual a 200

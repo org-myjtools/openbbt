@@ -283,7 +283,7 @@
 'rest.response.extracts.field':
   expression: 'I store the value of field {field:text} from the response body into variable {variable:id}'
   example: |
-    Then I store the value of field "id" from the response body into variable "userId"
+    Then I store the value of field "id" from the response body into variable userId
   scenarios:
     - title: Store a field and use it in a subsequent request
       gherkin: |
@@ -291,13 +291,13 @@
         """json
         {"name": "Carol"}
         """
-        Then I store the value of field "id" from the response body into variable "newUserId"
+        Then I store the value of field "id" from the response body into variable newUserId
         And I make a GET request to "users/${newUserId}"
         Then the HTTP status code is equal to 200
     - title: Use a stored variable in a subsequent request
       gherkin: |
         When I make a GET request to "users/1"
         Then the HTTP status code is equal to 200
-        And I store the value of field "id" from the response body into variable "existingUserId"
+        And I store the value of field "id" from the response body into variable existingUserId
         And I make a GET request to "users/${existingUserId}"
         Then the HTTP status code is equal to 200

@@ -330,7 +330,7 @@ public class MainWindow extends BasicWindow {
             var repo     = (TestPlanRepository) runtime.getRepository(TestPlanRepository.class);
             var executor = new BackendExecutor(runtime);
             Thread.ofVirtual().name("run-executor").start(() -> {
-                executor.setUp(Map.of());
+                executor.setUp(null,null,Map.of());
                 try {
                     runNode(execRoot, executor, repo);
                     refreshExecUi(" Done");

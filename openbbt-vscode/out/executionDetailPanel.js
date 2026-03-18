@@ -97,6 +97,25 @@ async function openExecutionDetail(context, client, execution, label) {
                 vscode.window.showErrorMessage(`OpenBBT: failed to load children — ${err}`);
             }
         }
+        else if (msg.type === 'poll') {
+            try {
+                const updates = await Promise.all(msg.nodeIds.map(async (nodeId) => {
+                    const execInfo = await client.getExecutionNode(execution.executionId, nodeId);
+                    return {
+                        nodeId,
+                        status: deriveStatus(execInfo),
+                        result: execInfo?.result ?? null,
+                        message: execInfo?.message ?? null,
+                        executionNodeId: execInfo?.executionNodeId ?? null,
+                        attachmentCount: execInfo?.attachmentCount ?? 0,
+                    };
+                }));
+                panel.webview.postMessage({ type: 'update', nodes: updates });
+            }
+            catch {
+                // ignore transient errors
+            }
+        }
         else if (msg.type === 'openAttachment') {
             try {
                 const data = await client.getAttachment(msg.executionId, msg.executionNodeId, msg.attachmentId);
@@ -324,7 +343,42 @@ function buildHtml(webview, _extensionUri) {
 <script>
   const vscode = acquireVsCodeApi();
   let msgId = 0;
-  const pendingExpand = new Map(); // msgId -> resolve
+  const pendingExpand = new Map();   // msgId -> resolve
+  const nodeStatusMap = new Map();   // nodeId -> { status, result }
+  const statusIconEls = new Map();   // nodeId -> span element
+  let rootNodeId = null;
+  let headerBadgeEl = null;
+  let pollTimer = null;
+  let pollAttempts = 0;
+  const POLL_INTERVAL = 1000;
+  const POLL_MAX = 300;
+
+  function startPolling() {
+    if (pollTimer !== null) return;
+    pollTimer = setInterval(doPoll, POLL_INTERVAL);
+  }
+
+  function stopPolling() {
+    if (pollTimer !== null) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function doPoll() {
+    const pending = [];
+    for (const [nodeId, info] of nodeStatusMap) {
+      if (info.status === 'PENDING' || info.status === 'RUNNING') pending.push(nodeId);
+    }
+    if (pending.length === 0 || pollAttempts >= POLL_MAX) { stopPolling(); return; }
+    pollAttempts++;
+    vscode.postMessage({ type: 'poll', nodeIds: pending });
+  }
+
+  function trackNode(nodeId, status, result) {
+    nodeStatusMap.set(nodeId, { status, result });
+  }
+
+  function registerStatusIconEl(nodeId, el) {
+    statusIconEls.set(nodeId, el);
+  }
 
   function tagColor(tag) {
     let hash = 0;
@@ -360,9 +414,10 @@ function buildHtml(webview, _extensionUri) {
     }
   }
 
-  // Status icon element: placed just before the node label
-  function statusIconEl(status, result) {
-    const el = document.createElement('span');
+  // Apply status/result styling to an existing status-icon element
+  function applyStatusIcon(el, status, result) {
+    el.removeAttribute('style');
+    el.innerHTML = '';
     el.className = 'status-icon';
     if (status === 'PENDING') {
       el.textContent = '○';
@@ -373,7 +428,6 @@ function buildHtml(webview, _extensionUri) {
       el.style.color = 'var(--vscode-progressBar-background, #0078d4)';
       el.title = 'Running';
     } else {
-      // FINISHED — colored background, white text
       el.style.display = 'inline-flex';
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
@@ -385,33 +439,40 @@ function buildHtml(webview, _extensionUri) {
       el.style.fontSize = '0.85em';
       el.style.flexShrink = '0';
       switch (result) {
-        case 'PASSED':
-          el.textContent = '✓';
-          el.style.background = 'var(--vscode-testing-iconPassed, #388a34)';
-          el.title = 'Passed';
-          break;
-        case 'FAILED':
-          el.textContent = '✗';
-          el.style.background = 'var(--vscode-testing-iconFailed, #c72e0f)';
-          el.title = 'Failed';
-          break;
-        case 'ERROR':
-          el.textContent = '⚠';
-          el.style.background = '#c72e0f';
-          el.title = 'Error';
-          break;
-        case 'SKIPPED':
-          el.textContent = '⊘';
-          el.style.background = 'var(--vscode-disabledForeground, #999)';
-          el.title = 'Skipped';
-          break;
-        default:
-          el.textContent = '✓';
-          el.style.background = 'var(--vscode-disabledForeground, #999)';
-          el.title = 'Finished';
+        case 'PASSED':  el.textContent = '✓'; el.style.background = 'var(--vscode-testing-iconPassed, #388a34)';  el.title = 'Passed';  break;
+        case 'FAILED':  el.textContent = '✗'; el.style.background = 'var(--vscode-testing-iconFailed, #c72e0f)';  el.title = 'Failed';  break;
+        case 'ERROR':   el.textContent = '⚠'; el.style.background = '#c72e0f';                                    el.title = 'Error';   break;
+        case 'SKIPPED': el.textContent = '⊘'; el.style.background = 'var(--vscode-disabledForeground, #999)';    el.title = 'Skipped'; break;
+        default:        el.textContent = '✓'; el.style.background = 'var(--vscode-disabledForeground, #999)';    el.title = 'Finished';
       }
     }
+  }
+
+  // Status icon element: placed just before the node label
+  function statusIconEl(status, result) {
+    const el = document.createElement('span');
+    applyStatusIcon(el, status, result);
     return el;
+  }
+
+  function applyHeaderBadge(el, status, result) {
+    el.removeAttribute('style');
+    el.innerHTML = '';
+    const resultColors = { PASSED: 'var(--vscode-testing-iconPassed, #388a34)', FAILED: 'var(--vscode-testing-iconFailed, #c72e0f)', ERROR: '#c72e0f', SKIPPED: 'var(--vscode-disabledForeground, #999)' };
+    const resultSymbols = { PASSED: '✓', FAILED: '✗', ERROR: '⚠', SKIPPED: '⊘' };
+    if (status === 'PENDING') {
+      el.style.background = 'var(--vscode-disabledForeground, #555)';
+      el.textContent = '○';
+      el.title = 'Pending';
+    } else if (status === 'RUNNING') {
+      el.style.background = 'var(--vscode-progressBar-background, #0078d4)';
+      el.innerHTML = '<span class="spin">↻</span>';
+      el.title = 'Running';
+    } else {
+      el.style.background = resultColors[result] || 'var(--vscode-disabledForeground, #999)';
+      el.textContent = resultSymbols[result] || '✓';
+      el.title = result || 'Finished';
+    }
   }
 
   function createNodeEl(node, indentLevel) {
@@ -435,8 +496,13 @@ function buildHtml(webview, _extensionUri) {
       || (node.nodeType ? node.nodeType.replace('TEST_', '') : null)
       || node.nodeId;
 
+    // Track node for polling
+    trackNode(node.nodeId, node.status, node.result);
+    const sIcon = statusIconEl(node.status, node.result);
+    registerStatusIconEl(node.nodeId, sIcon);
+
     row.appendChild(expander);
-    row.appendChild(statusIconEl(node.status, node.result));
+    row.appendChild(sIcon);
     row.appendChild(name);
     const tagsEl = createTagsEl(node.tags);
     if (tagsEl) { row.appendChild(tagsEl); }
@@ -586,6 +652,7 @@ function buildHtml(webview, _extensionUri) {
   window.addEventListener('message', (event) => {
     const msg = event.data;
     if (msg.type === 'init') {
+      rootNodeId = msg.node.nodeId;
       const h = msg.header;
       const headerEl = document.getElementById('header');
       headerEl.innerHTML = '';
@@ -607,6 +674,8 @@ function buildHtml(webview, _extensionUri) {
       box.appendChild(left);
 
       const result = msg.node.result;
+      const badge = document.createElement('div');
+      badge.className = 'header-result';
       if (result) {
         const resultColors = {
           PASSED:  'var(--vscode-testing-iconPassed, #388a34)',
@@ -615,13 +684,16 @@ function buildHtml(webview, _extensionUri) {
           SKIPPED: 'var(--vscode-disabledForeground, #999)',
         };
         const resultSymbols = { PASSED: '✓', FAILED: '✗', ERROR: '⚠', SKIPPED: '⊘' };
-        const badge = document.createElement('div');
-        badge.className = 'header-result';
         badge.style.background = resultColors[result] || 'var(--vscode-disabledForeground, #999)';
         badge.textContent = resultSymbols[result] || '✓';
         badge.title = result;
-        box.appendChild(badge);
+      } else {
+        badge.style.background = 'var(--vscode-disabledForeground, #555)';
+        badge.innerHTML = '<span class="spin" style="font-size:1.2em">↻</span>';
+        badge.id = 'header-badge';
+        badge.title = msg.node.status;
       }
+      box.appendChild(badge);
 
       headerEl.appendChild(box);
 
@@ -637,6 +709,29 @@ function buildHtml(webview, _extensionUri) {
       const root = document.getElementById('root');
       root.innerHTML = '';
       root.appendChild(createNodeEl(msg.node, 0));
+    } else if (msg.type === 'update') {
+      const resultColors = {
+        PASSED:  'var(--vscode-testing-iconPassed, #388a34)',
+        FAILED:  'var(--vscode-testing-iconFailed, #c72e0f)',
+        ERROR:   '#c72e0f',
+        SKIPPED: 'var(--vscode-disabledForeground, #999)',
+      };
+      const resultSymbols = { PASSED: '✓', FAILED: '✗', ERROR: '⚠', SKIPPED: '⊘' };
+      for (const upd of msg.nodes) {
+        nodeStatusMap.set(upd.nodeId, { status: upd.status, result: upd.result });
+        const iconEl = statusIconEls.get(upd.nodeId);
+        if (iconEl) { applyStatusIcon(iconEl, upd.status, upd.result); }
+        if (upd.nodeId === rootNodeId && upd.status === 'FINISHED' && upd.result) {
+          const badgeEl = document.getElementById('header-badge');
+          if (badgeEl) {
+            badgeEl.removeAttribute('id');
+            badgeEl.style.background = resultColors[upd.result] || 'var(--vscode-disabledForeground, #999)';
+            badgeEl.innerHTML = '';
+            badgeEl.textContent = resultSymbols[upd.result] || '✓';
+            badgeEl.title = upd.result;
+          }
+        }
+      }
     } else if (msg.type === 'children') {
       const resolve = pendingExpand.get(msg.msgId);
       if (resolve) {

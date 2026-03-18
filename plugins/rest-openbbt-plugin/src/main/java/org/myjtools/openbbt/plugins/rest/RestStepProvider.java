@@ -43,46 +43,55 @@ public class RestStepProvider implements StepProvider  {
 	@StepExpression(value = "rest.request.GET", args = {"endpoint:text"})
 	public void get(String endpoint) {
 		restEngine.requestGET(interpolate(endpoint));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.POST.empty", args = {"endpoint:text"})
 	public void post(String endpoint) {
 		restEngine.requestPOST(interpolate(endpoint));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.POST.body", args = {"endpoint:text"})
 	public void postWithBody(String endpoint, Document body) {
 		restEngine.requestPOST(interpolate(endpoint), interpolate(body.content()));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.POST.file", args = {"endpoint:text", "file:text"})
 	public void postWithFile(String endpoint, String file) {
 		restEngine.requestPOST(interpolate(endpoint), resourceFinder.readAsString(file));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.PUT.body", args = {"endpoint:text"})
 	public void putWithBody(String endpoint, Document body) {
 		restEngine.requestPUT(interpolate(endpoint), interpolate(body.content()));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.PUT.file", args = {"endpoint:text", "file:text"})
 	public void putWithFile(String endpoint, String file) {
 		restEngine.requestPUT(interpolate(endpoint), resourceFinder.readAsString(file));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.PATCH.body", args = {"endpoint:text"})
 	public void patchWithBody(String endpoint, Document body) {
 		restEngine.requestPATCH(interpolate(endpoint), interpolate(body.content()));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.PATCH.file", args = {"endpoint:text", "file:text"})
 	public void patchWithFile(String endpoint, String file) {
 		restEngine.requestPATCH(interpolate(endpoint), resourceFinder.readAsString(file));
+		storeHttpExchange();
 	}
 
 	@StepExpression(value = "rest.request.DELETE", args = {"endpoint:text"})
 	public void delete(String endpoint) {
 		restEngine.requestDELETE(interpolate(endpoint));
+		storeHttpExchange();
 	}
 
 
@@ -107,6 +116,15 @@ public class RestStepProvider implements StepProvider  {
 		assertCompareContentType(body.content(), body.mimeType(), ContentType.ComparisonMode.LOOSE);
 	}
 
+	@StepExpression(value = "rest.response.extracts.field", args = {"field:text", "variable:id"})
+	public void extractFieldFromResponse(String field, String variable) {
+		String contentType = restEngine.responseContentType();
+		String value = contentTypes.get(contentType).orElseThrow(
+			() -> new IllegalStateException("Unsupported response content type: " + contentType)
+		).extractValue(restEngine.responseBody(), field);
+		ExecutionContext.current().setVariable(variable, value);
+	}
+
 
 	private void assertCompareContentType(
 		String expectedContent,
@@ -123,6 +141,11 @@ public class RestStepProvider implements StepProvider  {
 		);
 	}
 
+
+	private void storeHttpExchange() {
+		String content = restEngine.requestRaw() + "\n\n" + restEngine.responseRaw();
+		ExecutionContext.current().storeAttachment(content.getBytes(), "text/plain");
+	}
 
 	protected String interpolate(String text) {
 		return ExecutionContext.current().interpolateString(text);

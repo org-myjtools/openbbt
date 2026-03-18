@@ -253,9 +253,9 @@
 
 
 'rest.response.extracts.field':
-  expression: 'var ${variable:id} = {field:text} from HTTP response'
+  expression: 'var {variable:id} = {field:text} from HTTP response'
   example: |
-    * var $userId = 'id' from HTTP response
+    * var userId = 'id' from HTTP response
   scenarios:
     - title: Store a field and use it in a subsequent request
       gherkin: |
@@ -263,13 +263,13 @@
         """json
         {"name": "Carol"}
         """
-        * var $newUserId = 'id' from HTTP response
+        * var newUserId = 'id' from HTTP response
         * do HTTP GET "users/${newUserId}"
         * assert HTTP status code = 200
     - title: Store an existing resource ID for reuse
       gherkin: |
         * do HTTP GET "users/1"
         * assert HTTP status code = 200
-        * var $existingUserId = 'id' from HTTP response
+        * var existingUserId = 'id' from HTTP response
         * do HTTP GET "users/${existingUserId}"
         * assert HTTP status code = 200

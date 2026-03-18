@@ -53,6 +53,8 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core.execution to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.validator;
 	opens org.myjtools.openbbt.core.validator to org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.steps;
+	opens org.myjtools.openbbt.core.steps to org.myjtools.jexten;
 
 	uses ContentType;
 	uses AssertionFactoryProvider;
@@ -73,8 +75,11 @@ module org.myjtools.openbbt.core {
 			YAMLContentType;
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 	provides DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;
-	provides MessageProvider with org.myjtools.openbbt.core.assertions.AssertionMessageProvider;
+	provides MessageProvider with
+		org.myjtools.openbbt.core.assertions.AssertionMessageProvider,
+		org.myjtools.openbbt.core.steps.CoreStepMessageProvider;
 	provides AssertionFactoryProvider with org.myjtools.openbbt.core.assertions.CoreAssertionFactories;
 	provides TestPlanValidator with DefaultPlanValidator;
+	provides StepProvider with org.myjtools.openbbt.core.steps.CoreStepProvider;
 
 }

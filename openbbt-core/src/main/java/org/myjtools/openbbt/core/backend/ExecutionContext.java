@@ -1,6 +1,10 @@
 package org.myjtools.openbbt.core.backend;
 
+import org.myjtools.openbbt.core.OpenBBTRuntime;
+import org.myjtools.openbbt.core.persistence.AttachmentRepository;
+import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ExecutionContext {
@@ -11,18 +15,30 @@ public class ExecutionContext {
 		return threadLocal.get();
 	}
 
-
-
-
-
-	private final Map<String,String> variables = new ConcurrentHashMap<>();
-
 	static void setCurrent(ExecutionContext executionContext) {
 		threadLocal.set(executionContext);
 	}
 
 	static void clearCurrent() {
 		threadLocal.remove();
+	}
+
+
+
+
+	private final Map<String,String> variables = new ConcurrentHashMap<>();
+	private final OpenBBTRuntime runtime;
+	private final UUID executionID;
+	private UUID executionNodeID;
+
+	public ExecutionContext(OpenBBTRuntime runtime, UUID executionID, UUID executionNodeID) {
+		this.runtime = runtime;
+		this.executionID = executionID;
+		this.executionNodeID = executionNodeID;
+	}
+
+	void setExecutionNodeID(UUID nodeID) {
+		this.executionNodeID = nodeID;
 	}
 
 	public void setVariable(String name, String value) {
@@ -40,6 +56,13 @@ public class ExecutionContext {
 			input = input.replace(placeholder, entry.getValue());
 		}
 		return input;
+	}
+
+	public void storeAttachment(byte[] bytes, String contentType) {
+		TestExecutionRepository testExecutionRepository = runtime.getRepository(TestExecutionRepository.class);
+		AttachmentRepository attachmentRepository = runtime.getRepository(AttachmentRepository.class);
+		UUID attachmentID = testExecutionRepository.newAttachment(executionNodeID);
+		attachmentRepository.storeAttachment(executionID, executionNodeID, attachmentID, bytes, contentType);
 	}
 
 }

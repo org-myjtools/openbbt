@@ -47,6 +47,7 @@ export interface AttachmentData extends AttachmentMeta {
 
 export interface ExecResult {
     executionId: string;
+    planId: string;
     result?: string;
 }
 

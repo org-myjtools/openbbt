@@ -102,7 +102,7 @@ public class TestPlanExecutor {
 			ownResult = recordStepExecution(executionID, executionNodeID, backendExecutor, node);
 		} else if (node.nodeType() == NodeType.TEST_CASE) {
 			backendExecutor = new BackendExecutor(runtime);
-			backendExecutor.setUp(node.properties());
+			backendExecutor.setUp(executionID, executionNodeID, node.properties());
 		}
 
 		ExecutionResult childrenResult = executeChildren(executionID, testPlanNodeID, backendExecutor);
@@ -164,7 +164,7 @@ public class TestPlanExecutor {
 	private ExecutionResult recordStepExecution(
 		UUID executionID, UUID executionNodeID, BackendExecutor backendExecutor, TestPlanNode node
 	) {
-		Result stepResult = executeTestCaseStep(backendExecutor, node);
+		Result stepResult = executeTestCaseStep(backendExecutor, node, executionNodeID);
 		if (stepResult.message() != null) {
 			testExecutionRepository.updateExecutionNodeMessage(executionNodeID, stepResult.message());
 		}
@@ -175,9 +175,9 @@ public class TestPlanExecutor {
 	}
 
 
-	private Result executeTestCaseStep(BackendExecutor backendExecutor, TestPlanNode node) {
+	private Result executeTestCaseStep(BackendExecutor backendExecutor, TestPlanNode node, UUID executionNodeID) {
 		try {
-			var stepResult = backendExecutor.submitStepExecution(node).get();
+			var stepResult = backendExecutor.submitStepExecution(node, executionNodeID).get();
 			if (stepResult.left() == ExecutionResult.PASSED) {
 				return new Result(ExecutionResult.PASSED,null,null);
 			} else if (stepResult.left() == ExecutionResult.FAILED) {

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -37,10 +38,10 @@ public class JsonRpcServer {
     public interface ExecHandler {
         /**
          * Execute the current plan synchronously.
-         * {@code onExecutionCreated} is called with the executionID as soon as the
+         * {@code onExecutionCreated} is called with (executionID, planID) as soon as the
          * execution record exists, before any test steps run.
          */
-        TestExecution exec(Consumer<UUID> onExecutionCreated);
+        TestExecution exec(BiConsumer<UUID, UUID> onExecutionCreated);
     }
 
     private final InputStream in;
@@ -323,6 +324,7 @@ public class JsonRpcServer {
             TestExecution ex = execHandler.exec(null);
             JsonObject result = new JsonObject();
             result.addProperty("executionId", ex.executionID().toString());
+            result.addProperty("planId", ex.planID().toString());
             if (ex.executionRootNodeID() != null && executionRepository != null) {
                 executionRepository.getExecutionNodeResult(ex.executionRootNodeID())
                     .ifPresent(r -> result.addProperty("result", r.name()));
@@ -330,15 +332,17 @@ public class JsonRpcServer {
             return result;
         }
 
-        // Detach mode: return executionId as soon as the record is created
+        // Detach mode: return executionId and planId as soon as the record is created
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<UUID> idRef = new AtomicReference<>();
+        AtomicReference<UUID> planIdRef = new AtomicReference<>();
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
         Thread thread = new Thread(() -> {
             try {
-                execHandler.exec(id -> {
+                execHandler.exec((id, planId) -> {
                     idRef.set(id);
+                    planIdRef.set(planId);
                     latch.countDown();
                 });
             } catch (Throwable t) {
@@ -361,6 +365,7 @@ public class JsonRpcServer {
 
         JsonObject result = new JsonObject();
         result.addProperty("executionId", idRef.get().toString());
+        result.addProperty("planId", planIdRef.get().toString());
         return result;
     }
 

@@ -11,6 +11,8 @@ import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.util.Log;
+import java.util.UUID;
+import java.util.function.Consumer;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -47,7 +49,11 @@ public final class ServeCommand extends AbstractCommand {
             } catch (Exception e) {
                 throw new OpenBBTException(e, "Failed to build test plan: {}", e.getMessage());
             }
-            return new TestPlanExecutor(runtime).execute(plan.planID(), onExecutionCreated);
+            final var planId = plan.planID();
+            Consumer<UUID> cb = onExecutionCreated != null
+                ? id -> onExecutionCreated.accept(id, planId)
+                : null;
+            return new TestPlanExecutor(runtime).execute(planId, cb);
         };
 
         new JsonRpcServer(System.in, System.out, new JsonRpcServer.RepositoryFactory() {

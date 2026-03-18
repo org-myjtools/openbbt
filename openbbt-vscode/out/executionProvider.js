@@ -84,6 +84,7 @@ class ExecutionItem extends vscode.TreeItem {
         this.kind = kind;
         this.planId = planId;
         this.execution = execution;
+        this.id = kind === 'plan' ? planId : kind === 'execution' ? execution?.executionId : 'project';
         this.description = description;
         this.iconPath = resolveIcon(kind, execution?.result);
         this.tooltip = label;
@@ -114,7 +115,7 @@ function executionIcon(result) {
         case 'FAILED': return new vscode.ThemeIcon('error', new vscode.ThemeColor('testing.iconFailed'));
         case 'ERROR': return new vscode.ThemeIcon('warning', new vscode.ThemeColor('testing.iconErrored'));
         case 'SKIPPED': return new vscode.ThemeIcon('debug-step-over', new vscode.ThemeColor('testing.iconSkipped'));
-        default: return new vscode.ThemeIcon('run-all');
+        default: return new vscode.ThemeIcon('loading~spin');
     }
 }
 function formatDate(iso) {
@@ -125,19 +126,38 @@ function formatDate(iso) {
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
+const POLL_INTERVAL_MS = 1000;
+const POLL_MAX_ATTEMPTS = 300; // stop polling after 5 minutes
 class ExecutionProvider {
     workspacePath;
     _onDidChangeTreeData = new vscode.EventEmitter();
     onDidChangeTreeData = this._onDidChangeTreeData.event;
     client;
+    _expandOnNextLoad = false;
+    /** executionIds currently being polled */
+    _pendingExecs = new Set();
+    /** executionId → number of poll attempts so far */
+    _pollAttempts = new Map();
+    _pollTimer;
     constructor(workspacePath) {
         this.workspacePath = workspacePath;
     }
     setClient(client) {
         this.client = client;
     }
-    refresh() {
+    refresh(expandPlans = false) {
+        this._expandOnNextLoad = expandPlans;
         this._onDidChangeTreeData.fire();
+    }
+    startPolling(executionId) {
+        this._pendingExecs.add(executionId);
+        this._pollAttempts.set(executionId, 0);
+        if (!this._pollTimer) {
+            this._pollTimer = setInterval(() => this._pollTick(), POLL_INTERVAL_MS);
+        }
+    }
+    dispose() {
+        this._stopPolling();
     }
     getTreeItem(element) {
         return element;
@@ -153,6 +173,37 @@ class ExecutionProvider {
         }
     }
     // --- Private ---
+    _pollTick() {
+        if (this._pendingExecs.size === 0) {
+            this._stopPolling();
+            return;
+        }
+        // Expire stale polls
+        for (const [execId, attempts] of this._pollAttempts) {
+            if (attempts + 1 >= POLL_MAX_ATTEMPTS) {
+                this._pendingExecs.delete(execId);
+                this._pollAttempts.delete(execId);
+            }
+            else {
+                this._pollAttempts.set(execId, attempts + 1);
+            }
+        }
+        // Refresh tree — loadExecutions will detect completed executions
+        this._onDidChangeTreeData.fire();
+        if (this._pendingExecs.size === 0) {
+            this._stopPolling();
+        }
+    }
+    _stopPolling() {
+        if (this._pollTimer) {
+            clearInterval(this._pollTimer);
+            this._pollTimer = undefined;
+        }
+        this._pendingExecs.clear();
+        this._pollAttempts.clear();
+        // Final refresh to show definitive result icons
+        this._onDidChangeTreeData.fire();
+    }
     projectItem() {
         const { organization, projectName } = this.workspacePath
             ? readProjectInfo(this.workspacePath)
@@ -168,7 +219,9 @@ class ExecutionProvider {
             : { organization: '', projectName: '' };
         try {
             const plans = await this.client.listPlansByProject(organization, projectName);
-            return plans.map(plan => new ExecutionItem('plan', formatDate(plan.createdAt), vscode.TreeItemCollapsibleState.Collapsed, plan.planId, undefined, plan.hasIssues ? '⚠ issues' : undefined));
+            const expand = this._expandOnNextLoad || this._pendingExecs.size > 0;
+            this._expandOnNextLoad = false;
+            return plans.map(plan => new ExecutionItem('plan', formatDate(plan.createdAt), expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed, plan.planId, undefined, plan.hasIssues ? '⚠ issues' : undefined));
         }
         catch {
             return [];
@@ -180,6 +233,18 @@ class ExecutionProvider {
         }
         try {
             const executions = await this.client.listExecutionsByPlan(planId);
+            // Detect executions that have finished and remove them from the pending set
+            if (this._pendingExecs.size > 0) {
+                for (const ex of executions) {
+                    if (this._pendingExecs.has(ex.executionId) && ex.result !== undefined) {
+                        this._pendingExecs.delete(ex.executionId);
+                        this._pollAttempts.delete(ex.executionId);
+                    }
+                }
+                if (this._pendingExecs.size === 0) {
+                    this._stopPolling();
+                }
+            }
             return executions.map(ex => new ExecutionItem('execution', formatDate(ex.executedAt), vscode.TreeItemCollapsibleState.None, undefined, ex));
         }
         catch {

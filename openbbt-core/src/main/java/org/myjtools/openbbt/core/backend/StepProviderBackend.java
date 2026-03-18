@@ -20,33 +20,32 @@ public class StepProviderBackend {
 	private final ConcurrentHashMap<String,Object> variables = new ConcurrentHashMap<>();
 	private final StepProviderHinter hinter;
 	private final Config config;
+	private final OpenBBTRuntime runtime;
 
-	public StepProviderBackend(OpenBBTRuntime cm) {
-		var dataTypes = DataTypes.of(cm.getExtensions(DataTypeProvider.class)
+	public StepProviderBackend(OpenBBTRuntime runtime) {
+		this.runtime = runtime;
+		var dataTypes = DataTypes.of(runtime.getExtensions(DataTypeProvider.class)
 			.flatMap(DataTypeProvider::dataTypes)
 			.toList());
-		var assertionFactories = AssertionFactories.of(cm.getExtensions(AssertionFactoryProvider.class)
+		var assertionFactories = AssertionFactories.of(runtime.getExtensions(AssertionFactoryProvider.class)
 			.flatMap(AssertionFactoryProvider::assertionFactories)
 			.toList());
-		var stepProviders = cm.getExtensions(StepProvider.class).toList();
+		var stepProviders = runtime.getExtensions(StepProvider.class).toList();
 		for (var stepProvider : stepProviders) {
-			Messages messages = Messages.of(cm.getExtensions(MessageProvider.class)
+			Messages messages = Messages.of(runtime.getExtensions(MessageProvider.class)
 				.filter(mp -> mp.providerFor(stepProvider.getClass().getSimpleName()))
 				.toList()
 			);
 			services.add(new StepProviderService(stepProvider, dataTypes, assertionFactories, messages));
 		}
 		this.hinter = new StepProviderHinter(services);
-		this.config = cm.configuration();
+		this.config = runtime.configuration();
 	}
 
 
-	public void setUp() {
-		setUp(Collections.emptyMap());
-	}
 
-	public void setUp(Map<String,String> properties) {
-		ExecutionContext.setCurrent(new ExecutionContext());
+	public void setUp(UUID executionID, UUID executionNodeID, Map<String,String> properties) {
+		ExecutionContext.setCurrent(new ExecutionContext(runtime, executionID, executionNodeID));
 		for (var service : services) {
 			service.setUp(config.append(Config.ofMap(properties)));
 		}
@@ -84,7 +83,11 @@ public class StepProviderBackend {
 	}
 
 
-	public void run(String step, Locale locale, NodeArgument nodeArgument) {
+	public void run(String step, Locale locale, NodeArgument nodeArgument, UUID executionNodeID) {
+		var ctx = ExecutionContext.current();
+		if (ctx != null && executionNodeID != null) {
+			ctx.setExecutionNodeID(executionNodeID);
+		}
 		var matchingStep = matchingStep(step,locale).orElseThrow(
 			() -> new NoMatchingStepException(
 				"No matching step found for '{}'\n{}",

@@ -9,6 +9,7 @@ import org.myjtools.openbbt.core.util.Log;
 import org.myjtools.openbbt.core.util.Pair;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,8 +30,8 @@ public class BackendExecutor {
 		this.executor = Executors.newSingleThreadExecutor(); // TODO: make this configurable for parallel execution in the future
 	}
 
-	public void setUp(Map<String,String> properties) {
-		runInExecutor(()-> backend.setUp(properties));
+	public void setUp(UUID executionID, UUID executionNodeID, Map<String,String> properties) {
+		runInExecutor(()-> backend.setUp(executionID, executionNodeID, properties));
 	}
 
 	public void tearDown() {
@@ -49,13 +50,13 @@ public class BackendExecutor {
 	}
 
 
-	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node) {
+	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node, UUID executionNodeID) {
 		return this.executor.submit(() -> {
 			try {
 				if (testCaseFailed) {
 					return Pair.of(ExecutionResult.SKIPPED, null);
 				}
-				backend.run(node.name(), locale(node.language()), nodeArgument(node));
+				backend.run(node.name(), locale(node.language()), nodeArgument(node), executionNodeID);
 				return Pair.of(ExecutionResult.PASSED, null);
 			} catch (AssertionError e) {
 				testCaseFailed = true;

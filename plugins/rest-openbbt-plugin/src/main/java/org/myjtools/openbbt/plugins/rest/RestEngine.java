@@ -14,5 +14,7 @@ public interface RestEngine {
 	Integer responseHttpCode();
 	String responseBody();
 	String responseContentType();
+	String requestRaw();
+	String responseRaw();
 
 }

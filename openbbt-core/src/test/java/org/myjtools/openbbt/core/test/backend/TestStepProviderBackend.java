@@ -27,7 +27,7 @@ class TestStepProviderBackend {
 		void testRunStepWithOneParameter() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(()->	backend.run("Step with one parameter: 5", Locale.ENGLISH, null))
+			assertThatCode(()->	backend.run("Step with one parameter: 5", Locale.ENGLISH, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -36,7 +36,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			DataTable dataTable = new DataTable();
-			assertThatCode(() -> backend.run("Step with one parameter: 5", Locale.ENGLISH, dataTable))
+			assertThatCode(() -> backend.run("Step with one parameter: 5", Locale.ENGLISH, dataTable, null))
 				.isInstanceOf(OpenBBTException.class)
 				.hasMessageContaining("Step 'stepWithOneParameter' does not expect additional data, but it was provided");
 		}
@@ -45,7 +45,7 @@ class TestStepProviderBackend {
 		void testRunStepWithoutParameters() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Step without parameters", Locale.ENGLISH, null))
+			assertThatCode(() -> backend.run("Step without parameters", Locale.ENGLISH, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -53,7 +53,7 @@ class TestStepProviderBackend {
 		void testRunStepWithTwoParameters() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Step with two parameters: 3, 7", Locale.ENGLISH, null))
+			assertThatCode(() -> backend.run("Step with two parameters: 3, 7", Locale.ENGLISH, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -61,7 +61,7 @@ class TestStepProviderBackend {
 		void testRunStepNotFoundThrowsException() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Non-existent step", Locale.ENGLISH, null))
+			assertThatCode(() -> backend.run("Non-existent step", Locale.ENGLISH, null, null))
 				.isInstanceOf(OpenBBTException.class)
 				.hasMessageContaining("No matching step found for 'Non-existent step'");
 		}
@@ -71,7 +71,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			var dataTable = new DataTable(List.of(List.of("col1", "col2"), List.of("val1", "val2")));
-			assertThatCode(() -> backend.run("Step with only data table", Locale.ENGLISH, dataTable))
+			assertThatCode(() -> backend.run("Step with only data table", Locale.ENGLISH, dataTable, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -80,7 +80,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			var document = Document.of("text/plain", "hello world");
-			assertThatCode(() -> backend.run("Step with only document", Locale.ENGLISH, document))
+			assertThatCode(() -> backend.run("Step with only document", Locale.ENGLISH, document, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -88,7 +88,7 @@ class TestStepProviderBackend {
 		void testRunStepWithOneParameterAndAssertionPassed() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Step with one parameter and assertion: 5 is greater than 2", Locale.ENGLISH, null))
+			assertThatCode(() -> backend.run("Step with one parameter and assertion: 5 is greater than 2", Locale.ENGLISH, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -96,7 +96,7 @@ class TestStepProviderBackend {
 		void testRunStepWithOnlyAssertionStored() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Step with only assertion: is greater than 2", Locale.ENGLISH, null))
+			assertThatCode(() -> backend.run("Step with only assertion: is greater than 2", Locale.ENGLISH, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -105,7 +105,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			var dataTable = new DataTable(List.of(List.of("col1"), List.of("val1")));
-			assertThatCode(() -> backend.run("Step with one parameter and data table: 5", Locale.ENGLISH, dataTable))
+			assertThatCode(() -> backend.run("Step with one parameter and data table: 5", Locale.ENGLISH, dataTable, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -113,7 +113,7 @@ class TestStepProviderBackend {
 		void testSetUp() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(backend::setUp).doesNotThrowAnyException();
+			assertThatCode(() -> backend.setUp(null, null, Map.of())).doesNotThrowAnyException();
 		}
 
 		@Test
@@ -134,7 +134,7 @@ class TestStepProviderBackend {
 		void testRunStepWithOneParameter() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Paso con un parámetro: 5", ES, null))
+			assertThatCode(() -> backend.run("Paso con un parámetro: 5", ES, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -143,7 +143,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			DataTable dataTable = new DataTable();
-			assertThatCode(() -> backend.run("Paso con un parámetro: 5", ES, dataTable))
+			assertThatCode(() -> backend.run("Paso con un parámetro: 5", ES, dataTable, null))
 				.isInstanceOf(OpenBBTException.class)
 				.hasMessageContaining("Step 'stepWithOneParameter' does not expect additional data, but it was provided");
 		}
@@ -152,7 +152,7 @@ class TestStepProviderBackend {
 		void testRunStepWithoutParameters() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Paso sin parámetros", ES, null))
+			assertThatCode(() -> backend.run("Paso sin parámetros", ES, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -160,7 +160,7 @@ class TestStepProviderBackend {
 		void testRunStepWithTwoParameters() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Paso con dos parámetros: 3, 7", ES, null))
+			assertThatCode(() -> backend.run("Paso con dos parámetros: 3, 7", ES, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -168,7 +168,7 @@ class TestStepProviderBackend {
 		void testRunStepNotFoundThrowsException() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Paso inexistente", ES, null))
+			assertThatCode(() -> backend.run("Paso inexistente", ES, null, null))
 				.isInstanceOf(OpenBBTException.class)
 				.hasMessageContaining("No matching step found for 'Paso inexistente'");
 		}
@@ -178,7 +178,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			var dataTable = new DataTable(List.of(List.of("col1", "col2"), List.of("val1", "val2")));
-			assertThatCode(() -> backend.run("Paso con solo tabla de datos", ES, dataTable))
+			assertThatCode(() -> backend.run("Paso con solo tabla de datos", ES, dataTable, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -187,7 +187,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			var document = Document.of("text/plain", "hola mundo");
-			assertThatCode(() -> backend.run("Paso con solo documento", ES, document))
+			assertThatCode(() -> backend.run("Paso con solo documento", ES, document, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -195,7 +195,7 @@ class TestStepProviderBackend {
 		void testRunStepWithOneParameterAndAssertionPassed() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Paso con un parámetro y una aserción: 5 es mayor que 2", ES, null))
+			assertThatCode(() -> backend.run("Paso con un parámetro y una aserción: 5 es mayor que 2", ES, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -203,7 +203,7 @@ class TestStepProviderBackend {
 		void testRunStepWithOnlyAssertionStored() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(() -> backend.run("Paso con solo aserción: es mayor que 2", ES, null))
+			assertThatCode(() -> backend.run("Paso con solo aserción: es mayor que 2", ES, null, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -212,7 +212,7 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			var dataTable = new DataTable(List.of(List.of("col1"), List.of("val1")));
-			assertThatCode(() -> backend.run("Paso con un parámetro y tabla de datos: 5", ES, dataTable))
+			assertThatCode(() -> backend.run("Paso con un parámetro y tabla de datos: 5", ES, dataTable, null))
 				.doesNotThrowAnyException();
 		}
 
@@ -220,7 +220,7 @@ class TestStepProviderBackend {
 		void testSetUp() {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
-			assertThatCode(backend::setUp).doesNotThrowAnyException();
+			assertThatCode(() -> backend.setUp(null, null, Map.of())).doesNotThrowAnyException();
 		}
 
 		@Test

@@ -42,6 +42,12 @@ class TestRestSteps {
 
 		wireMock.stubFor(get("/missing")
 			.willReturn(notFound()));
+
+		wireMock.stubFor(get(urlPathEqualTo("/users"))
+			.withQueryParam("name", equalTo("Alice"))
+			.willReturn(ok()
+				.withHeader("Content-Type", "application/json")
+				.withBody("[{\"name\":\"Alice\"}]")));
 	}
 
 	private String baseUrl() {
@@ -96,6 +102,18 @@ class TestRestSteps {
 	@Test
 	@FeatureDir("dsl-delete-204")
 	void dsl_delete204_passes(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("extract-field")
+	void extractField_storesValueAndUsesItInSubsequentRequest(JUnitOpenBBTPlan plan) {
+		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-extract-field")
+	void dsl_extractField_storesValueAndUsesItInSubsequentRequest(JUnitOpenBBTPlan plan) {
 		plan.withConfig("rest.baseURL", baseUrl()).execute().assertAllPassed();
 	}
 }

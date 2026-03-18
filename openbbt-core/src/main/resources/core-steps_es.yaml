@@ -1,0 +1,128 @@
+'assert.variable.integer':
+  expression: 'la variable entera {variable:id} {{integer-assertion}}'
+  assertion-hints:
+    - 'es igual a 0'
+    - 'no es igual a 0'
+    - 'es mayor que 0'
+    - 'es menor que 100'
+  example: |
+    Entonces la variable entera count es igual a 5
+  scenarios:
+    - title: Verificar un valor entero exacto
+      gherkin: |
+        Cuando hago una petición GET a "orders/42"
+        Entonces la variable entera retries es igual a 3
+
+
+
+'assert.variable.decimal':
+  expression: 'la variable decimal {variable:id} {{decimal-assertion}}'
+  assertion-hints:
+    - 'es igual a 0.0'
+    - 'no es igual a 0.0'
+    - 'es mayor que 0.0'
+    - 'es menor que 1.0'
+  example: |
+    Entonces la variable decimal price es igual a 19.99
+  scenarios:
+    - title: Verificar un valor decimal exacto
+      gherkin: |
+        Cuando hago una petición GET a "products/1"
+        Entonces la variable decimal price es igual a 19.99
+    - title: Verificar que un decimal es positivo
+      gherkin: |
+        Cuando hago una petición POST a "cart/apply-coupon" con el cuerpo:
+        """json
+        {"code": "SAVE10"}
+        """
+        Entonces la variable decimal discount es mayor que 0.0
+
+
+'assert.variable.date':
+  expression: 'la variable fecha {variable:id} {{date-assertion}}'
+  assertion-hints:
+    - 'es igual a 2025-01-01'
+    - 'es anterior a 2025-12-31'
+    - 'es posterior a 2020-01-01'
+  example: |
+    Entonces la variable fecha expiryDate es posterior a 2025-01-01
+  scenarios:
+    - title: Verificar que una fecha es futura
+      gherkin: |
+        Cuando hago una petición GET a "subscriptions/me"
+        Entonces la variable fecha expiryDate es posterior a 2025-01-01
+    - title: Verificar una fecha exacta
+      gherkin: |
+        Cuando hago una petición POST a "users" con el cuerpo:
+        """json
+        {"name": "Alicia", "birthdate": "1990-06-15"}
+        """
+        Entonces la variable fecha createdAt es igual a 2024-06-15
+
+
+'assert.variable.time':
+  expression: 'la variable hora {variable:id} {{time-assertion}}'
+  assertion-hints:
+    - 'es igual a 12:00:00'
+    - 'es anterior a 18:00:00'
+    - 'es posterior a 08:00:00'
+  example: |
+    Entonces la variable hora openTime es anterior a 18:00:00
+  scenarios:
+    - title: Verificar que una hora es anterior a un límite
+      gherkin: |
+        Cuando hago una petición GET a "stores/1/schedule"
+        Entonces la variable hora openTime es anterior a 18:00:00
+    - title: Verificar una hora exacta
+      gherkin: |
+        Cuando hago una petición POST a "appointments" con el cuerpo:
+        """json
+        {"slot": "09:30:00"}
+        """
+        Entonces la variable hora scheduledAt es igual a 09:30:00
+
+
+'assert.variable.datetime':
+  expression: 'la variable fechahora {variable:id} {{datetime-assertion}}'
+  assertion-hints:
+    - 'es igual a 2025-01-01T00:00:00'
+    - 'es anterior a 2025-12-31T23:59:59'
+    - 'es posterior a 2020-01-01T00:00:00'
+  example: |
+    Entonces la variable fechahora createdAt es anterior a 2025-12-31T23:59:59
+  scenarios:
+    - title: Verificar que una fechahora es anterior a un instante
+      gherkin: |
+        Cuando hago una petición POST a "events" con el cuerpo:
+        """json
+        {"name": "Conferencia", "start": "2025-06-01T09:00:00"}
+        """
+        Entonces la variable fechahora createdAt es anterior a 2025-12-31T23:59:59
+    - title: Verificar una fechahora exacta
+      gherkin: |
+        Cuando hago una petición GET a "audit/latest"
+        Entonces la variable fechahora timestamp es igual a 2024-06-15T10:30:00
+
+
+'assert.variable.text':
+  expression: 'la variable texto {variable:id} {{text-assertion}}'
+  assertion-hints:
+    - 'es igual a "esperado"'
+    - 'no es igual a "inesperado"'
+    - 'contiene "parcial"'
+    - 'empieza por "prefijo"'
+    - 'termina en "sufijo"'
+  example: |
+    Entonces la variable texto status es igual a "activo"
+  scenarios:
+    - title: Verificar un valor de texto exacto
+      gherkin: |
+        Cuando hago una petición GET a "users/1"
+        Entonces la variable texto status es igual a "activo"
+    - title: Verificar que un texto contiene una subcadena
+      gherkin: |
+        Cuando hago una petición POST a "notifications/send" con el cuerpo:
+        """json
+        {"recipient": "alicia@ejemplo.com", "template": "bienvenida"}
+        """
+        Entonces la variable texto message contiene "éxito"

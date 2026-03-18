@@ -233,7 +233,8 @@ function activate(context) {
     // Auto-populate the tree on startup using existing plan data (no plan re-run).
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     const executionProvider = new executionProvider_1.ExecutionProvider(workspaceFolder?.uri.fsPath);
-    vscode.window.registerTreeDataProvider('openbbt.executions', executionProvider);
+    const executionTreeView = vscode.window.createTreeView('openbbt.executions', { treeDataProvider: executionProvider, showCollapseAll: true });
+    context.subscriptions.push(executionTreeView, executionProvider);
     if (workspaceFolder) {
         const config = vscode.workspace.getConfiguration('openbbt');
         const executable = config.get('executablePath', 'openbbt');
@@ -322,16 +323,22 @@ function activate(context) {
             return;
         }
         try {
-            const result = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'OpenBBT: running tests…', cancellable: false }, () => serveClient.exec(false));
-            const resultLabel = result.result ?? 'unknown';
-            vscode.window.showInformationMessage(`OpenBBT: execution ${result.executionId.substring(0, 8)} — ${resultLabel}`);
+            const result = await serveClient.exec(true);
+            executionProvider.refresh(true);
+            executionProvider.startPolling(result.executionId);
+            if (result.planId) {
+                const executions = await serveClient.listExecutionsByPlan(result.planId);
+                const execItem = executions.find(e => e.executionId === result.executionId);
+                if (execItem) {
+                    const label = execItem.executedAt.substring(0, 19);
+                    await (0, executionDetailPanel_1.openExecutionDetail)(context, serveClient, execItem, label);
+                }
+            }
+            vscode.window.showInformationMessage(`OpenBBT: execution ${result.executionId.substring(0, 8)} started`);
         }
         catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             vscode.window.showErrorMessage(`OpenBBT: execution failed — ${msg}`);
-        }
-        finally {
-            executionProvider.refresh();
         }
     }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.openDetail', async (execution) => {

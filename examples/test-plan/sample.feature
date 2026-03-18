@@ -102,3 +102,18 @@ Feature: Posts REST API
   Scenario: Trigger an action with no body
     When I make a POST request to "posts/1/comments"
     Then the HTTP status code is not equal to 500
+
+    # -------------------------------------------------------------
+  @ID-10 @POST @GET
+  Scenario: Create a post and get it
+    When I make a POST request to "posts" with body:
+      """json
+      {
+          "title": "My new post",
+          "body": "Content of my new post.",
+          "userId": 1
+      }
+      """
+    Then I store the value of field 'id' from the response body into variable id
+    Then I make a GET request to 'posts/${id}'
+    Then the HTTP status code is 200

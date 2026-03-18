@@ -15,6 +15,8 @@ public class JdkHttpEngine implements RestEngine {
     private String baseUrl;
     private Integer httpCodeThreshold;
     private Duration timeout = Duration.ofSeconds(10);
+    private HttpRequest lastRequest;
+    private String lastRequestBody;
     private HttpResponse<String> lastResponse;
 
     private final HttpClient client = HttpClient.newHttpClient();
@@ -36,38 +38,32 @@ public class JdkHttpEngine implements RestEngine {
 
     @Override
     public void requestGET(String endpoint) {
-        lastResponse = send(builder(endpoint).GET().build());
-        checkThreshold();
+        send(builder(endpoint).GET().build(), null);
     }
 
     @Override
     public void requestPOST(String endpoint) {
-        lastResponse = send(builder(endpoint).POST(HttpRequest.BodyPublishers.noBody()).build());
-        checkThreshold();
+        send(builder(endpoint).POST(HttpRequest.BodyPublishers.noBody()).build(), null);
     }
 
     @Override
     public void requestPOST(String endpoint, String content) {
-        lastResponse = send(builder(endpoint).POST(HttpRequest.BodyPublishers.ofString(content)).build());
-        checkThreshold();
+        send(builder(endpoint).POST(HttpRequest.BodyPublishers.ofString(content)).build(), content);
     }
 
     @Override
     public void requestPUT(String endpoint, String content) {
-        lastResponse = send(builder(endpoint).PUT(HttpRequest.BodyPublishers.ofString(content)).build());
-        checkThreshold();
+        send(builder(endpoint).PUT(HttpRequest.BodyPublishers.ofString(content)).build(), content);
     }
 
     @Override
     public void requestPATCH(String endpoint, String content) {
-        lastResponse = send(builder(endpoint).method("PATCH", HttpRequest.BodyPublishers.ofString(content)).build());
-        checkThreshold();
+        send(builder(endpoint).method("PATCH", HttpRequest.BodyPublishers.ofString(content)).build(), content);
     }
 
     @Override
     public void requestDELETE(String endpoint) {
-        lastResponse = send(builder(endpoint).DELETE().build());
-        checkThreshold();
+        send(builder(endpoint).DELETE().build(), null);
     }
 
     @Override
@@ -99,9 +95,40 @@ public class JdkHttpEngine implements RestEngine {
             .timeout(timeout);
     }
 
-    private HttpResponse<String> send(HttpRequest request) {
+    @Override
+    public String requestRaw() {
+        if (lastRequest == null) return null;
+        var sb = new StringBuilder();
+        sb.append(lastRequest.method()).append(" ").append(lastRequest.uri()).append("\n");
+        lastRequest.headers().map().forEach((name, values) ->
+            values.forEach(value -> sb.append(name).append(": ").append(value).append("\n"))
+        );
+        if (lastRequestBody != null && !lastRequestBody.isBlank()) {
+            sb.append("\n").append(lastRequestBody);
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String responseRaw() {
+        if (lastResponse == null) return null;
+        var sb = new StringBuilder();
+        sb.append("HTTP/1.1 ").append(lastResponse.statusCode()).append("\n");
+        lastResponse.headers().map().forEach((name, values) ->
+            values.forEach(value -> sb.append(name).append(": ").append(value).append("\n"))
+        );
+        String body = lastResponse.body();
+        if (body != null && !body.isBlank()) {
+            sb.append("\n").append(body);
+        }
+        return sb.toString();
+    }
+
+    private void send(HttpRequest request, String body) {
+        lastRequest = request;
+        lastRequestBody = body;
         try {
-            return client.send(request, HttpResponse.BodyHandlers.ofString());
+            lastResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new OpenBBTException("HTTP request interrupted: {}",request.uri());
@@ -109,6 +136,7 @@ public class JdkHttpEngine implements RestEngine {
             String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             throw new OpenBBTException("HTTP request failed [{}]: {}", request.uri(), reason);
         }
+        checkThreshold();
     }
 
     private void checkThreshold() {
