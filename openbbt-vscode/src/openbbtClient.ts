@@ -75,6 +75,11 @@ export interface NodeInfo {
     dataTable: string[][] | null;
 }
 
+export interface ContributorInfo {
+    type: string;
+    implementations: string[];
+}
+
 type PendingRequest = {
     resolve: (result: unknown) => void;
     reject: (err: Error) => void;
@@ -93,6 +98,7 @@ export class OpenBBTClient {
     private readonly cwd: string;
     private readonly executable: string;
     private readonly log: (msg: string) => void;
+    onConnected: (() => void) | undefined = undefined;
 
     constructor(executable: string, cwd: string, log: (msg: string) => void = () => {}) {
         this.executable = executable;
@@ -128,10 +134,15 @@ export class OpenBBTClient {
             this.rejectAll(new Error(`openbbt serve process exited (code ${code})`));
         });
         this.process = proc;
+        this.onConnected?.();
     }
 
     async refresh(): Promise<void> {
         await this.call('refresh', {});
+    }
+
+    async getContributors(): Promise<ContributorInfo[]> {
+        return this.call('contributors/list', {}) as Promise<ContributorInfo[]>;
     }
 
     async listPlans(): Promise<PlanInfo[]> {

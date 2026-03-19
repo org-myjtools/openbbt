@@ -45,6 +45,7 @@ const openbbtClient_1 = require("./openbbtClient");
 const executionProvider_1 = require("./executionProvider");
 const executionDetailPanel_1 = require("./executionDetailPanel");
 const testPlanProvider_1 = require("./testPlanProvider");
+const contributorsProvider_1 = require("./contributorsProvider");
 const node_1 = require("vscode-languageclient/node");
 let client;
 let serveClient;
@@ -230,6 +231,8 @@ function activate(context) {
     vscode.workspace.textDocuments.forEach(updateDiagnostics);
     const testPlanProvider = new testPlanProvider_1.TestPlanProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
+    const contributorsProvider = new contributorsProvider_1.ContributorsProvider();
+    vscode.window.registerTreeDataProvider('openbbt.contributors', contributorsProvider);
     // Auto-populate the tree on startup using existing plan data (no plan re-run).
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     const executionProvider = new executionProvider_1.ExecutionProvider(workspaceFolder?.uri.fsPath);
@@ -241,6 +244,7 @@ function activate(context) {
         if (executableExists(executable)) {
             logOutput('[startup] starting serve connection');
             serveClient = new openbbtClient_1.OpenBBTClient(executable, workspaceFolder.uri.fsPath, logOutput);
+            contributorsProvider.setClient(serveClient);
             serveClient.connect();
             testPlanProvider.setClient(serveClient);
             testPlanProvider.invalidate();
@@ -290,6 +294,7 @@ function activate(context) {
         // engine and reads the plan data just written by 'openbbt plan'.
         logOutput(`[refresh] starting new serve connection`);
         serveClient = new openbbtClient_1.OpenBBTClient(executable, cwd, logOutput);
+        contributorsProvider.setClient(serveClient);
         serveClient.connect();
         testPlanProvider.setClient(serveClient);
         executionProvider.setClient(serveClient);
@@ -348,6 +353,9 @@ function activate(context) {
         }
         const label = execution.executedAt ? execution.executedAt.substring(0, 19) : execution.executionId.substring(0, 8);
         await (0, executionDetailPanel_1.openExecutionDetail)(context, serveClient, execution, label);
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.contributors.refresh', async () => {
+        await contributorsProvider.refresh();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.restartLsp', async () => {
         await startClient();

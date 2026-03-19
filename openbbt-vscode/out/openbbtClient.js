@@ -14,6 +14,7 @@ class OpenBBTClient {
     cwd;
     executable;
     log;
+    onConnected = undefined;
     constructor(executable, cwd, log = () => { }) {
         this.executable = executable;
         this.cwd = cwd;
@@ -46,9 +47,13 @@ class OpenBBTClient {
             this.rejectAll(new Error(`openbbt serve process exited (code ${code})`));
         });
         this.process = proc;
+        this.onConnected?.();
     }
     async refresh() {
         await this.call('refresh', {});
+    }
+    async getContributors() {
+        return this.call('contributors/list', {});
     }
     async listPlans() {
         return this.call('browse/plans', {});

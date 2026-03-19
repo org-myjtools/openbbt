@@ -429,7 +429,7 @@ public class MainWindow extends BasicWindow {
         }
 
         try {
-            var pair = executor.submitStepExecution(coreNode).get();
+            var pair = executor.submitStepExecution(coreNode, null).get();
             step.setStatus(mapResult(pair.left()));
             if (pair.right() != null) {
                 step.setValidationMessage(pair.right().getMessage());

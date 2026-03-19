@@ -709,6 +709,7 @@ function buildHtml(webview, _extensionUri) {
       const root = document.getElementById('root');
       root.innerHTML = '';
       root.appendChild(createNodeEl(msg.node, 0));
+      startPolling();
     } else if (msg.type === 'update') {
       const resultColors = {
         PASSED:  'var(--vscode-testing-iconPassed, #388a34)',

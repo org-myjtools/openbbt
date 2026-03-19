@@ -8,6 +8,7 @@ import { OpenBBTClient } from './openbbtClient';
 import { ExecutionProvider } from './executionProvider';
 import { openExecutionDetail } from './executionDetailPanel';
 import { ISSUE_URI_SCHEME, TestPlanProvider } from './testPlanProvider';
+import { ContributorsProvider } from './contributorsProvider';
 import {
     CloseAction,
     ErrorAction,
@@ -246,6 +247,9 @@ export function activate(context: vscode.ExtensionContext): void {
     const testPlanProvider = new TestPlanProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
 
+    const contributorsProvider = new ContributorsProvider();
+    vscode.window.registerTreeDataProvider('openbbt.contributors', contributorsProvider);
+
     // Auto-populate the tree on startup using existing plan data (no plan re-run).
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 
@@ -258,6 +262,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (executableExists(executable)) {
             logOutput('[startup] starting serve connection');
             serveClient = new OpenBBTClient(executable, workspaceFolder.uri.fsPath, logOutput);
+            contributorsProvider.setClient(serveClient);
             serveClient.connect();
             testPlanProvider.setClient(serveClient);
             testPlanProvider.invalidate();
@@ -321,6 +326,7 @@ export function activate(context: vscode.ExtensionContext): void {
             // engine and reads the plan data just written by 'openbbt plan'.
             logOutput(`[refresh] starting new serve connection`);
             serveClient = new OpenBBTClient(executable, cwd, logOutput);
+            contributorsProvider.setClient(serveClient);
             serveClient.connect();
             testPlanProvider.setClient(serveClient);
             executionProvider.setClient(serveClient);
@@ -387,6 +393,12 @@ export function activate(context: vscode.ExtensionContext): void {
             }
             const label = execution.executedAt ? execution.executedAt.substring(0, 19) : execution.executionId.substring(0, 8);
             await openExecutionDetail(context, serveClient, execution, label);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.contributors.refresh', async () => {
+            await contributorsProvider.refresh();
         })
     );
 

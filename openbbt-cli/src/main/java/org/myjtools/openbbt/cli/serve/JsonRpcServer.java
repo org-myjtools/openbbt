@@ -35,6 +35,11 @@ public class JsonRpcServer {
     }
 
     @FunctionalInterface
+    public interface ContributorsProvider {
+        java.util.Map<String, java.util.List<String>> getContributors();
+    }
+
+    @FunctionalInterface
     public interface ExecHandler {
         /**
          * Execute the current plan synchronously.
@@ -48,20 +53,26 @@ public class JsonRpcServer {
     private final OutputStream out;
     private final RepositoryFactory factory;
     private final ExecHandler execHandler;
+    private final ContributorsProvider contributorsProvider;
     private TestPlanRepository repository;
     private TestExecutionRepository executionRepository;
     private AttachmentRepository attachmentRepository;
     private volatile boolean running = true;
 
     public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory) {
-        this(in, out, factory, null);
+        this(in, out, factory, null, null);
     }
 
     public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler) {
+        this(in, out, factory, execHandler, null);
+    }
+
+    public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler, ContributorsProvider contributorsProvider) {
         this.in = in;
         this.out = out;
         this.factory = factory;
         this.execHandler = execHandler;
+        this.contributorsProvider = contributorsProvider;
     }
 
     public void run() {
@@ -147,6 +158,7 @@ public class JsonRpcServer {
                 case "executions/attachments" -> handleListAttachments(params);
                 case "executions/attachment"  -> handleGetAttachment(params);
                 case "executions/delete" -> { handleDeleteExecution(params); yield JsonNull.INSTANCE; }
+                case "contributors/list" -> handleContributors();
                 case "exec"                   -> handleExec(params);
                 case "refresh"         -> { handleRefresh(); yield JsonNull.INSTANCE; }
                 case "shutdown"        -> { running = false; yield JsonNull.INSTANCE; }
@@ -366,6 +378,21 @@ public class JsonRpcServer {
         JsonObject result = new JsonObject();
         result.addProperty("executionId", idRef.get().toString());
         result.addProperty("planId", planIdRef.get().toString());
+        return result;
+    }
+
+    private JsonArray handleContributors() {
+        if (contributorsProvider == null)
+            throw new IllegalStateException("Contributors provider not configured");
+        JsonArray result = new JsonArray();
+        contributorsProvider.getContributors().forEach((type, implementations) -> {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("type", type);
+            JsonArray impls = new JsonArray();
+            implementations.forEach(impls::add);
+            obj.add("implementations", impls);
+            result.add(obj);
+        });
         return result;
     }
 

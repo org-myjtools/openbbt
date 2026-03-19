@@ -66,6 +66,11 @@
         "command": "openbbt.executions.pruneEmpty",
         "title": "OpenBBT: Delete Plans Without Executions",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "openbbt.contributors.refresh",
+        "title": "OpenBBT: Refresh Contributors",
+        "icon": "$(refresh)"
       }
     ],
     "viewsContainers": {
@@ -88,6 +93,11 @@
           "id": "openbbt.executions",
           "name": "Executions",
           "icon": "$(run-all)"
+        },
+        {
+          "id": "openbbt.contributors",
+          "name": "Contributors",
+          "icon": "$(extensions)"
         }
       ]
     },
@@ -111,6 +121,11 @@
         {
           "command": "openbbt.restartLsp",
           "when": "view == openbbt.testPlan",
+          "group": "navigation"
+        },
+        {
+          "command": "openbbt.contributors.refresh",
+          "when": "view == openbbt.contributors",
           "group": "navigation"
         }
       ],

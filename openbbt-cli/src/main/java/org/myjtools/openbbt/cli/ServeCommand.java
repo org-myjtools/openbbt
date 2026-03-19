@@ -66,6 +66,6 @@ public final class ServeCommand extends AbstractCommand {
             @Override public AttachmentRepository openAttachment() {
                 return runtime.getRepository(AttachmentRepository.class);
             }
-        }, execHandler).run();
+        }, execHandler, runtime::getContributors).run();
     }
 }

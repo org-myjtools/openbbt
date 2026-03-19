@@ -15,6 +15,7 @@ import java.util.Map;
 		GetExecutionNodeCommand.class,
 		InitCommand.class,
 		InstallCommand.class,
+		ListContributorsCommand.class,
 		ListExecutionsCommand.class,
 		ListPlansCommand.class,
 		VersionCommand.class,

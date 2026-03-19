@@ -4,9 +4,7 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
-import org.myjtools.openbbt.core.contributors.ConfigProvider;
-import org.myjtools.openbbt.core.contributors.ContentType;
-import org.myjtools.openbbt.core.contributors.RepositoryFactory;
+import org.myjtools.openbbt.core.contributors.*;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.persistence.AttachmentRepository;
@@ -19,6 +17,9 @@ import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class OpenBBTRuntime implements InjectionProvider {
@@ -172,6 +173,30 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 	public <T> Stream<T> getExtensions(Class<T> type) {
 		return extensionManager.getExtensions(type);
+	}
+
+
+	public List<Class<?>> getContributedTypes() {
+		return List.of(
+			ConfigProvider.class,
+			MessageProvider.class,
+			RepositoryFactory.class,
+			ContentType.class,
+			DataTypeProvider.class,
+			ReportBuilder.class,
+			StepProvider.class,
+			SuiteAssembler.class
+		);
+	}
+
+	public Map<String, List<String>> getContributors() {
+		return getContributedTypes().stream()
+			.flatMap(type -> getExtensions(type).map(ext -> Map.entry(type.getSimpleName(), ext.getClass().getSimpleName())))
+			.collect(Collectors.toMap(
+				Map.Entry::getKey,
+				entry -> List.of(entry.getValue()),
+				(a, b) -> Stream.concat(a.stream(), b.stream()).toList()
+			));
 	}
 
 
