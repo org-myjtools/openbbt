@@ -832,6 +832,19 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	}
 
 
+	@Override
+	public void deletePlan(UUID planId) {
+		// Deleting the plan record is enough: the schema cascades handle everything.
+		// - EXECUTION_PLAN_FK ON DELETE CASCADE → removes executions, execution_nodes, execution_attachments
+		// - PLAN_NODE_PLAN_FK ON DELETE SET NULL → clears plan_id on plan_nodes
+		// - PLAN_PLAN_NODE_FK ON DELETE CASCADE → removes root plan_node, which cascades
+		//   via fk_plan_node_parent to all children, tags and properties.
+		dsl.deleteFrom(TABLE_PLAN)
+		   .where(FIELD_PLAN_ID.eq(planId))
+		   .execute();
+	}
+
+
 	private void assertExistsNode(UUID id) {
 		if (id == null) {
 			throw new OpenBBTException("Plan node ID is null!");
@@ -851,6 +864,10 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			.fetchOptional()
 			.map(r -> r.get(FIELD_PROJECT_ID));
 		if (existing.isPresent()) {
+			dsl.update(TABLE_PROJECT)
+				.set(FIELD_DESCRIPTION, testProject.description())
+				.where(FIELD_PROJECT_ID.eq(existing.get()))
+				.execute();
 			return existing.get();
 		}
 		UUID id = UUIDGenerator.generateUUID();
@@ -858,6 +875,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			.set(FIELD_PROJECT_ID, id)
 			.set(FIELD_ORGANIZATION_NAME, testProject.organization())
 			.set(FIELD_PROJECT_NAME, testProject.name())
+			.set(FIELD_DESCRIPTION, testProject.description())
 			.execute();
 		return id;
 	}
@@ -891,6 +909,21 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	}
 
 	@Override
+	public List<TestPlan> listPlans(String organization, String project, int offset, int max) {
+		var query = dsl.select(
+				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+			)
+			.from(TABLE_PLAN)
+			.join(TABLE_PROJECT).using(FIELD_PROJECT_ID)
+			.where(FIELD_ORGANIZATION_NAME.eq(organization))
+			.and(FIELD_PROJECT_NAME.eq(project))
+			.orderBy(FIELD_CREATED_AT.desc())
+			.offset(offset);
+		return (max > 0 ? query.limit(max) : query).fetch().map(this::mapPlan);
+	}
+
+	@Override
 	public Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash) {
 		return dsl.select(FIELD_PROJECT_ID)
 			.from(TABLE_PROJECT)
@@ -914,6 +947,19 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 
 
 	@Override
+	public Optional<org.myjtools.openbbt.core.testplan.TestProject> getProject(UUID projectID) {
+		return dsl.select(FIELD_ORGANIZATION_NAME, FIELD_PROJECT_NAME, FIELD_DESCRIPTION)
+			.from(TABLE_PROJECT)
+			.where(FIELD_PROJECT_ID.eq(projectID))
+			.fetchOptional()
+			.map(rec -> new org.myjtools.openbbt.core.testplan.TestProject(
+				rec.get(FIELD_PROJECT_NAME),
+				rec.get(FIELD_DESCRIPTION),
+				rec.get(FIELD_ORGANIZATION_NAME),
+				java.util.List.of()
+			));
+	}
+
 	public Optional<TestPlan> getPlan(UUID planID) {
 		return dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,

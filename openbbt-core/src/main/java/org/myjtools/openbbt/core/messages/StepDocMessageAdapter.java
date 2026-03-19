@@ -4,6 +4,7 @@ import org.myjtools.openbbt.core.docgen.StepDocEntry;
 import org.myjtools.openbbt.core.docgen.StepDocLoader;
 import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,7 +17,18 @@ public abstract class StepDocMessageAdapter implements MessageProvider {
 
 	private final Lazy<Map<String,StepDocEntry>> entries = Lazy.of(() -> {
 		try {
-			return StepDocLoader.load(getClass().getModule().getResourceAsStream(resource()));
+			var langResources = languageResources();
+			if (langResources.isEmpty()) {
+				return StepDocLoader.load(getClass().getModule().getResourceAsStream(resource()));
+			}
+			var langStreams = new LinkedHashMap<String, InputStream>();
+			for (var langEntry : langResources.entrySet()) {
+				var stream = getClass().getModule().getResourceAsStream(langEntry.getValue());
+				if (stream != null) {
+					langStreams.put(langEntry.getKey(), stream);
+				}
+			}
+			return StepDocLoader.load(getClass().getModule().getResourceAsStream(resource()), langStreams);
 		} catch (Exception e) {
 			log.error(e, "Failed to load step documentation from resource {}", resource());
 			return Map.of();
@@ -47,6 +59,10 @@ public abstract class StepDocMessageAdapter implements MessageProvider {
 
 	protected String resource() {
 		return resource;
+	}
+
+	protected Map<String, String> languageResources() {
+		return Map.of();
 	}
 
 }

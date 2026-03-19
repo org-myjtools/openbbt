@@ -1,3 +1,7 @@
+import org.myjtools.openbbt.core.contenttypes.JSONContentType;
+import org.myjtools.openbbt.core.contenttypes.TextContentType;
+import org.myjtools.openbbt.core.contenttypes.XMLContentType;
+import org.myjtools.openbbt.core.contenttypes.YAMLContentType;
 import org.myjtools.openbbt.core.contributors.*;
 import org.myjtools.openbbt.core.validator.DefaultPlanValidator;
 import org.myjtools.openbbt.core.messages.MessageProvider;
@@ -19,6 +23,10 @@ module org.myjtools.openbbt.core {
 	requires org.yaml.snakeyaml;
 	requires org.hamcrest;
 	requires com.google.guice;
+	requires com.fasterxml.jackson.databind;
+	requires com.fasterxml.jackson.dataformat.yaml;
+	requires com.networknt.schema;
+	requires java.xml;
 
 	exports org.myjtools.openbbt.core;
 	exports org.myjtools.openbbt.core.util;
@@ -37,13 +45,18 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.backend to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.contenttypes;
+	opens org.myjtools.openbbt.core.contenttypes to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.persistence;
 	opens org.myjtools.openbbt.core.persistence to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.execution;
 	opens org.myjtools.openbbt.core.execution to org.myjtools.jexten;
 	exports org.myjtools.openbbt.core.validator;
 	opens org.myjtools.openbbt.core.validator to org.myjtools.jexten;
+	exports org.myjtools.openbbt.core.steps;
+	opens org.myjtools.openbbt.core.steps to org.myjtools.jexten;
 
+	uses ContentType;
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;
 	uses TestPlanRepository;
@@ -53,11 +66,20 @@ module org.myjtools.openbbt.core {
 	uses org.myjtools.openbbt.core.contributors.StepProvider;
 	uses RepositoryFactory;
 	uses TestPlanValidator;
+	uses ReportBuilder;
 
+	provides ContentType with
+			JSONContentType,
+			TextContentType,
+			XMLContentType,
+			YAMLContentType;
 	provides ConfigProvider with org.myjtools.openbbt.core.OpenBBTConfig;
 	provides DataTypeProvider with org.myjtools.openbbt.core.datatypes.CoreDataTypes;
-	provides MessageProvider with org.myjtools.openbbt.core.assertions.AssertionMessageProvider;
+	provides MessageProvider with
+		org.myjtools.openbbt.core.assertions.AssertionMessageProvider,
+		org.myjtools.openbbt.core.steps.CoreStepMessageProvider;
 	provides AssertionFactoryProvider with org.myjtools.openbbt.core.assertions.CoreAssertionFactories;
 	provides TestPlanValidator with DefaultPlanValidator;
+	provides StepProvider with org.myjtools.openbbt.core.steps.CoreStepProvider;
 
 }

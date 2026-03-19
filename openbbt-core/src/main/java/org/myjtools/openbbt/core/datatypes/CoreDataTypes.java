@@ -77,9 +77,9 @@ public class CoreDataTypes implements DataTypeProvider {
 		"<protocol://host/path>"
 	);
 
-	/** Identifier string. Pattern: {@code \w[\w_-.]+}. Example: {@code user_123}, {@code abc.def} */
+	/** Java-like identifier. Pattern: {@code [a-zA-Z_$][\w$]*}. Example: {@code userId}, {@code my_var} */
 	public static final DataType ID = new RegexDataTypeAdapter<>(
-		"id", "\\w[\\w_-\\.]+", String.class, x -> x, "<UUID>"
+		"id", "[a-zA-Z_$][\\w$]*", String.class, x -> x, "<identifier>"
 	);
 
 	/** File path (quoted). Parses to {@link Path}. Example: {@code '/path/to/file.txt'} */

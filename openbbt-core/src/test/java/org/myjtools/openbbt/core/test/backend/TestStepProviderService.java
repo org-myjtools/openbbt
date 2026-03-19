@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.core.test.backend;
 
 import org.junit.jupiter.api.Test;
+import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.AssertionFactories;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
@@ -142,7 +143,7 @@ class TestStepProviderService {
     void stepWithOneParameterAndAssertion() throws Throwable {
         TestStepProvider stepProvider = new TestStepProvider();
         var stepContributorBackend = new StepProviderService(stepProvider, dataTypes, assertionFactories, stepMessages);
-        stepContributorBackend.setUp();
+        stepContributorBackend.setUp(Config.empty());
         var step = stepContributorBackend.matchingStep("Step with one parameter and assertion: 5 is greater than 2", Locale.ENGLISH).orElseThrow();
         var runnableStep = step.left();
         var match = step.right();
@@ -232,7 +233,7 @@ class TestStepProviderService {
     @Test
     void testSetUp() {
         var service = new StepProviderService(new TestStepProvider(), dataTypes, assertionFactories, stepMessages);
-        service.setUp();
+        service.setUp(Config.empty());
     }
 
 

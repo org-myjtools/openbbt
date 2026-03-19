@@ -42,7 +42,10 @@ const vscode = __importStar(require("vscode"));
 const featureFormatter_1 = require("./featureFormatter");
 const gherkinSymbolProvider_1 = require("./gherkinSymbolProvider");
 const openbbtClient_1 = require("./openbbtClient");
+const executionProvider_1 = require("./executionProvider");
+const executionDetailPanel_1 = require("./executionDetailPanel");
 const testPlanProvider_1 = require("./testPlanProvider");
+const contributorsProvider_1 = require("./contributorsProvider");
 const node_1 = require("vscode-languageclient/node");
 let client;
 let serveClient;
@@ -228,17 +231,25 @@ function activate(context) {
     vscode.workspace.textDocuments.forEach(updateDiagnostics);
     const testPlanProvider = new testPlanProvider_1.TestPlanProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
+    const contributorsProvider = new contributorsProvider_1.ContributorsProvider();
+    vscode.window.registerTreeDataProvider('openbbt.contributors', contributorsProvider);
     // Auto-populate the tree on startup using existing plan data (no plan re-run).
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    const executionProvider = new executionProvider_1.ExecutionProvider(workspaceFolder?.uri.fsPath);
+    const executionTreeView = vscode.window.createTreeView('openbbt.executions', { treeDataProvider: executionProvider, showCollapseAll: true });
+    context.subscriptions.push(executionTreeView, executionProvider);
     if (workspaceFolder) {
         const config = vscode.workspace.getConfiguration('openbbt');
         const executable = config.get('executablePath', 'openbbt');
         if (executableExists(executable)) {
             logOutput('[startup] starting serve connection');
             serveClient = new openbbtClient_1.OpenBBTClient(executable, workspaceFolder.uri.fsPath, logOutput);
+            contributorsProvider.setClient(serveClient);
             serveClient.connect();
             testPlanProvider.setClient(serveClient);
             testPlanProvider.invalidate();
+            executionProvider.setClient(serveClient);
+            executionProvider.refresh();
         }
     }
     context.subscriptions.push(vscode.window.registerFileDecorationProvider({
@@ -283,10 +294,13 @@ function activate(context) {
         // engine and reads the plan data just written by 'openbbt plan'.
         logOutput(`[refresh] starting new serve connection`);
         serveClient = new openbbtClient_1.OpenBBTClient(executable, cwd, logOutput);
+        contributorsProvider.setClient(serveClient);
         serveClient.connect();
         testPlanProvider.setClient(serveClient);
+        executionProvider.setClient(serveClient);
         logOutput(`[refresh] invalidating tree`);
         testPlanProvider.invalidate();
+        executionProvider.refresh();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.openSource', async (source) => {
         const match = source.match(/^(.*)\[(\d+),(\d+)\]$/);
@@ -308,16 +322,134 @@ function activate(context) {
             selection: new vscode.Range(pos, pos),
         });
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('openbbt.installPlugins', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.run', async (_item) => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        try {
+            const result = await serveClient.exec(true);
+            executionProvider.refresh(true);
+            executionProvider.startPolling(result.executionId);
+            if (result.planId) {
+                const executions = await serveClient.listExecutionsByPlan(result.planId);
+                const execItem = executions.find(e => e.executionId === result.executionId);
+                if (execItem) {
+                    const label = execItem.executedAt.substring(0, 19);
+                    await (0, executionDetailPanel_1.openExecutionDetail)(context, serveClient, execItem, label);
+                }
+            }
+            vscode.window.showInformationMessage(`OpenBBT: execution ${result.executionId.substring(0, 8)} started`);
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`OpenBBT: execution failed — ${msg}`);
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.openDetail', async (execution) => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        const label = execution.executedAt ? execution.executedAt.substring(0, 19) : execution.executionId.substring(0, 8);
+        await (0, executionDetailPanel_1.openExecutionDetail)(context, serveClient, execution, label);
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.contributors.refresh', async () => {
+        await contributorsProvider.refresh();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.restartLsp', async () => {
+        await startClient();
+        vscode.window.showInformationMessage('OpenBBT: LSP connection restarted.');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.deleteExecution', async (item) => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        const executionId = item?.execution?.executionId;
+        if (!executionId) {
+            return;
+        }
+        const label = item?.execution?.executedAt
+            ? item.execution.executedAt.substring(0, 19)
+            : executionId.substring(0, 8);
+        const confirm = await vscode.window.showWarningMessage(`Delete execution ${label}? This cannot be undone.`, { modal: true }, 'Delete');
+        if (confirm !== 'Delete') {
+            return;
+        }
+        try {
+            await serveClient.deleteExecution(executionId);
+            executionProvider.refresh();
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`OpenBBT: failed to delete execution — ${msg}`);
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.pruneEmpty', async () => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        const confirm = await vscode.window.showWarningMessage('Delete all plans with no executions? This cannot be undone.', { modal: true }, 'Delete');
+        if (confirm !== 'Delete') {
+            return;
+        }
+        try {
+            await serveClient.deleteUnexecutedPlans();
+            executionProvider.refresh();
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`OpenBBT: failed to delete unexecuted plans — ${msg}`);
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.deletePlan', async (item) => {
+        if (!serveClient) {
+            vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+            return;
+        }
+        const planId = item?.planId;
+        if (!planId) {
+            return;
+        }
+        const confirm = await vscode.window.showWarningMessage(`Delete plan ${planId.substring(0, 8)}… and ALL its executions? This cannot be undone.`, { modal: true }, 'Delete');
+        if (confirm !== 'Delete') {
+            return;
+        }
+        try {
+            await serveClient.deletePlan(planId);
+            executionProvider.refresh();
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`OpenBBT: failed to delete plan — ${msg}`);
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.installPlugins', async () => {
         const config = vscode.workspace.getConfiguration('openbbt');
         const executable = config.get('executablePath', 'openbbt');
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        const terminal = vscode.window.createTerminal({
-            name: 'OpenBBT Install',
-            cwd: workspaceFolder?.uri.fsPath,
-        });
-        terminal.show();
-        terminal.sendText(`${executable} install`);
+        const cwd = workspaceFolder?.uri.fsPath;
+        const success = await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'OpenBBT: installing plugins…' }, () => new Promise((resolve) => {
+            logOutput(`[install] running: ${executable} install --clean (cwd=${cwd})`);
+            (0, child_process_1.execFile)(executable, ['install', '--clean'], { cwd }, (err, stdout, stderr) => {
+                logOutput(`[install] stdout: ${stdout.trim() || '(empty)'}`);
+                logOutput(`[install] stderr: ${stderr.trim() || '(empty)'}`);
+                if (err) {
+                    logOutput(`[install] exit error: ${err.message}`);
+                }
+                resolve(!err);
+            });
+        }));
+        if (!success) {
+            vscode.window.showErrorMessage('OpenBBT: plugin installation failed. See the OpenBBT output channel for details.');
+            outputChannel.show(true);
+            return;
+        }
+        logOutput('[install] restarting LSP after plugin installation');
+        await startClient();
+        vscode.window.showInformationMessage('OpenBBT: plugins installed and LSP connection restarted.');
     }));
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('openbbt.executablePath')) {
@@ -326,6 +458,7 @@ function activate(context) {
     }), vscode.languages.registerCodeLensProvider({ scheme: 'file', pattern: '**/openbbt.yaml' }, new OpenbbtYamlCodeLensProvider()), vscode.languages.registerCodeActionsProvider({ scheme: 'file', pattern: '**/openbbt.yaml' }, new OpenbbtYamlCodeActionProvider(), { providedCodeActionKinds: OpenbbtYamlCodeActionProvider.providedCodeActionKinds }), vscode.workspace.onDidOpenTextDocument(updateDiagnostics), vscode.workspace.onDidChangeTextDocument(e => updateDiagnostics(e.document)), vscode.workspace.onDidCloseTextDocument(doc => diagnosticCollection.delete(doc.uri)), vscode.workspace.onDidSaveTextDocument(doc => {
         if (doc.fileName.endsWith('openbbt.yaml')) {
             startClient();
+            executionProvider.refresh();
         }
     }), diagnosticCollection, vscode.languages.registerDocumentSymbolProvider({ scheme: 'file', language: 'feature' }, new gherkinSymbolProvider_1.GherkinSymbolProvider()), vscode.languages.registerDocumentFormattingEditProvider({ scheme: 'file', language: 'feature' }, {
         provideDocumentFormattingEdits(document) {

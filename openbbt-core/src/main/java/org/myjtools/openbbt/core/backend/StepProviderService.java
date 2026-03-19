@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.core.backend;
 
 
+import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.AssertionFactories;
 import org.myjtools.openbbt.core.DataTypes;
 import org.myjtools.openbbt.core.OpenBBTException;
@@ -110,7 +111,8 @@ public class StepProviderService {
     }
 
 
-    public void setUp()  {
+    public void setUp(Config config) {
+        stepProvider.init(config);
         try  {
             for (Method setupMethod : setupMethods) {
                 setupMethod.invoke(stepProvider);

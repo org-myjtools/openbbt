@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.core.execution;
 
+import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.testplan.NodeArgument;
@@ -7,6 +8,9 @@ import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.util.Log;
 import org.myjtools.openbbt.core.util.Pair;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -26,19 +30,33 @@ public class BackendExecutor {
 		this.executor = Executors.newSingleThreadExecutor(); // TODO: make this configurable for parallel execution in the future
 	}
 
-	public void setUp() {
-		this.backend.setUp();
+	public void setUp(UUID executionID, UUID executionNodeID, Map<String,String> properties) {
+		runInExecutor(()-> backend.setUp(executionID, executionNodeID, properties));
 	}
 
 	public void tearDown() {
-		this.backend.tearDown();
+		runInExecutor(backend::tearDown);
+	}
+
+	private void runInExecutor(Runnable task) {
+		try {
+			executor.submit(task).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new OpenBBTException(e, "Interrupted while running task in executor");
+		} catch (ExecutionException e) {
+			throw new OpenBBTException(e.getCause(), "Task failed in executor");
+		}
 	}
 
 
-	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node) {
+	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node, UUID executionNodeID) {
 		return this.executor.submit(() -> {
 			try {
-				backend.run(node.name(), locale(node.language()), nodeArgument(node));
+				if (testCaseFailed) {
+					return Pair.of(ExecutionResult.SKIPPED, null);
+				}
+				backend.run(node.name(), locale(node.language()), nodeArgument(node), executionNodeID);
 				return Pair.of(ExecutionResult.PASSED, null);
 			} catch (AssertionError e) {
 				testCaseFailed = true;

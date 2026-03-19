@@ -1,0 +1,47 @@
+'assert.variable.integer':
+  description: Assert that a variable satisfies a specific integer assertion
+  parameters:
+    - name: variable
+      type: id
+      description: The name of the variable to check.
+  role: then
+
+'assert.variable.decimal':
+  description: Assert that a variable satisfies a specific decimal assertion
+  parameters:
+    - name: variable
+      type: id
+      description: The name of the variable to check.
+  role: then
+
+'assert.variable.date':
+  description: Assert that a variable satisfies a specific date assertion
+  parameters:
+    - name: variable
+      type: id
+      description: The name of the variable to check.
+  role: then
+
+'assert.variable.time':
+  description: Assert that a variable satisfies a specific time assertion
+  parameters:
+    - name: variable
+      type: id
+      description: The name of the variable to check.
+  role: then
+
+'assert.variable.datetime':
+  description: Assert that a variable satisfies a specific datetime assertion
+  parameters:
+    - name: variable
+      type: id
+      description: The name of the variable to check.
+  role: then
+
+'assert.variable.text':
+  description: Assert that a variable satisfies a specific text assertion
+  parameters:
+    - name: variable
+      type: id
+      description: The name of the variable to check.
+  role: then

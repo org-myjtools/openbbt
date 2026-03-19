@@ -120,7 +120,7 @@ class TestPlanProvider {
         }
     }
     nodeToItem(node) {
-        const label = node.name ?? node.identifier ?? node.nodeId;
+        const label = node.display || node.name || node.identifier || node.nodeId;
         const collapsible = node.childCount > 0
             ? vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;

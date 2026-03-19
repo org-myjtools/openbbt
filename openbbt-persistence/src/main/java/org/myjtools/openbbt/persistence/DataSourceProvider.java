@@ -49,6 +49,7 @@ public class DataSourceProvider {
 		public String jdbcUrl() {
 			var url = "jdbc:hsqldb:file:" + file.toAbsolutePath() + ";DB_CLOSE_DELAY=-1;MODE=PostgreSQL";
 			url += ";hsqldb.default_table_type=cached;hsqldb.cache_rows=2000;hsqldb.cache_size=1000";
+			url += ";hsqldb.lock_file=false";
 			return url;
 		}
 

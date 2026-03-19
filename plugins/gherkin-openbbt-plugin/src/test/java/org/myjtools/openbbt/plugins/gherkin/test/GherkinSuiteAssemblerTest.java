@@ -36,7 +36,7 @@ class GherkinSuiteAssemblerTest {
 		assertThat(string).hasToString("""
 				[TEST_SUITE] Test Suite
 				  [TEST_FEATURE] Test 1 - Simple Scenario
-				    [TEST_CASE] (Test1_Scenario1) Test Scenario
+				    [TEST_CASE] Test1_Scenario1 - Test Scenario
 				      [STEP_AGGREGATOR] Background
 				        [STEP] Given the set of real numbers
 				      [STEP] Given a number with value 8.02 and another number with value 9
@@ -61,40 +61,40 @@ class GherkinSuiteAssemblerTest {
 				      [STEP] When both numbers are multiplied
 				      [STEP] Then the matchResult is equals to:
 				  [TEST_FEATURE] Test 3 - Backgrounds
-				    [TEST_CASE] (Test3_Scenario1) Test Scenario 1
+				    [TEST_CASE] Test3_Scenario1 - Test Scenario 1
 				      [STEP_AGGREGATOR] Background
 				        [STEP] Given the set of real numbers ℝ
 				      [STEP] Given a number with value 8.02 and another number with value 9
 				      [STEP] When both numbers are multiplied
 				      [STEP] Then the matchResult is equals to 72.18
-				    [TEST_CASE] (Test3_Scenario2) Test Scenario 2
+				    [TEST_CASE] Test3_Scenario2 - Test Scenario 2
 				      [STEP_AGGREGATOR] Background
 				        [STEP] Given the set of real numbers ℝ
 				      [STEP] Given a number with value 7.02 and another number with value 8
 				      [STEP] When both numbers are multiplied
 				      [STEP] Then the matchResult is equals to 56.16
-				    [TEST_CASE] (Test3_Scenario3) Test Scenario 3
+				    [TEST_CASE] Test3_Scenario3 - Test Scenario 3
 				      [STEP_AGGREGATOR] Background
 				        [STEP] Given the set of real numbers ℝ
 				      [STEP] Given a number with value 8.09 and another number with value 9
 				      [STEP] When both numbers are multiplied
 				      [STEP] Then the matchResult is equals to 72.81
 				  [TEST_FEATURE] Test 2 - Scenario Outline
-				    [TEST_FEATURE] (ScenarioOutline1) Test Scenario Outline
-				      [TEST_CASE] (ScenarioOutline1_1) Test Scenario Outline [1]
+				    [TEST_FEATURE] Test Scenario Outline
+				      [TEST_CASE] ScenarioOutline1_1 - Test Scenario Outline [1]
 				        [STEP] Given a number with value 1.0 and another number with value 2
 				        [STEP] When both numbers are multiplied
 				        [STEP] Then the matchResult is equals to 2.0
-				      [TEST_CASE] (ScenarioOutline1_2) Test Scenario Outline [2]
+				      [TEST_CASE] ScenarioOutline1_2 - Test Scenario Outline [2]
 				        [STEP] Given a number with value 2.0 and another number with value 3
 				        [STEP] When both numbers are multiplied
 				        [STEP] Then the matchResult is equals to 6.0
-				      [TEST_CASE] (ScenarioOutline1_3) Test Scenario Outline [3]
+				      [TEST_CASE] ScenarioOutline1_3 - Test Scenario Outline [3]
 				        [STEP] Given a number with value 5.0 and another number with value 4
 				        [STEP] When both numbers are multiplied
 				        [STEP] Then the matchResult is equals to 20.0
 				  [TEST_FEATURE] Test 1 - Simple Scenario
-				    [TEST_CASE] (Test1_Scenario1) Test Scenario
+				    [TEST_CASE] Test1_Scenario1 - Test Scenario
 				      [STEP] Given a number with value 8.02 and another number with value 9
 				      [STEP] When both numbers are multiplied
 				      [STEP] Then the matchResult is equals to 72.18
@@ -109,7 +109,7 @@ class GherkinSuiteAssemblerTest {
 		assertThat(string).hasToString("""
 				[TEST_SUITE] Test Suite
 				  [TEST_FEATURE] Test Redefined feature - Definition
-				    [TEST_CASE] (1) Test scenario
+				    [TEST_CASE] 1 - Test scenario
 				      [STEP_AGGREGATOR] Antecedentes
 				        [STEP] Dado el conjunto de números reales ℝ
 				      [STEP_AGGREGATOR] Given two numbers
@@ -121,8 +121,8 @@ class GherkinSuiteAssemblerTest {
 				        [STEP] Entonces el resultado es 18,3
 				        [STEP] Y el resultado es 18,3
 				      [VIRTUAL_STEP] And the world is wonderful
-				    [TEST_FEATURE] (2) Test scenario outline
-				      [TEST_CASE] (2_1) Test scenario outline [1]
+				    [TEST_FEATURE] Test scenario outline
+				      [TEST_CASE] 2_1 - Test scenario outline [1]
 				        [STEP_AGGREGATOR] Antecedentes
 				          [STEP] Dado el conjunto de números reales ℝ
 				        [VIRTUAL_STEP] Given a number with value 1.0
@@ -133,7 +133,7 @@ class GherkinSuiteAssemblerTest {
 				        [STEP_AGGREGATOR] Then the matchResult is 2.0
 				          [STEP] Entonces el resultado es 2.0
 				          [STEP] Y el resultado es 2.0
-				      [TEST_CASE] (2_2) Test scenario outline [2]
+				      [TEST_CASE] 2_2 - Test scenario outline [2]
 				        [STEP_AGGREGATOR] Antecedentes
 				          [STEP] Dado el conjunto de números reales ℝ
 				        [VIRTUAL_STEP] Given a number with value 2.0
@@ -144,7 +144,7 @@ class GherkinSuiteAssemblerTest {
 				        [STEP_AGGREGATOR] Then the matchResult is 8.0
 				          [STEP] Entonces el resultado es 8.0
 				          [STEP] Y el resultado es 8.0
-				      [TEST_CASE] (2_3) Test scenario outline [3]
+				      [TEST_CASE] 2_3 - Test scenario outline [3]
 				        [STEP_AGGREGATOR] Antecedentes
 				          [STEP] Dado el conjunto de números reales ℝ
 				        [VIRTUAL_STEP] Given a number with value 3.0

@@ -1,6 +1,7 @@
 package org.myjtools.openbbt.persistence.test.plan;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -626,6 +627,126 @@ abstract class AbstractRepositoryTest {
 	@Test
 	void getPlan_byUUID_returnsEmptyForUnknownId() {
 		assertThat(repo.getPlan(UUID.randomUUID())).isEmpty();
+	}
+
+	// --- listPlans(organization, project, offset, max) ---
+
+	private TestPlan persistPlanForProject(String organization, String project, Instant createdAt) {
+		UUID root = repo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
+		TestProject testProject = new TestProject(project, "desc", organization, List.of());
+		UUID projectId = repo.persistProject(testProject);
+		return repo.persistPlan(new TestPlan(null, projectId, createdAt, "rHash", "cHash", root));
+	}
+
+	@Test
+	void listPlans_returnsPlansForMatchingOrgAndProject() {
+		persistPlanForProject("OrgA", "ProjA", Instant.now());
+		persistPlanForProject("OrgA", "ProjB", Instant.now());
+		persistPlanForProject("OrgB", "ProjA", Instant.now());
+
+		assertThat(repo.listPlans("OrgA", "ProjA", 0, 0)).hasSize(1);
+	}
+
+	@Test
+	void listPlans_returnsEmptyWhenNoMatch() {
+		assertThat(repo.listPlans("NonExistent", "NonExistent", 0, 0)).isEmpty();
+	}
+
+	@Test
+	void listPlans_doesNotReturnPlansFromOtherProjects() {
+		persistPlanForProject("OrgA", "ProjB", Instant.now());
+		persistPlanForProject("OrgB", "ProjA", Instant.now());
+
+		assertThat(repo.listPlans("OrgA", "ProjA", 0, 0)).isEmpty();
+	}
+
+	@Test
+	void listPlans_orderedByCreatedAtDescending() {
+		Instant t1 = Instant.now().minusSeconds(200).truncatedTo(ChronoUnit.MILLIS);
+		Instant t2 = Instant.now().minusSeconds(100).truncatedTo(ChronoUnit.MILLIS);
+		Instant t3 = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+		persistPlanForProject("OrgA", "ProjA", t1);
+		persistPlanForProject("OrgA", "ProjA", t2);
+		persistPlanForProject("OrgA", "ProjA", t3);
+
+		List<TestPlan> result = repo.listPlans("OrgA", "ProjA", 0, 0);
+		assertThat(result).hasSize(3);
+		assertThat(result.get(0).createdAt()).isEqualTo(t3);
+		assertThat(result.get(1).createdAt()).isEqualTo(t2);
+		assertThat(result.get(2).createdAt()).isEqualTo(t1);
+	}
+
+	@Test
+	void listPlans_withMax_limitsResults() {
+		persistPlanForProject("OrgA", "ProjA", Instant.now().minusSeconds(200));
+		persistPlanForProject("OrgA", "ProjA", Instant.now().minusSeconds(100));
+		persistPlanForProject("OrgA", "ProjA", Instant.now());
+
+		assertThat(repo.listPlans("OrgA", "ProjA", 0, 2)).hasSize(2);
+	}
+
+	@Test
+	void listPlans_withMaxZero_returnsAll() {
+		persistPlanForProject("OrgA", "ProjA", Instant.now().minusSeconds(200));
+		persistPlanForProject("OrgA", "ProjA", Instant.now().minusSeconds(100));
+		persistPlanForProject("OrgA", "ProjA", Instant.now());
+
+		assertThat(repo.listPlans("OrgA", "ProjA", 0, 0)).hasSize(3);
+	}
+
+	@Test
+	void listPlans_withOffset_skipsRecords() {
+		Instant t1 = Instant.now().minusSeconds(200).truncatedTo(ChronoUnit.MILLIS);
+		Instant t2 = Instant.now().minusSeconds(100).truncatedTo(ChronoUnit.MILLIS);
+		Instant t3 = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+		persistPlanForProject("OrgA", "ProjA", t1);
+		persistPlanForProject("OrgA", "ProjA", t2);
+		persistPlanForProject("OrgA", "ProjA", t3);
+
+		// With desc order: [t3, t2, t1]. Skipping 1 -> [t2, t1]
+		List<TestPlan> result = repo.listPlans("OrgA", "ProjA", 1, 0);
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0).createdAt()).isEqualTo(t2);
+		assertThat(result.get(1).createdAt()).isEqualTo(t1);
+	}
+
+	@Test
+	void listPlans_withOffsetAndMax_paginates() {
+		Instant t1 = Instant.now().minusSeconds(300).truncatedTo(ChronoUnit.MILLIS);
+		Instant t2 = Instant.now().minusSeconds(200).truncatedTo(ChronoUnit.MILLIS);
+		Instant t3 = Instant.now().minusSeconds(100).truncatedTo(ChronoUnit.MILLIS);
+		Instant t4 = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+		persistPlanForProject("OrgA", "ProjA", t1);
+		persistPlanForProject("OrgA", "ProjA", t2);
+		persistPlanForProject("OrgA", "ProjA", t3);
+		persistPlanForProject("OrgA", "ProjA", t4);
+
+		// Desc order: [t4, t3, t2, t1]. Page 1: offset=0, max=2 -> [t4, t3]
+		List<TestPlan> page1 = repo.listPlans("OrgA", "ProjA", 0, 2);
+		assertThat(page1).hasSize(2);
+		assertThat(page1.get(0).createdAt()).isEqualTo(t4);
+		assertThat(page1.get(1).createdAt()).isEqualTo(t3);
+
+		// Page 2: offset=2, max=2 -> [t2, t1]
+		List<TestPlan> page2 = repo.listPlans("OrgA", "ProjA", 2, 2);
+		assertThat(page2).hasSize(2);
+		assertThat(page2.get(0).createdAt()).isEqualTo(t2);
+		assertThat(page2.get(1).createdAt()).isEqualTo(t1);
+	}
+
+	@Test
+	void listPlans_resultContainsPlanIdAndProjectId() {
+		Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+		TestPlan saved = persistPlanForProject("OrgA", "ProjA", now);
+
+		List<TestPlan> result = repo.listPlans("OrgA", "ProjA", 0, 0);
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).planID()).isEqualTo(saved.planID());
+		assertThat(result.get(0).projectID()).isEqualTo(saved.projectID());
+		assertThat(result.get(0).createdAt()).isEqualTo(now);
 	}
 
 	@Test

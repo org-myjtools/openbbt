@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 public class TestPlanExecutor {
 
@@ -45,6 +46,10 @@ public class TestPlanExecutor {
 	}
 
 	public TestExecution execute(UUID planID) {
+		return execute(planID, null);
+	}
+
+	public TestExecution execute(UUID planID, Consumer<UUID> onExecutionCreated) {
 		TestPlan testPlan = testPlanRepository.getPlan(planID).orElseThrow(
 			() -> new OpenBBTException("Test plan with ID {} not found", planID)
 		);
@@ -55,7 +60,11 @@ public class TestPlanExecutor {
 			throw new OpenBBTException("Test plan has issues, cannot be executed");
 		}
 		TestExecution execution = testExecutionRepository.newExecution(planID, runtime.clock().now());
-		createExecutionNodes(execution.executionID(), planRoot.nodeID());
+		if (onExecutionCreated != null) {
+			onExecutionCreated.accept(execution.executionID());
+		}
+		UUID rootExecutionNodeID = createExecutionNodes(execution.executionID(), planRoot.nodeID());
+		execution.executionRootNodeID(rootExecutionNodeID);
 
 		executeTestPlanNode(execution.executionID(), planRoot.nodeID(), null);
 		return execution;
@@ -93,7 +102,7 @@ public class TestPlanExecutor {
 			ownResult = recordStepExecution(executionID, executionNodeID, backendExecutor, node);
 		} else if (node.nodeType() == NodeType.TEST_CASE) {
 			backendExecutor = new BackendExecutor(runtime);
-			backendExecutor.setUp();
+			backendExecutor.setUp(executionID, executionNodeID, node.properties());
 		}
 
 		ExecutionResult childrenResult = executeChildren(executionID, testPlanNodeID, backendExecutor);
@@ -102,7 +111,7 @@ public class TestPlanExecutor {
 			backendExecutor.tearDown();
 		}
 
-		return ownResult != ExecutionResult.PASSED ? ownResult : childrenResult;
+		return merge(ownResult, childrenResult);
 	}
 
 
@@ -137,10 +146,7 @@ public class TestPlanExecutor {
 			.toList();
 		ExecutionResult finalResult = ExecutionResult.PASSED;
 		for (CompletableFuture<ExecutionResult> future : futures) {
-			ExecutionResult childResult = future.join();
-			if (childResult != ExecutionResult.PASSED) {
-				finalResult = childResult;
-			}
+			finalResult = merge(finalResult, future.join());
 		}
 		return finalResult;
 	}
@@ -149,10 +155,7 @@ public class TestPlanExecutor {
 	private ExecutionResult executeChildrenSequential(UUID executionID, List<UUID> children, BackendExecutor backendExecutor) {
 		ExecutionResult finalResult = ExecutionResult.PASSED;
 		for (UUID childNodeID : children) {
-			ExecutionResult childResult = executeTestPlanNode(executionID, childNodeID, backendExecutor);
-			if (childResult != ExecutionResult.PASSED) {
-				finalResult = childResult;
-			}
+			finalResult = merge(finalResult, executeTestPlanNode(executionID, childNodeID, backendExecutor));
 		}
 		return finalResult;
 	}
@@ -161,7 +164,7 @@ public class TestPlanExecutor {
 	private ExecutionResult recordStepExecution(
 		UUID executionID, UUID executionNodeID, BackendExecutor backendExecutor, TestPlanNode node
 	) {
-		Result stepResult = executeTestCaseStep(backendExecutor, node);
+		Result stepResult = executeTestCaseStep(backendExecutor, node, executionNodeID);
 		if (stepResult.message() != null) {
 			testExecutionRepository.updateExecutionNodeMessage(executionNodeID, stepResult.message());
 		}
@@ -172,9 +175,9 @@ public class TestPlanExecutor {
 	}
 
 
-	private Result executeTestCaseStep(BackendExecutor backendExecutor, TestPlanNode node) {
+	private Result executeTestCaseStep(BackendExecutor backendExecutor, TestPlanNode node, UUID executionNodeID) {
 		try {
-			var stepResult = backendExecutor.submitStepExecution(node).get();
+			var stepResult = backendExecutor.submitStepExecution(node, executionNodeID).get();
 			if (stepResult.left() == ExecutionResult.PASSED) {
 				return new Result(ExecutionResult.PASSED,null,null);
 			} else if (stepResult.left() == ExecutionResult.FAILED) {
@@ -182,7 +185,9 @@ public class TestPlanExecutor {
 			} else if (stepResult.left() == ExecutionResult.UNDEFINED) {
 				log.error("Step execution failed with no matching step definition: {}", stepResult.right().getMessage());
 				return new Result(ExecutionResult.UNDEFINED, node.name(), null);
-			} else {
+			} else if (stepResult.left() == ExecutionResult.SKIPPED) {
+				return new Result(ExecutionResult.SKIPPED, null, null);
+			}else {
 				return new Result(ExecutionResult.ERROR, stepResult.right().getMessage(), stepResult.right());
 			}
 		} catch (InterruptedException e) {
@@ -196,10 +201,11 @@ public class TestPlanExecutor {
 	}
 
 
-	private void createExecutionNodes(UUID executionID, UUID planNodeID) {
-		testExecutionRepository.newExecutionNode(executionID, planNodeID);
+	private UUID createExecutionNodes(UUID executionID, UUID planNodeID) {
+		UUID executionNodeID = testExecutionRepository.newExecutionNode(executionID, planNodeID);
 		testPlanRepository.getNodeChildren(planNodeID)
 			.forEach(childNodeID -> createExecutionNodes(executionID, childNodeID));
+		return executionNodeID;
 	}
 
 
@@ -208,6 +214,7 @@ public class TestPlanExecutor {
 		String stackTrace = getStackTraceAsString(error);
 		attachmentRepository.storeAttachment(
 			executionID,
+			executionNodeID,
 			attachmentID,
 			stackTrace.getBytes(StandardCharsets.UTF_8),
 			"text/plain"
@@ -220,6 +227,21 @@ public class TestPlanExecutor {
 		PrintWriter pw = new PrintWriter(sw);
 		error.printStackTrace(pw);
 		return sw.toString();
+	}
+
+
+	private static ExecutionResult merge(ExecutionResult a, ExecutionResult b) {
+		return mergePriority(a) >= mergePriority(b) ? a : b;
+	}
+
+	private static int mergePriority(ExecutionResult result) {
+		return switch (result) {
+			case ERROR    -> 4;
+			case FAILED   -> 3;
+			case SKIPPED  -> 2;
+			case PASSED   -> 1;
+			default       -> 4; // UNDEFINED treated as ERROR
+		};
 	}
 
 }

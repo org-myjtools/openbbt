@@ -1,8 +1,8 @@
 package org.myjtools.openbbt.core.persistence;
 
-import java.util.UUID;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import java.io.IOException;
+import java.util.UUID;
 
 public class TestPlanRepositoryWriter {
 
@@ -26,11 +26,6 @@ public class TestPlanRepositoryWriter {
 		appender.append("[");
 		appender.append(String.valueOf(node.nodeType()));
 		appender.append("] ");
-		if (node.identifier() != null) {
-			appender.append("(");
-			appender.append(node.identifier());
-			appender.append(") ");
-		}
 		appender.append(node.toString());
 		appender.append("\n");
 		for (UUID childID : repository.getNodeChildren(nodeID).toList()) {

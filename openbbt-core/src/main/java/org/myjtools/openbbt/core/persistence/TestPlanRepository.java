@@ -240,9 +240,21 @@ public interface TestPlanRepository extends Repository {
 
 	List<TestPlan> listPlans();
 
+	/**
+	 * List test plans for a given organization and project, ordered by creation date descending.
+	 * @param organization the organization name
+	 * @param project the project name
+	 * @param offset number of records to skip (for pagination)
+	 * @param max maximum number of records to return (0 or negative means no limit)
+	 * @return a list of matching test plans ordered by createdAt descending
+	 */
+	List<TestPlan> listPlans(String organization, String project, int offset, int max);
+
 	Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash);
 
 	Optional<TestPlan> getPlan(UUID planID);
+
+	Optional<TestProject> getProject(UUID projectID);
 
 	TestPlan persistPlan(TestPlan testPlan);
 
@@ -277,6 +289,12 @@ public interface TestPlanRepository extends Repository {
 	 */
 	boolean planHasIssues(UUID planId);
 
-
+	/**
+	 * Delete a plan and all its nodes (including tags and properties).
+	 * Executions must be deleted separately via {@link TestExecutionRepository}.
+	 *
+	 * @param planId the plan to delete
+	 */
+	void deletePlan(UUID planId);
 
 }

@@ -1,0 +1,5 @@
+{
+  "title": "Post from file",
+  "body": "This post body was loaded from a fixture file.",
+  "userId": 1
+}

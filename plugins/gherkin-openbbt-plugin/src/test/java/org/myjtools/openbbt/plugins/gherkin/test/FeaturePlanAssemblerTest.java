@@ -34,20 +34,20 @@ class FeaturePlanAssemblerTest {
 
 		assertThat(output).hasToString("""
 			[TEST_FEATURE] Test 1 - Simple Scenario
-			  [TEST_CASE] (Test1_Scenario1) Test Scenario
+			  [TEST_CASE] Test1_Scenario1 - Test Scenario
 			    [STEP_AGGREGATOR] Background
 			      [STEP] Given the set of real numbers
 			    [STEP] Given a number with value 8.02 and another number with value 9
 			    [STEP] When both numbers are multiplied
 			    [STEP] Then the matchResult is equals to 72.18
-			  [TEST_FEATURE] (Test1_ScenarioOutline) Test Scenario Outline
-			    [TEST_CASE] (Test1_ScenarioOutline_1) Test Scenario Outline [1]
+			  [TEST_FEATURE] Test Scenario Outline
+			    [TEST_CASE] Test1_ScenarioOutline_1 - Test Scenario Outline [1]
 			      [STEP_AGGREGATOR] Background
 			        [STEP] Given the set of real numbers
 			      [STEP] Given a number with value 8.02 and another number with value 9
 			      [STEP] When both numbers are multiplied
 			      [STEP] Then the matchResult is equals to 72.18
-			    [TEST_CASE] (Test1_ScenarioOutline_2) Test Scenario Outline [2]
+			    [TEST_CASE] Test1_ScenarioOutline_2 - Test Scenario Outline [2]
 			      [STEP_AGGREGATOR] Background
 			        [STEP] Given the set of real numbers
 			      [STEP] Given a number with value 5 and another number with value 4
@@ -69,7 +69,7 @@ class FeaturePlanAssemblerTest {
 
 		assertThat(output).hasToString("""
 			[TEST_FEATURE] Test 1 - Simple Scenario
-			  [TEST_CASE] (Test1_Scenario1) Test Scenario
+			  [TEST_CASE] Test1_Scenario1 - Test Scenario
 			    [STEP_AGGREGATOR] Background
 			      [STEP] Given the set of real numbers
 			    [STEP] Given a number with value 8.02 and another number with value 9
@@ -92,14 +92,14 @@ class FeaturePlanAssemblerTest {
 
 		assertThat(output).hasToString("""
 			[TEST_FEATURE] Test 1 - Simple Scenario
-			  [TEST_FEATURE] (Test1_ScenarioOutline) Test Scenario Outline
-			    [TEST_CASE] (Test1_ScenarioOutline_1) Test Scenario Outline [1]
+			  [TEST_FEATURE] Test Scenario Outline
+			    [TEST_CASE] Test1_ScenarioOutline_1 - Test Scenario Outline [1]
 			      [STEP_AGGREGATOR] Background
 			        [STEP] Given the set of real numbers
 			      [STEP] Given a number with value 8.02 and another number with value 9
 			      [STEP] When both numbers are multiplied
 			      [STEP] Then the matchResult is equals to 72.18
-			    [TEST_CASE] (Test1_ScenarioOutline_2) Test Scenario Outline [2]
+			    [TEST_CASE] Test1_ScenarioOutline_2 - Test Scenario Outline [2]
 			      [STEP_AGGREGATOR] Background
 			        [STEP] Given the set of real numbers
 			      [STEP] Given a number with value 5 and another number with value 4
@@ -140,20 +140,22 @@ class FeaturePlanAssemblerTest {
 			.containsEntry("featureProperty", "A")
 			.containsEntry("scenarioProperty", "B");
 
-		// Background step: inherits background (and thus scenario+feature) tags and properties
+		// Background step: STEP nodes do NOT inherit tags or properties from parent
 		UUID backgroundStepId = repository.getNodeChildren(backgroundId).findFirst().orElseThrow();
-		assertThat(repository.getNodeTags(backgroundStepId)).contains("Test1", "ScenarioA");
+		assertThat(repository.getNodeTags(backgroundStepId)).isEmpty();
 		assertThat(repository.getNodeProperties(backgroundStepId))
-			.containsEntry("featureProperty", "A")
-			.containsEntry("scenarioProperty", "B");
+			.containsOnlyKeys("gherkinType")
+			.doesNotContainKey("featureProperty")
+			.doesNotContainKey("scenarioProperty");
 
-		// First scenario step: inherits scenario tags and properties, adds its own from comment
+		// First scenario step: STEP nodes do NOT inherit tags or properties from parent,
+		// but do have properties declared in their own comments
 		UUID firstStepId = repository.getNodeChildren(scenarioId).skip(1).findFirst().orElseThrow();
-		assertThat(repository.getNodeTags(firstStepId)).contains("Test1", "ScenarioA");
+		assertThat(repository.getNodeTags(firstStepId)).isEmpty();
 		assertThat(repository.getNodeProperties(firstStepId))
-			.containsEntry("featureProperty", "A")
-			.containsEntry("scenarioProperty", "B")
-			.containsEntry("stepProperty", "C");
+			.containsEntry("stepProperty", "C")
+			.doesNotContainKey("featureProperty")
+			.doesNotContainKey("scenarioProperty");
 	}
 
 

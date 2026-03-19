@@ -35,7 +35,7 @@ class MarkdownSuiteAssemblerTest {
 		assertThat(output).hasToString("""
 				[TEST_SUITE] Test Suite
 				  [TEST_FEATURE] Simple Feature - Test 1
-				    [TEST_CASE] (TC1) Test Case 1
+				    [TEST_CASE] Test Case 1
 				      [STEP] Given a number with value 8.02 and another number with value 9
 				      [STEP] When both numbers are multiplied
 				      [STEP] Then the matchResult is equals to 72.18
@@ -48,7 +48,7 @@ class MarkdownSuiteAssemblerTest {
 		assertThat(output).hasToString("""
 				[TEST_SUITE] Test Suite
 				  [TEST_FEATURE] Simple Feature - Test 1
-				    [TEST_CASE] (TC1) Test Case 1
+				    [TEST_CASE] Test Case 1
 				      [STEP] Given a number with value 8.02 and another number with value 9
 				      [STEP] When both numbers are multiplied
 				      [STEP] Then the matchResult is equals to 72.18
@@ -70,7 +70,7 @@ class MarkdownSuiteAssemblerTest {
 		assertThat(output).hasToString("""
 				[TEST_SUITE] Test Suite
 				  [TEST_FEATURE] Tagged Feature
-				    [TEST_CASE] (TC1) Test Case A
+				    [TEST_CASE] Test Case A
 				      [STEP] Given step given A
 				      [STEP] When step when A
 				""");
@@ -96,10 +96,10 @@ class MarkdownSuiteAssemblerTest {
 				[TEST_SUITE] Test Suite
 				  [TEST_FEATURE] multiSection.md
 				    [TEST_FEATURE] Feature Alpha
-				      [TEST_CASE] (A1) Test Case Alpha 1
+				      [TEST_CASE] Test Case Alpha 1
 				        [STEP] Given alpha step 1
 				    [TEST_FEATURE] Feature Beta
-				      [TEST_CASE] (B1) Test Case Beta 1
+				      [TEST_CASE] Test Case Beta 1
 				        [STEP] Given beta step 1
 				""");
 	}
