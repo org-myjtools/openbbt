@@ -119,7 +119,7 @@ class TestPlanProvider {
             return [];
         }
     }
-    nodeToItem(node) {
+    nodeToItem(node, plan) {
         const label = node.display || node.name || node.identifier || node.nodeId;
         const collapsible = node.childCount > 0
             ? vscode.TreeItemCollapsibleState.Collapsed
@@ -127,7 +127,11 @@ class TestPlanProvider {
         // ID is scoped to the current refresh serial so VSCode treats all items
         // as new after each refresh, giving a clean expansion state.
         const vsCodeId = `${this.refreshSerial}-${node.nodeId}`;
-        return new TestPlanItem(node.nodeId, vsCodeId, label, node.nodeType, collapsible, node.hasIssues, node.source);
+        let description;
+        if (plan && node.nodeType === 'TEST_PLAN') {
+            description = `${plan.testCaseCount ?? 0} test cases`;
+        }
+        return new TestPlanItem(node.nodeId, vsCodeId, label, node.nodeType, collapsible, node.hasIssues, node.source, description);
     }
     getRoots() {
         if (this.rootItems !== undefined) {
@@ -152,7 +156,7 @@ class TestPlanProvider {
             this.log(`[tree] fetching root node ${plan.planNodeRoot}`);
             const rootNode = await this.client.getNode(plan.planNodeRoot);
             this.log(`[tree] root node: ${rootNode.nodeType} "${rootNode.name}" childCount=${rootNode.childCount}`);
-            this.rootItems = [this.nodeToItem(rootNode)];
+            this.rootItems = [this.nodeToItem(rootNode, plan)];
             return this.rootItems;
         }
         catch (err) {

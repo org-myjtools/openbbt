@@ -51,7 +51,7 @@ abstract class AbstractExecutionRepositoryTest {
 	private UUID persistPlanWithRoot() {
 		UUID root = planRepo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
 		UUID projectID = planRepo.persistProject(new TestProject("P", "desc", "Org", List.of()));
-		TestPlan plan = planRepo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rh", "ch", root));
+		TestPlan plan = planRepo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rh", "ch", root, 0));
 		return plan.planID();
 	}
 

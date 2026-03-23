@@ -105,7 +105,7 @@ Feature: Posts REST API
 
     # -------------------------------------------------------------
   @ID-10 @POST @GET
-  Scenario: Create a post and get it
+  Scenario: Create a post and get it after
     When I make a POST request to "posts" with body:
       """json
       {

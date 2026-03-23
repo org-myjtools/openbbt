@@ -34,9 +34,9 @@
         "icon": "$(cloud-download)"
       },
       {
-        "command": "openbbt.testPlan.refresh",
-        "title": "OpenBBT: Refresh Test Plan",
-        "icon": "$(refresh)"
+        "command": "openbbt.testPlan.build",
+        "title": "OpenBBT: Build Plan",
+        "icon": "$(tools)"
       },
       {
         "command": "openbbt.openSource",
@@ -114,7 +114,7 @@
           "group": "navigation"
         },
         {
-          "command": "openbbt.testPlan.refresh",
+          "command": "openbbt.testPlan.build",
           "when": "view == openbbt.testPlan",
           "group": "navigation"
         },

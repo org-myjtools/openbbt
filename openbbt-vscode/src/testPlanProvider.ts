@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { NodeInfo, OpenBBTClient } from './openbbtClient';
+import { NodeInfo, PlanInfo, OpenBBTClient } from './openbbtClient';
 
 type Logger = (msg: string) => void;
 
@@ -101,7 +101,7 @@ export class TestPlanProvider implements vscode.TreeDataProvider<TestPlanItem> {
         }
     }
 
-    private nodeToItem(node: NodeInfo): TestPlanItem {
+    private nodeToItem(node: NodeInfo, plan?: PlanInfo): TestPlanItem {
         const label = node.display || node.name || node.identifier || node.nodeId;
         const collapsible = node.childCount > 0
             ? vscode.TreeItemCollapsibleState.Collapsed
@@ -109,7 +109,11 @@ export class TestPlanProvider implements vscode.TreeDataProvider<TestPlanItem> {
         // ID is scoped to the current refresh serial so VSCode treats all items
         // as new after each refresh, giving a clean expansion state.
         const vsCodeId = `${this.refreshSerial}-${node.nodeId}`;
-        return new TestPlanItem(node.nodeId, vsCodeId, label, node.nodeType, collapsible, node.hasIssues, node.source);
+        let description: string | undefined;
+        if (plan && node.nodeType === 'TEST_PLAN') {
+            description = `${plan.testCaseCount ?? 0} test cases`;
+        }
+        return new TestPlanItem(node.nodeId, vsCodeId, label, node.nodeType, collapsible, node.hasIssues, node.source, description);
     }
 
     private getRoots(): Promise<TestPlanItem[]> {
@@ -136,7 +140,7 @@ export class TestPlanProvider implements vscode.TreeDataProvider<TestPlanItem> {
             this.log(`[tree] fetching root node ${plan.planNodeRoot}`);
             const rootNode = await this.client!.getNode(plan.planNodeRoot);
             this.log(`[tree] root node: ${rootNode.nodeType} "${rootNode.name}" childCount=${rootNode.childCount}`);
-            this.rootItems = [this.nodeToItem(rootNode)];
+            this.rootItems = [this.nodeToItem(rootNode, plan)];
             return this.rootItems;
         } catch (err) {
             this.log(`[tree] fetchRoots error: ${err}`);

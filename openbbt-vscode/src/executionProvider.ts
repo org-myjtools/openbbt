@@ -52,6 +52,7 @@ export class ExecutionItem extends vscode.TreeItem {
         public readonly planId?: string,
         public readonly execution?: ExecutionListItem,
         description?: string,
+        hasIssues?: boolean,
     ) {
         super(label, collapsibleState);
         this.id = kind === 'plan' ? planId : kind === 'execution' ? execution?.executionId : 'project';
@@ -59,7 +60,7 @@ export class ExecutionItem extends vscode.TreeItem {
         this.iconPath = resolveIcon(kind, execution?.result);
         this.tooltip = label;
         this.contextValue = kind;
-        if (kind === 'plan' && description !== undefined) {
+        if (kind === 'plan' && hasIssues) {
             this.resourceUri = vscode.Uri.parse(`${ISSUE_URI_SCHEME}://${planId}`);
         }
         if (kind === 'execution' && execution) {
@@ -211,17 +212,22 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
             ? readProjectInfo(this.workspacePath)
             : { organization: '', projectName: '' };
         try {
-            const plans: PlanListItem[] = await this.client.listPlansByProject(organization, projectName);
+            const plans: PlanListItem[] = await this.client.listPlansByProject(organization, projectName, 0, 0, true);
             const expand = this._expandOnNextLoad || this._pendingExecs.size > 0;
             this._expandOnNextLoad = false;
-            return plans.map(plan => new ExecutionItem(
-                'plan',
-                formatDate(plan.createdAt),
-                expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
-                plan.planId,
-                undefined,
-                plan.hasIssues ? '⚠ issues' : undefined,
-            ));
+            return plans.map(plan => {
+                const parts: string[] = [`${plan.testCaseCount ?? 0} test cases`];
+                if (plan.hasIssues) { parts.push('⚠ issues'); }
+                return new ExecutionItem(
+                    'plan',
+                    formatDate(plan.createdAt),
+                    expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+                    plan.planId,
+                    undefined,
+                    parts.join(' | '),
+                    plan.hasIssues,
+                );
+            });
         } catch {
             return [];
         }

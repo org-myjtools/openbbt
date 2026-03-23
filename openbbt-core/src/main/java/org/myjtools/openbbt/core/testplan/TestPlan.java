@@ -9,7 +9,8 @@ public record TestPlan(
 	Instant createdAt,
 	String resourceSetHash,
 	String configurationHash,
-	UUID planNodeRoot
+	UUID planNodeRoot,
+	int testCaseCount
 ) {
 
 }

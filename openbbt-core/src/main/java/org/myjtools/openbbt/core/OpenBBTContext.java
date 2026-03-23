@@ -10,7 +10,6 @@ public record OpenBBTContext(
 	TestProject testProject,
 	Config configuration,
 	List<String> testSuites,
-	String profile,
 	List<String> plugins
 ){
 

@@ -67,8 +67,8 @@ class OpenBBTClient {
     async getPlan(planId) {
         return this.call('plans/get', { planId });
     }
-    async listPlansByProject(organization, project, offset = 0, max = 0) {
-        return this.call('plans/list', { organization, project, offset, max });
+    async listPlansByProject(organization, project, offset = 0, max = 0, withExecutions = false) {
+        return this.call('plans/list', { organization, project, offset, max, withExecutions });
     }
     async listExecutionsByPlan(planId, offset = 0, max = 0) {
         return this.call('executions/list', { planId, offset, max });

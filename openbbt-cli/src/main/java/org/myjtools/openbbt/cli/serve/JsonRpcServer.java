@@ -9,7 +9,6 @@ import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.testplan.TestPlanNode;
 import org.myjtools.openbbt.core.util.Log;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -18,7 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * JSON-RPC 2.0 server over stdio using Content-Length framing (same as LSP).
@@ -183,6 +181,7 @@ public class JsonRpcServer {
             obj.addProperty("projectId", plan.projectID().toString());
             obj.addProperty("createdAt", plan.createdAt().toString());
             obj.addProperty("planNodeRoot", plan.planNodeRoot().toString());
+            obj.addProperty("testCaseCount", plan.testCaseCount());
             arr.add(obj);
         }
         return arr;
@@ -210,14 +209,16 @@ public class JsonRpcServer {
         String project = params.get("project").getAsString();
         int offset = params.has("offset") ? params.get("offset").getAsInt() : 0;
         int max = params.has("max") ? params.get("max").getAsInt() : 0;
+        boolean withExecutions = params.has("withExecutions") && params.get("withExecutions").getAsBoolean();
         JsonArray arr = new JsonArray();
-        for (TestPlan plan : repository.listPlans(organization, project, offset, max)) {
+        for (TestPlan plan : repository.listPlans(organization, project, offset, max, withExecutions)) {
             JsonObject obj = new JsonObject();
             obj.addProperty("planId", plan.planID().toString());
             obj.addProperty("createdAt", plan.createdAt().toString());
             boolean hasIssues = repository.getNodeData(plan.planNodeRoot())
                 .map(n -> n.hasIssues()).orElse(false);
             obj.addProperty("hasIssues", hasIssues);
+            obj.addProperty("testCaseCount", plan.testCaseCount());
             arr.add(obj);
         }
         return arr;

@@ -250,6 +250,14 @@ public interface TestPlanRepository extends Repository {
 	 */
 	List<TestPlan> listPlans(String organization, String project, int offset, int max);
 
+	/**
+	 * List test plans for a given organization and project, optionally filtering to only those
+	 * that have at least one execution.
+	 */
+	default List<TestPlan> listPlans(String organization, String project, int offset, int max, boolean withExecutions) {
+		return listPlans(organization, project, offset, max);
+	}
+
 	Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash);
 
 	Optional<TestPlan> getPlan(UUID planID);

@@ -64,7 +64,7 @@ public class JUnitOpenBBTPlan {
         String suiteName = featureDirPath.getFileName().toString();
         TestSuite suite = new TestSuite(suiteName, "", TagExpression.EMPTY);
         TestProject project = new TestProject("OpenBBT Test", "", "", List.of(suite));
-        OpenBBTContext context = new OpenBBTContext(project, config, List.of(suiteName), "", List.of());
+        OpenBBTContext context = new OpenBBTContext(project, config, List.of(suiteName), List.of());
 
         TestPlan plan = runtime.buildTestPlan(context);
         TestExecution execution = new TestPlanExecutor(runtime).execute(plan.planID());

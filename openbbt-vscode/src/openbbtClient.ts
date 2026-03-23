@@ -5,12 +5,14 @@ export interface PlanInfo {
     projectId: string;
     createdAt: string;
     planNodeRoot: string;
+    testCaseCount: number;
 }
 
 export interface PlanListItem {
     planId: string;
     createdAt: string;
     hasIssues: boolean;
+    testCaseCount?: number;
 }
 
 export interface ExecutionListItem {
@@ -161,8 +163,8 @@ export class OpenBBTClient {
         return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string }>;
     }
 
-    async listPlansByProject(organization: string, project: string, offset = 0, max = 0): Promise<PlanListItem[]> {
-        return this.call('plans/list', { organization, project, offset, max }) as Promise<PlanListItem[]>;
+    async listPlansByProject(organization: string, project: string, offset = 0, max = 0, withExecutions = false): Promise<PlanListItem[]> {
+        return this.call('plans/list', { organization, project, offset, max, withExecutions }) as Promise<PlanListItem[]>;
     }
 
     async listExecutionsByPlan(planId: string, offset = 0, max = 0): Promise<ExecutionListItem[]> {

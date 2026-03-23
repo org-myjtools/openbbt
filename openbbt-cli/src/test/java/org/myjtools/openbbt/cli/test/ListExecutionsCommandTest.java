@@ -63,7 +63,7 @@ class ListExecutionsCommandTest {
                 OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_FILE
             );
             var context = file.createContext(
-                Config.ofMap(params), List.of(), "", Config.ofMap(params).append(Config.env())
+                Config.ofMap(params), List.of()
             );
             OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration());
             TestPlanRepository planRepo = runtime.getRepository(TestPlanRepository.class);
@@ -72,7 +72,7 @@ class ListExecutionsCommandTest {
             // Create a plan with a root node
             UUID root = planRepo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
             UUID projectId = planRepo.persistProject(new TestProject("P", "desc", "Org", List.of()));
-            TestPlan plan = planRepo.persistPlan(new TestPlan(null, projectId, Instant.now(), "rh", "ch", root));
+            TestPlan plan = planRepo.persistPlan(new TestPlan(null, projectId, Instant.now(), "rh", "ch", root, 0));
             planId = plan.planID().toString();
 
             // 3 executions with distinct times and results (oldest first in list)
@@ -87,7 +87,7 @@ class ListExecutionsCommandTest {
 
             // A second plan with its own execution — must never appear in results
             UUID root2 = planRepo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root2"));
-            TestPlan plan2 = planRepo.persistPlan(new TestPlan(null, projectId, Instant.now(), "rh2", "ch2", root2));
+            TestPlan plan2 = planRepo.persistPlan(new TestPlan(null, projectId, Instant.now(), "rh2", "ch2", root2, 0));
             TestExecution otherEx = execRepo.newExecution(plan2.planID(), Instant.now());
             UUID otherExecNode = execRepo.newExecutionNode(otherEx.executionID(), root2);
             execRepo.updateExecutionNodeFinish(otherExecNode, ExecutionResult.PASSED, Instant.now());

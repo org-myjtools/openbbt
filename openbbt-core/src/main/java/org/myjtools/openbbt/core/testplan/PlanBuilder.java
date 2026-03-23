@@ -6,6 +6,7 @@ import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.contributors.TestPlanValidator;
+import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.util.Hash;
 import org.myjtools.openbbt.core.util.Log;
@@ -50,13 +51,20 @@ public class PlanBuilder {
 			var rootNodeID = assembleTestPlanNodes(context).orElseThrow(
 				() -> new OpenBBTException("Failed to assemble test plan for project: {}", context.testProject().name())
 			);
+			int testCaseCount = testPlanRepository.countNodes(
+				TestPlanNodeCriteria.and(
+					TestPlanNodeCriteria.descendantOf(rootNodeID),
+					TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
+				)
+			);
 			testPlan = new TestPlan(
 				null,
 				projectID,
 				runtime.clock().now(),
 				resourceSetHash,
 				configurationHash,
-				rootNodeID
+				rootNodeID,
+				testCaseCount
 			);
 			testPlan = testPlanRepository.persistPlan(testPlan);
 			testPlanRepository.assignPlanToNodes(testPlan.planID(), rootNodeID);

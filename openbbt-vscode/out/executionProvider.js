@@ -79,7 +79,7 @@ class ExecutionItem extends vscode.TreeItem {
     kind;
     planId;
     execution;
-    constructor(kind, label, collapsibleState, planId, execution, description) {
+    constructor(kind, label, collapsibleState, planId, execution, description, hasIssues) {
         super(label, collapsibleState);
         this.kind = kind;
         this.planId = planId;
@@ -89,7 +89,7 @@ class ExecutionItem extends vscode.TreeItem {
         this.iconPath = resolveIcon(kind, execution?.result);
         this.tooltip = label;
         this.contextValue = kind;
-        if (kind === 'plan' && description !== undefined) {
+        if (kind === 'plan' && hasIssues) {
             this.resourceUri = vscode.Uri.parse(`${testPlanProvider_1.ISSUE_URI_SCHEME}://${planId}`);
         }
         if (kind === 'execution' && execution) {
@@ -218,10 +218,16 @@ class ExecutionProvider {
             ? readProjectInfo(this.workspacePath)
             : { organization: '', projectName: '' };
         try {
-            const plans = await this.client.listPlansByProject(organization, projectName);
+            const plans = await this.client.listPlansByProject(organization, projectName, 0, 0, true);
             const expand = this._expandOnNextLoad || this._pendingExecs.size > 0;
             this._expandOnNextLoad = false;
-            return plans.map(plan => new ExecutionItem('plan', formatDate(plan.createdAt), expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed, plan.planId, undefined, plan.hasIssues ? '⚠ issues' : undefined));
+            return plans.map(plan => {
+                const parts = [`${plan.testCaseCount ?? 0} test cases`];
+                if (plan.hasIssues) {
+                    parts.push('⚠ issues');
+                }
+                return new ExecutionItem('plan', formatDate(plan.createdAt), expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed, plan.planId, undefined, parts.join(' | '), plan.hasIssues);
+            });
         }
         catch {
             return [];

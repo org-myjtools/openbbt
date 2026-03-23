@@ -217,8 +217,9 @@ interface PlanResult {
 
 function runPlan(executable: string, cwd: string): Promise<PlanResult> {
     return new Promise((resolve) => {
-        logOutput(`[plan] running: ${executable} plan (cwd=${cwd})`);
-        execFile(executable, ['plan'], { cwd }, (_err, stdout, stderr) => {
+        const args = ['plan'];
+        logOutput(`[plan] running: ${executable} ${args.join(' ')} (cwd=${cwd})`);
+        execFile(executable, args, { cwd }, (_err, stdout, stderr) => {
             const combined = stdout + '\n' + stderr;
             logOutput(`[plan] stdout: ${stdout.trim() || '(empty)'}`);
             logOutput(`[plan] stderr: ${stderr.trim() || '(empty)'}`);
@@ -284,56 +285,51 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand('openbbt.testPlan.refresh', async () => {
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            if (!workspaceFolder) {
-                vscode.window.showErrorMessage('OpenBBT: no workspace folder open.');
-                return;
-            }
-            const config = vscode.workspace.getConfiguration('openbbt');
-            const executable = config.get<string>('executablePath', 'openbbt');
-            const cwd = workspaceFolder.uri.fsPath;
+    async function doBuildPlan(): Promise<void> {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('OpenBBT: no workspace folder open.');
+            return;
+        }
+        const config = vscode.workspace.getConfiguration('openbbt');
+        const executable = config.get<string>('executablePath', 'openbbt');
+        const cwd = workspaceFolder.uri.fsPath;
 
-            // Stop any running serve process before running plan.
-            // This avoids resource contention and ensures the new serve process
-            // opens a fresh HSQLDB engine that reads from disk (not a cached
-            // in-memory state from the previous session).
-            if (serveClient) {
-                logOutput(`[refresh] stopping existing serve process`);
-                serveClient.shutdown().catch(() => {});
-                serveClient = undefined;
-            }
+        if (serveClient) {
+            logOutput(`[build] stopping existing serve process`);
+            serveClient.shutdown().catch(() => {});
+            serveClient = undefined;
+        }
 
-            // Run openbbt plan to regenerate the plan
-            const planResult = await vscode.window.withProgress(
-                { location: vscode.ProgressLocation.Window, title: 'OpenBBT: running plan…' },
-                () => runPlan(executable, cwd)
+        const planResult = await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Window, title: 'OpenBBT: building plan…' },
+            () => runPlan(executable, cwd)
+        );
+
+        if (!planResult.planId) {
+            vscode.window.showErrorMessage(
+                'OpenBBT: plan generation failed. See the OpenBBT output channel for details.'
             );
+            outputChannel.show(true);
+            return;
+        }
+        if (planResult.hasValidationErrors) {
+            vscode.window.showWarningMessage('OpenBBT: test plan has validation issues.');
+        }
 
-            if (!planResult.planId) {
-                vscode.window.showErrorMessage(
-                    'OpenBBT: plan generation failed. See the OpenBBT output channel for details.'
-                );
-                outputChannel.show(true);
-                return;
-            }
-            if (planResult.hasValidationErrors) {
-                vscode.window.showWarningMessage('OpenBBT: test plan has validation issues.');
-            }
+        logOutput(`[build] starting new serve connection`);
+        serveClient = new OpenBBTClient(executable, cwd, logOutput);
+        contributorsProvider.setClient(serveClient);
+        serveClient.connect();
+        testPlanProvider.setClient(serveClient);
+        executionProvider.setClient(serveClient);
+        logOutput(`[build] invalidating tree`);
+        testPlanProvider.invalidate();
+        executionProvider.refresh();
+    }
 
-            // Start a fresh serve process. The new process opens a fresh HSQLDB
-            // engine and reads the plan data just written by 'openbbt plan'.
-            logOutput(`[refresh] starting new serve connection`);
-            serveClient = new OpenBBTClient(executable, cwd, logOutput);
-            contributorsProvider.setClient(serveClient);
-            serveClient.connect();
-            testPlanProvider.setClient(serveClient);
-            executionProvider.setClient(serveClient);
-            logOutput(`[refresh] invalidating tree`);
-            testPlanProvider.invalidate();
-            executionProvider.refresh();
-        })
+    context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.testPlan.build', () => doBuildPlan())
     );
 
     context.subscriptions.push(
@@ -537,6 +533,7 @@ export function activate(context: vscode.ExtensionContext): void {
             if (doc.fileName.endsWith('openbbt.yaml')) {
                 startClient();
                 executionProvider.refresh();
+                testPlanProvider.invalidate();
             }
         }),
         diagnosticCollection,

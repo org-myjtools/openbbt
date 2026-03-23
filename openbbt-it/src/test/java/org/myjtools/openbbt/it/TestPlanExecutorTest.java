@@ -150,7 +150,7 @@ class TestPlanExecutorTest {
 	private OpenBBTContext createContext(String suiteName, Config config) {
 		TestSuite suite = new TestSuite(suiteName, "", null);
 		TestProject project = new TestProject("Test Project", "", "Test Org", List.of(suite));
-		return new OpenBBTContext(project, config, List.of(suiteName), "", List.of());
+		return new OpenBBTContext(project, config, List.of(suiteName), List.of());
 	}
 
 	private UUID findNodeOfType(ExecutionContext ctx, NodeType type) {

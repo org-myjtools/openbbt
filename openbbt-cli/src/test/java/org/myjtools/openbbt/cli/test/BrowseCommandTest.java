@@ -50,9 +50,7 @@ class BrowseCommandTest {
             );
             var context = file.createContext(
                 Config.ofMap(params),
-                List.of("suiteA"),
-                "",
-                Config.ofMap(params).append(Config.env())
+                List.of("suiteA")
             );
             OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration());
             TestPlan testPlan = runtime.buildTestPlan(context);

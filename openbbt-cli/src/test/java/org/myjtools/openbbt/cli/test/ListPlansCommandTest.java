@@ -63,7 +63,7 @@ class ListPlansCommandTest {
                 OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_FILE
             );
             var context = file.createContext(
-                Config.ofMap(params), List.of(), "", Config.ofMap(params).append(Config.env())
+                Config.ofMap(params), List.of()
             );
             OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration());
             TestPlanRepository repo = runtime.getRepository(TestPlanRepository.class);
@@ -75,7 +75,7 @@ class ListPlansCommandTest {
             for (int i = 0; i < 3; i++) {
                 UUID root = repo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root" + i));
                 Instant createdAt = Instant.now().minusSeconds(200L - i * 100);
-                TestPlan plan = repo.persistPlan(new TestPlan(null, projectId, createdAt, "h" + i, "c" + i, root));
+                TestPlan plan = repo.persistPlan(new TestPlan(null, projectId, createdAt, "h" + i, "c" + i, root, 0));
                 planIds.add(plan.planID().toString());
             }
 
@@ -83,7 +83,7 @@ class ListPlansCommandTest {
             TestProject other = new TestProject(OTHER_PROJECT, "desc", ORGANIZATION, List.of());
             UUID otherId = repo.persistProject(other);
             UUID otherRoot = repo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("otherRoot"));
-            repo.persistPlan(new TestPlan(null, otherId, Instant.now(), "hx", "cx", otherRoot));
+            repo.persistPlan(new TestPlan(null, otherId, Instant.now(), "hx", "cx", otherRoot, 0));
         }
     }
 

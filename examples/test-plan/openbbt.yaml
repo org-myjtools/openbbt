@@ -21,4 +21,6 @@ configuration:
         baseURL: 'https://jsonplaceholder.typicode.com'
         timeout: 10000
 
-profiles: {}
+profiles:
+    dev: {}
+    prod: {}

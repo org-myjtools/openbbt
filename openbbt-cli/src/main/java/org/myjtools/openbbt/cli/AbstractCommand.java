@@ -24,9 +24,7 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 		Map<String, String> params = parent.params == null ? Map.of() : parent.params;
 		return readConfigurationFile().createContext(
 			Config.ofMap(params),
-			parent.suites == null ? List.of() : parent.suites,
-			parent.profile,
-			Config.ofMap(params).append(Config.env())
+			parent.suites == null ? List.of() : parent.suites
 		);
 	}
 

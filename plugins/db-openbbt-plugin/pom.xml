@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.myjtools.openbbt</groupId>
+        <artifactId>openbbt-plugin-starter</artifactId>
+        <version>1.0.0-alpha1</version>
+    </parent>
+
+
+    <groupId>org.myjtools.openbbt.plugins</groupId>
+    <artifactId>db-openbbt-plugin</artifactId>
+    <version>1.0.0-alpha1</version>
+
+    <name>Database OpenBBT Plugin</name>
+
+    <properties>
+        <openbbt.docgen.stepDocFile>${project.basedir}/src/main/resources/steps.yaml</openbbt.docgen.stepDocFile>
+        <openbbt.docgen.configFile>${project.basedir}/src/main/resources/config.yaml</openbbt.docgen.configFile>
+        <openbbt.docgen.outputDirectory>${project.basedir}/../../docs</openbbt.docgen.outputDirectory>
+        <openbbt.docgen.stepTitle>Database Plugin — Step Reference</openbbt.docgen.stepTitle>
+        <openbbt.docgen.configTitle>Database Plugin — Configuration Reference</openbbt.docgen.configTitle>
+    </properties>
+    <description>A plugin that provides RESTful application steps</description>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <url>https://myjtools.org/open-bbt/plugins/rest</url>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.19.18</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>6.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.myjtools.openbbt</groupId>
+            <artifactId>openbbt-persistence</artifactId>
+            <version>1.0.0-alpha1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.myjtools.openbbt.plugins</groupId>
+            <artifactId>gherkin-openbbt-plugin</artifactId>
+            <version>1.0.0-alpha1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.myjtools.openbbt</groupId>
+            <artifactId>openbbt-test-support</artifactId>
+            <version>1.0.0-alpha1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.16</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+
+
+</project>
