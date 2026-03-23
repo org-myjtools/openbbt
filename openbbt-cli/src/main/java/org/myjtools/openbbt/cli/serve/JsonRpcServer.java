@@ -456,6 +456,7 @@ public class JsonRpcServer {
         obj.add("validationStatus", node.validationStatus() != null ? new JsonPrimitive(node.validationStatus().name()) : JsonNull.INSTANCE);
         obj.add("validationMessage", str(node.validationMessage()));
         obj.addProperty("hasIssues", node.hasIssues());
+        obj.add("testCaseCount", node.testCaseCount() != null ? new JsonPrimitive(node.testCaseCount()) : JsonNull.INSTANCE);
 
         JsonArray tags = new JsonArray();
         if (node.tags() != null) node.tags().stream().sorted().forEach(tags::add);

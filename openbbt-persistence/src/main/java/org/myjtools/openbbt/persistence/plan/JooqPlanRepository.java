@@ -99,7 +99,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 				FIELD_TYPE, FIELD_NAME, FIELD_IDENTIFIER, FIELD_LANGUAGE, FIELD_SOURCE,
 				FIELD_KEYWORD, FIELD_DESCRIPTION, FIELD_DISPLAY, FIELD_DATA_TABLE,
 				FIELD_DOCUMENT, FIELD_DOCUMENT_MIME_TYPE,
-				FIELD_VALIDATION_STATUS, FIELD_VALIDATION_MESSAGE, FIELD_HAS_ISSUES
+				FIELD_VALIDATION_STATUS, FIELD_VALIDATION_MESSAGE, FIELD_HAS_ISSUES,
+				FIELD_TEST_CASE_COUNT
 			)
 			.from(TABLE_PLAN_NODE)
 			.where(FIELD_NODE_ID.eq(id))
@@ -367,6 +368,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		   .set(FIELD_DATA_TABLE, node.dataTable() != null ? node.dataTable().toString() : null)
 		   .set(FIELD_DOCUMENT, node.document() != null ? node.document().content() : null)
 		   .set(FIELD_DOCUMENT_MIME_TYPE, node.document() != null ? node.document().mimeType() : null)
+		   .set(FIELD_TEST_CASE_COUNT, (Integer) null)
 		   .execute();
 	}
 
@@ -384,6 +386,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		   .set(FIELD_DATA_TABLE, node.dataTable() != null ? node.dataTable().toString() : null)
 		   .set(FIELD_DOCUMENT, node.document() != null ? node.document().content() : null)
 		   .set(FIELD_DOCUMENT_MIME_TYPE, node.document() != null ? node.document().mimeType() : null)
+		   .set(FIELD_TEST_CASE_COUNT, node.testCaseCount())
 		   .where(FIELD_NODE_ID.eq(node.nodeID()))
 		   .execute();
 	}
@@ -704,6 +707,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		node.validationMessage(rec.get(FIELD_VALIDATION_MESSAGE));
 		Boolean hasIssues = rec.get(FIELD_HAS_ISSUES);
 		node.hasIssues(Boolean.TRUE.equals(hasIssues));
+		node.testCaseCount(rec.get(FIELD_TEST_CASE_COUNT));
 		fillTagsAndProperties(node);
 		return node;
 	}
@@ -902,6 +906,57 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			testPlan.planNodeRoot(),
 			testPlan.testCaseCount()
 		);
+	}
+
+
+	@Override
+	public void assignTestCaseCountsToNodes(UUID planId) {
+		record NodeRow(UUID nodeId, UUID parentId, int type) {}
+
+		List<NodeRow> rows = dsl.select(FIELD_NODE_ID, FIELD_PARENT_NODE, FIELD_TYPE)
+			.from(TABLE_PLAN_NODE)
+			.where(FIELD_PLAN_ID.eq(planId))
+			.fetch(r -> new NodeRow(r.get(FIELD_NODE_ID), r.get(FIELD_PARENT_NODE), r.get(FIELD_TYPE)));
+
+		Map<UUID, List<UUID>> childrenMap = new HashMap<>();
+		Map<UUID, Integer> typeMap = new HashMap<>();
+		for (var row : rows) {
+			typeMap.put(row.nodeId(), row.type());
+			childrenMap.computeIfAbsent(row.nodeId(), k -> new ArrayList<>());
+			if (row.parentId() != null) {
+				childrenMap.computeIfAbsent(row.parentId(), k -> new ArrayList<>()).add(row.nodeId());
+			}
+		}
+
+		Map<UUID, Integer> countMap = new HashMap<>();
+		for (var entry : typeMap.entrySet()) {
+			if (entry.getValue() != NodeType.TEST_CASE.value) {
+				countMap.put(entry.getKey(), countDescendantTestCases(entry.getKey(), childrenMap, typeMap));
+			}
+		}
+
+		if (!countMap.isEmpty()) {
+			var batch = dsl.batch(
+				dsl.update(TABLE_PLAN_NODE)
+				   .set(FIELD_TEST_CASE_COUNT, DSL.param("count", Integer.class))
+				   .where(FIELD_NODE_ID.eq(DSL.param("id", UUID.class)))
+			);
+			countMap.forEach((id, count) -> batch.bind(count, id));
+			batch.execute();
+		}
+	}
+
+	private int countDescendantTestCases(UUID nodeId, Map<UUID, List<UUID>> childrenMap, Map<UUID, Integer> typeMap) {
+		int count = 0;
+		for (UUID child : childrenMap.getOrDefault(nodeId, List.of())) {
+			Integer childType = typeMap.get(child);
+			if (childType != null && childType == NodeType.TEST_CASE.value) {
+				count++;
+			} else {
+				count += countDescendantTestCases(child, childrenMap, typeMap);
+			}
+		}
+		return count;
 	}
 
 

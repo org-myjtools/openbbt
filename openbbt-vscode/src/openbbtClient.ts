@@ -73,6 +73,7 @@ export interface NodeInfo {
     tags: string[];
     properties: Record<string, string>;
     childCount: number;
+    testCaseCount: number | null;
     document: NodeDocument | null;
     dataTable: string[][] | null;
 }

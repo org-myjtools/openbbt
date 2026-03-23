@@ -216,7 +216,7 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
             const expand = this._expandOnNextLoad || this._pendingExecs.size > 0;
             this._expandOnNextLoad = false;
             return plans.map(plan => {
-                const parts: string[] = [`${plan.testCaseCount ?? 0} test cases`];
+                const parts: string[] = [`${plan.testCaseCount ?? 0}`];
                 if (plan.hasIssues) { parts.push('⚠ issues'); }
                 return new ExecutionItem(
                     'plan',

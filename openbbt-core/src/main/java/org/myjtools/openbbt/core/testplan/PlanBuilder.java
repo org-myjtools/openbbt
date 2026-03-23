@@ -68,6 +68,7 @@ public class PlanBuilder {
 			);
 			testPlan = testPlanRepository.persistPlan(testPlan);
 			testPlanRepository.assignPlanToNodes(testPlan.planID(), rootNodeID);
+			testPlanRepository.assignTestCaseCountsToNodes(testPlan.planID());
 			var backend = new StepProviderBackend(runtime);
 			log.debug("Validating test plan");
 			for (var validator : runtime.getExtensions(TestPlanValidator.class).toList()) {
