@@ -421,6 +421,9 @@ function activate(context) {
             vscode.window.showErrorMessage(`OpenBBT: failed to delete plan — ${msg}`);
         }
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.showLogs', () => {
+        outputChannel.show(true);
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.installPlugins', async () => {
         const config = vscode.workspace.getConfiguration('openbbt');
         const executable = config.get('executablePath', 'openbbt');

@@ -8,6 +8,7 @@ import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.execution.ExecutionResult;
 import org.myjtools.openbbt.core.execution.TestExecution;
+import org.myjtools.openbbt.core.execution.TestExecutionNode;
 import org.myjtools.openbbt.core.execution.TestPlanExecutor;
 import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
@@ -122,6 +123,51 @@ class TestPlanExecutorTest {
 				.as("result for test case %s", testCaseNodeID)
 				.contains(ExecutionResult.PASSED);
 		});
+	}
+
+
+	@Test
+	void execute_mixedResults_setsTestCountsOnContainerNodes(@TempDir Path tempDir) {
+		var ctx = setup("execMixedResults", tempDir);
+		TestExecution execution = new TestPlanExecutor(ctx.runtime()).execute(ctx.plan().planID());
+		UUID executionID = execution.executionID();
+
+		// TEST_PLAN is the planNodeRoot itself (not a descendant), check it directly
+		TestExecutionNode rootExecNode = ctx.execRepo()
+			.getExecutionNode(executionID, ctx.plan().planNodeRoot()).orElseThrow();
+		assertThat(rootExecNode.testPassedCount()).as("TEST_PLAN testPassedCount").isEqualTo(1);
+		assertThat(rootExecNode.testFailedCount()).as("TEST_PLAN testFailedCount").isEqualTo(1);
+		assertThat(rootExecNode.testErrorCount()).as("TEST_PLAN testErrorCount").isEqualTo(1);
+
+		// TEST_SUITE and TEST_FEATURE are descendants — counts must also be 1/1/1
+		for (NodeType containerType : List.of(NodeType.TEST_SUITE, NodeType.TEST_FEATURE)) {
+			UUID planNodeID = findNodeOfType(ctx, containerType);
+			TestExecutionNode execNode = ctx.execRepo().getExecutionNode(executionID, planNodeID).orElseThrow(
+				() -> new AssertionError("Missing execution node for " + containerType)
+			);
+			assertThat(execNode.testPassedCount()).as("%s testPassedCount", containerType).isEqualTo(1);
+			assertThat(execNode.testFailedCount()).as("%s testFailedCount", containerType).isEqualTo(1);
+			assertThat(execNode.testErrorCount()).as("%s testErrorCount",  containerType).isEqualTo(1);
+		}
+
+		// TEST_CASE nodes must have null counts (they are the counted unit, not containers)
+		ctx.planRepo().searchNodes(TestPlanNodeCriteria.and(
+			TestPlanNodeCriteria.descendantOf(ctx.plan().planNodeRoot()),
+			TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
+		)).forEach(testCaseNodeID -> {
+			TestExecutionNode execNode = ctx.execRepo().getExecutionNode(executionID, testCaseNodeID).orElseThrow();
+			assertThat(execNode.testPassedCount()).as("TEST_CASE testPassedCount must be null").isNull();
+			assertThat(execNode.testFailedCount()).as("TEST_CASE testFailedCount must be null").isNull();
+			assertThat(execNode.testErrorCount()).as("TEST_CASE testErrorCount must be null").isNull();
+		});
+
+		// EXECUTION row must also carry the aggregated counts
+		TestExecution executionWithCounts = ctx.execRepo()
+			.listExecutions(ctx.plan().planID(), ctx.plan().planNodeRoot(), 0, 1)
+			.getFirst();
+		assertThat(executionWithCounts.testPassedCount()).as("execution testPassedCount").isEqualTo(1);
+		assertThat(executionWithCounts.testFailedCount()).as("execution testFailedCount").isEqualTo(1);
+		assertThat(executionWithCounts.testErrorCount()).as("execution testErrorCount").isEqualTo(1);
 	}
 
 

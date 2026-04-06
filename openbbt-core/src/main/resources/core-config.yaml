@@ -138,3 +138,8 @@ core.attachments.server.password:
     Prefer injecting this value via environment variables in production.
   type: text
 
+core.stepExecutionTimeout:
+    description: |
+        Default timeout in seconds for executing a step. If a step execution exceeds this time, it will be aborted.
+    type: integer
+    defaultValue: 60

@@ -261,6 +261,11 @@ public class JsonRpcServer {
             executionRepository.getExecutionNodeResult(ex.executionRootNodeID() != null
                     ? ex.executionRootNodeID() : UUID.randomUUID())
                 .ifPresent(r -> obj.addProperty("result", r.name()));
+            if (ex.testPassedCount() != null) {
+                obj.addProperty("testPassedCount", ex.testPassedCount());
+                obj.addProperty("testErrorCount",  ex.testErrorCount());
+                obj.addProperty("testFailedCount", ex.testFailedCount());
+            }
             arr.add(obj);
         }
         return arr;

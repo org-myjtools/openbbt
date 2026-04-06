@@ -32,7 +32,7 @@ class TestTestPlanExecutor {
 			TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 					.name("Step with one parameter: 5")
 					.language("en");
-			var future = executor.submitStepExecution(node, null);
+			var future = executor.submitStepExecution(node);
 			assertThat(future.get()).isEqualTo(Pair.of(ExecutionResult.PASSED,null));
 		}
 
@@ -44,7 +44,7 @@ class TestTestPlanExecutor {
 		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("XX Step with one parameter: 5")
 				.language("en");
-		var future = executor.submitStepExecution(node, null);
+		var future = executor.submitStepExecution(node);
 		assertThat(future.get().left()).isEqualTo(ExecutionResult.UNDEFINED);
 	}
 
@@ -56,7 +56,7 @@ class TestTestPlanExecutor {
 		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("stepThatAlwaysFails")
 				.language("en");
-		var future = executor.submitStepExecution(node, null);
+		var future = executor.submitStepExecution(node);
 		assertThat(future.get().left()).isEqualTo(ExecutionResult.FAILED);
 		assertThat(future.get().right()).hasMessage("This step is designed to always fail");
 	}
@@ -69,7 +69,7 @@ class TestTestPlanExecutor {
 		TestPlanNode node = new TestPlanNode(NodeType.TEST_CASE)
 				.name("stepWithUnexpectedError")
 				.language("en");
-		var future = executor.submitStepExecution(node, null);
+		var future = executor.submitStepExecution(node);
 		assertThat(future.get().left()).isEqualTo(ExecutionResult.ERROR);
 		assertThat(future.get().right()).hasMessage("java.lang.IllegalArgumentException: This step is designed to throw an unexpected error");
 	}

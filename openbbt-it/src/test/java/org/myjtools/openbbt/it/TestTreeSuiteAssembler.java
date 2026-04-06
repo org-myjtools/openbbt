@@ -31,6 +31,7 @@ public class TestTreeSuiteAssembler implements SuiteAssembler {
 			case "execUndefinedStep"            -> suiteWithStep("this step does not exist");
 			case "execVirtualStep"              -> suiteWithVirtualStep();
 			case "execTwoTestCases"             -> suiteWithTwoTestCases();
+			case "execMixedResults"             -> suiteWithMixedResults();
 			default                             -> Optional.empty();
 		};
 	}
@@ -111,6 +112,38 @@ public class TestTreeSuiteAssembler implements SuiteAssembler {
 		repository.attachChildNodeLast(feature, testCase2);
 		repository.attachChildNodeLast(testCase2, aggregator2);
 		repository.attachChildNodeLast(aggregator2, step2);
+		return Optional.of(suite);
+	}
+
+	// TEST_SUITE → TEST_FEATURE → TEST_CASE_1 → STEP_AGGREGATOR → STEP("a valid step")    [PASSED]
+	//                           → TEST_CASE_2 → STEP_AGGREGATOR → STEP("a failing step")  [FAILED]
+	//                           → TEST_CASE_3 → STEP_AGGREGATOR → STEP("an error step")   [ERROR]
+	private Optional<UUID> suiteWithMixedResults() {
+		UUID suite    = node(NodeType.TEST_SUITE,   "suite");
+		UUID feature  = node(NodeType.TEST_FEATURE, "feature");
+
+		UUID testCase1    = node(NodeType.TEST_CASE,        "passing test case");
+		UUID aggregator1  = node(NodeType.STEP_AGGREGATOR,  "steps");
+		UUID step1        = node(NodeType.STEP,             "a valid step");
+
+		UUID testCase2    = node(NodeType.TEST_CASE,        "failing test case");
+		UUID aggregator2  = node(NodeType.STEP_AGGREGATOR,  "steps");
+		UUID step2        = node(NodeType.STEP,             "a failing step");
+
+		UUID testCase3    = node(NodeType.TEST_CASE,        "error test case");
+		UUID aggregator3  = node(NodeType.STEP_AGGREGATOR,  "steps");
+		UUID step3        = node(NodeType.STEP,             "an error step");
+
+		repository.attachChildNodeLast(suite,      feature);
+		repository.attachChildNodeLast(feature,    testCase1);
+		repository.attachChildNodeLast(testCase1,  aggregator1);
+		repository.attachChildNodeLast(aggregator1, step1);
+		repository.attachChildNodeLast(feature,    testCase2);
+		repository.attachChildNodeLast(testCase2,  aggregator2);
+		repository.attachChildNodeLast(aggregator2, step2);
+		repository.attachChildNodeLast(feature,    testCase3);
+		repository.attachChildNodeLast(testCase3,  aggregator3);
+		repository.attachChildNodeLast(aggregator3, step3);
 		return Optional.of(suite);
 	}
 

@@ -10,14 +10,18 @@ import org.myjtools.openbbt.core.util.Pair;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class BackendExecutor {
 
 	private static final Log log  = Log.of();
+	private static final long NO_TIMEOUT = Long.MAX_VALUE;
 
 	private final StepProviderBackend backend;
 	private final ExecutorService executor;
@@ -50,8 +54,22 @@ public class BackendExecutor {
 	}
 
 
-	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node, UUID executionNodeID) {
-		return this.executor.submit(() -> {
+	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(TestPlanNode node) {
+		return submitStepExecution(node, null, NO_TIMEOUT);
+	}
+
+
+	public Future<Pair<ExecutionResult,Throwable>> submitStepExecution(
+			TestPlanNode node,
+			UUID executionNodeID,
+			long timeoutSec
+	) {
+		if (timeoutSec == 0 || timeoutSec == -1) {
+			throw new OpenBBTException(
+				"Invalid timeout value: {}. Step timeout must be a positive number of seconds.", timeoutSec
+			);
+		}
+		Future<Pair<ExecutionResult,Throwable>> future = this.executor.submit(() -> {
 			try {
 				if (testCaseFailed) {
 					return Pair.of(ExecutionResult.SKIPPED, null);
@@ -70,6 +88,20 @@ public class BackendExecutor {
 				return Pair.of(ExecutionResult.ERROR, e);
 			}
 		});
+		try {
+			Pair<ExecutionResult,Throwable> result = timeoutSec == NO_TIMEOUT
+				? future.get()
+				: future.get(timeoutSec, TimeUnit.SECONDS);
+			return CompletableFuture.completedFuture(result);
+		} catch (TimeoutException e) {
+			future.cancel(true);
+			throw new OpenBBTException("Step execution timed out after {} seconds: {}", timeoutSec, node.name());
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new OpenBBTException(e, "Interrupted while waiting for step execution");
+		} catch (ExecutionException e) {
+			throw new OpenBBTException(e.getCause(), "Unexpected error in step execution");
+		}
 	}
 
 

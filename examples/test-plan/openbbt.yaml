@@ -6,9 +6,12 @@ project:
       (https://jsonplaceholder.typicode.com). Some tests will fail on purpose 
       to demostrate the behaviour on failures.
     test-suites:
-      - name: Test Suite
-        description: REST API test suite
-        
+      - name: Getters
+        description: REST API Getters
+        tag-expression: GET
+      - name: Others
+        description: REST API Other Operations
+        tag-expression: not GET  
 
 plugins:
     - gherkin

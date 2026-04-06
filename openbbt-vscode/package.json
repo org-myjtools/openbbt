@@ -71,6 +71,11 @@
         "command": "openbbt.contributors.refresh",
         "title": "OpenBBT: Refresh Contributors",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "openbbt.showLogs",
+        "title": "OpenBBT: Show Logs",
+        "icon": "$(output)"
       }
     ],
     "viewsContainers": {

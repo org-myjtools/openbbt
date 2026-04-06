@@ -251,7 +251,14 @@ class ExecutionProvider {
                     this._stopPolling();
                 }
             }
-            return executions.map(ex => new ExecutionItem('execution', formatDate(ex.executedAt), vscode.TreeItemCollapsibleState.None, undefined, ex));
+            return executions.map(ex => {
+                let description;
+                if (ex.testPassedCount !== undefined && ex.testErrorCount !== undefined && ex.testFailedCount !== undefined) {
+                    const total = ex.testPassedCount + ex.testErrorCount + ex.testFailedCount;
+                    description = `${ex.testPassedCount} / ${total}`;
+                }
+                return new ExecutionItem('execution', formatDate(ex.executedAt), vscode.TreeItemCollapsibleState.None, undefined, ex, description);
+            });
         }
         catch {
             return [];

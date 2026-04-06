@@ -22,6 +22,9 @@ export interface ExecutionListItem {
     executionRootNodeId: string | null;
     executedAt: string;
     result?: string;
+    testPassedCount?: number;
+    testErrorCount?: number;
+    testFailedCount?: number;
 }
 
 export interface ExecNodeInfo {

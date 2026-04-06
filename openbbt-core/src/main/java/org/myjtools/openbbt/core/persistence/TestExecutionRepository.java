@@ -27,6 +27,10 @@ public interface TestExecutionRepository extends Repository {
 
 	void updateExecutionNodeFinish(UUID executionNodeID, ExecutionResult result, Instant finishedAt);
 
+	void updateExecutionNodeTestCounts(UUID executionNodeID, int passed, int error, int failed);
+
+	void updateExecutionTestCounts(UUID executionID, int passed, int error, int failed);
+
 	void updateExecutionNodeMessage(UUID executionNodeID, String message);
 
 	UUID newAttachment(UUID executionNodeID);

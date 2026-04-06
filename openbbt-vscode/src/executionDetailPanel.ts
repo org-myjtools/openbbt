@@ -33,6 +33,9 @@ interface ExecutionHeader {
     planCreatedAt: string;
     executedAt: string;
     executionId: string;
+    testPassedCount?: number;
+    testErrorCount?: number;
+    testFailedCount?: number;
 }
 
 type ToWebview =
@@ -91,13 +94,16 @@ export async function openExecutionDetail(
                 const node = mergeResult(rootNode, execInfo);
                 const planInfo = await client.getPlan(execution.planId).catch(() => null);
                 const header: ExecutionHeader = {
-                    organization:  planInfo?.organization          ?? '',
-                    project:       planInfo?.project               ?? '',
-                    description:   planInfo?.description           ?? '',
-                    planId:        execution.planId,
-                    planCreatedAt: planInfo?.createdAt ? formatDate(planInfo.createdAt) : '',
-                    executedAt:    formatDate(execution.executedAt),
-                    executionId:   execution.executionId,
+                    organization:    planInfo?.organization          ?? '',
+                    project:         planInfo?.project               ?? '',
+                    description:     planInfo?.description           ?? '',
+                    planId:          execution.planId,
+                    planCreatedAt:   planInfo?.createdAt ? formatDate(planInfo.createdAt) : '',
+                    executedAt:      formatDate(execution.executedAt),
+                    executionId:     execution.executionId,
+                    testPassedCount: execution.testPassedCount,
+                    testErrorCount:  execution.testErrorCount,
+                    testFailedCount: execution.testFailedCount,
                 };
                 const payload: ToWebview = { type: 'init', node, header };
                 panel.webview.postMessage(payload);
@@ -310,6 +316,12 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
     font-weight: bold;
     color: #fff;
   }
+  .header-donut {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
   .spin { display: inline-block; animation: spin 1s linear infinite; }
   .arg-item { padding: 4px 4px 4px 56px; }
@@ -478,6 +490,40 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
     const el = document.createElement('span');
     applyStatusIcon(el, status, result);
     return el;
+  }
+
+  // Donut chart: green = passed, red = error+failed.
+  // Uses a circle with r=15.9155 so circumference ≈ 100, making dasharray values directly
+  // equal to percentages. Both arcs together always cover the full circle.
+  function createDonutChart(passed, error, failed) {
+    var total = passed + error + failed;
+    if (total === 0) return null;
+    var passedPct    = (passed / total) * 100;
+    var notPassedPct = 100 - passedPct;
+    var GREEN = 'var(--vscode-testing-iconPassed, #388a34)';
+    var RED   = 'var(--vscode-testing-iconFailed, #c72e0f)';
+    var cx = 21, cy = 21, r = 15.9155, sw = 5.5;
+    var arcs = '';
+    if (passedPct > 0 && passedPct < 100) {
+      // Green arc: starts at 12 o'clock, covers passedPct% clockwise
+      arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+        ' stroke="' + GREEN + '" stroke-width="' + sw + '"' +
+        ' stroke-dasharray="' + passedPct.toFixed(2) + ' ' + notPassedPct.toFixed(2) + '"' +
+        ' transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+      // Red arc: starts immediately after green arc.
+      // stroke-dashoffset = notPassedPct shifts the red dash to start at path position passedPct%.
+      arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+        ' stroke="' + RED + '" stroke-width="' + sw + '"' +
+        ' stroke-dasharray="' + notPassedPct.toFixed(2) + ' ' + passedPct.toFixed(2) + '"' +
+        ' stroke-dashoffset="' + notPassedPct.toFixed(2) + '"' +
+        ' transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+    } else {
+      var color = passedPct === 100 ? GREEN : RED;
+      arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+        ' stroke="' + color + '" stroke-width="' + sw + '"/>';
+    }
+    var svgTitle = passed + ' passed, ' + (failed + error) + ' failed / error of ' + total;
+    return '<svg viewBox="0 0 42 42" width="54" height="54"><title>' + svgTitle + '</title>' + arcs + '</svg>';
   }
 
   function applyHeaderBadge(el, status, result) {
@@ -697,6 +743,16 @@ function buildHtml(webview: vscode.Webview, _extensionUri: vscode.Uri): string {
       left.appendChild(title);
       left.appendChild(meta);
       box.appendChild(left);
+
+      if (h.testPassedCount !== undefined) {
+        var donutSvg = createDonutChart(h.testPassedCount, h.testErrorCount || 0, h.testFailedCount || 0);
+        if (donutSvg) {
+          var donutEl = document.createElement('div');
+          donutEl.className = 'header-donut';
+          donutEl.innerHTML = donutSvg;
+          box.appendChild(donutEl);
+        }
+      }
 
       const result = msg.node.result;
       const badge = document.createElement('div');
