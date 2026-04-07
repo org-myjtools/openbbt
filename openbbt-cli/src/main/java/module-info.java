@@ -7,6 +7,8 @@ module org.myjtools.openbbt.cli {
 	requires com.google.common;
 	requires org.myjtools.imconfig;
 	requires org.slf4j;
+	requires ch.qos.logback.classic;
+	requires ch.qos.logback.core;
 	requires org.myjtools.openbbt.tui;
 	requires org.myjtools.openbbt.lsp;
 	requires com.google.gson;

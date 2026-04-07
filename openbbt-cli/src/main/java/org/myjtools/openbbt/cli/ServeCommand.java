@@ -11,6 +11,7 @@ import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.util.Log;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.function.Consumer;
 import picocli.CommandLine;
@@ -25,6 +26,7 @@ public final class ServeCommand extends AbstractCommand {
 
     @Override
     protected void execute() {
+        LogConfig.redirectToFile(Path.of(System.getProperty("user.home"), ".openbbt", "openbbt.log"));
         OpenBBTContext context = getContext();
 
         // Single full-mode runtime shared by both the repository factory and the
