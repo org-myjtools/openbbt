@@ -2,8 +2,17 @@ package org.myjtools.openbbt.core.steps;
 
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
+import org.myjtools.jexten.Inject;
 import org.myjtools.jexten.Scope;
+import org.myjtools.openbbt.core.Assertion;
+import org.myjtools.openbbt.core.DataTypes;
+import org.myjtools.openbbt.core.backend.ExecutionContext;
+import org.myjtools.openbbt.core.contributors.StepExpression;
 import org.myjtools.openbbt.core.contributors.StepProvider;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Extension(
 name = "Core Step Provider",
@@ -12,9 +21,55 @@ scope = Scope.TRANSIENT // A new instance of this class will be created for each
 )
 public class CoreStepProvider implements StepProvider {
 
+	@Inject
+	DataTypes dataTypes;
+
 	@Override
 	public void init(Config config) {
 
+	}
+
+
+	@StepExpression(value = "assert.variable.integer", args = {"variable:id"})
+	public void assertVariableInteger(String variable, Assertion assertion) {
+		String varValue = ExecutionContext.current().getVariable(variable);
+		Integer value = (Integer) dataTypes.byJavaType(Integer.class).parse(varValue);
+		Assertion.assertThat(value, assertion);
+	}
+
+	@StepExpression(value = "assert.variable.decimal", args = {"variable:id"})
+	public void assertVariableDecimal(String variable, Assertion assertion) {
+		String varValue = ExecutionContext.current().getVariable(variable);
+		BigDecimal value = (BigDecimal) dataTypes.byJavaType(BigDecimal.class).parse(varValue);
+		Assertion.assertThat(value, assertion);
+	}
+
+	@StepExpression(value = "assert.variable.date", args = {"variable:id"})
+	public void assertVariableDate(String variable, Assertion assertion) {
+		String varValue = ExecutionContext.current().getVariable(variable);
+		LocalDate value = (LocalDate) dataTypes.byJavaType(LocalDate.class).parse(varValue);
+		Assertion.assertThat(value, assertion);
+	}
+
+	@StepExpression(value = "assert.variable.time", args = {"variable:id"})
+	public void assertVariableTime(String variable, Assertion assertion) {
+		String varValue = ExecutionContext.current().getVariable(variable);
+		LocalTime value = (LocalTime) dataTypes.byJavaType(LocalTime.class).parse(varValue);
+		Assertion.assertThat(value, assertion);
+	}
+
+	@StepExpression(value = "assert.variable.datetime", args = {"variable:id"})
+	public void assertVariableDatetime(String variable, Assertion assertion) {
+		String varValue = ExecutionContext.current().getVariable(variable);
+		LocalDateTime value = (LocalDateTime) dataTypes.byJavaType(LocalDateTime.class).parse(varValue);
+		Assertion.assertThat(value, assertion);
+	}
+
+	@StepExpression(value = "assert.variable.text", args = {"variable:id"})
+	public void assertVariableText(String variable, Assertion assertion) {
+		String varValue = ExecutionContext.current().getVariable(variable);
+		String value = (String) dataTypes.byJavaType(String.class).parse(varValue);
+		Assertion.assertThat(value, assertion);
 	}
 
 }

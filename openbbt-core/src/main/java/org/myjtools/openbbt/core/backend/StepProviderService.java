@@ -57,6 +57,11 @@ public class StepProviderService {
     }
 
 
+    public String providerLabel() {
+        String name = stepProvider.getClass().getSimpleName();
+        return name.endsWith("StepProvider") ? name.substring(0, name.length() - "StepProvider".length()) : name;
+    }
+
     public List<String> stepStringsForLocale(Locale locale) {
         try {
             var localeMessages = messages.forLocale(locale);

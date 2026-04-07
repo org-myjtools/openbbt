@@ -40,7 +40,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(this::openRepository);
 	private final Lazy<TestExecutionRepository> executionRepository = Lazy.of(this::openExecutionRepository);
 	private final Lazy<AttachmentRepository> attachmentRepository = Lazy.of(this::openAttachmentRepository);
-
+	private final Lazy<DataTypes> dataTypes = Lazy.of(this::collectDataTypes);
 
 	public OpenBBTRuntime(Config configuration) {
 		this(configuration, Instant::now);
@@ -146,6 +146,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 		if (type == AttachmentRepository.class) {
 			return Stream.of(attachmentRepository.get());
 		}
+		if (type == DataTypes.class) {
+			return Stream.of(dataTypes.get());
+		}
 		if (type == Messages.class) {
 			return Stream.of(Messages.of(
 					getExtensions(MessageProvider.class).filter(it -> it.providerFor(name)).toList()
@@ -243,6 +246,11 @@ public class OpenBBTRuntime implements InjectionProvider {
 	}
 
 
+	private DataTypes collectDataTypes() {
+		var dataTypeList = getExtensions(DataTypeProvider.class).flatMap(DataTypeProvider::dataTypes).toList();
+		return DataTypes.of(dataTypeList);
+	}
+
 	public ResourceSet resourceSet() {
 		return resourceSet;
 	}
@@ -251,6 +259,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	public TestPlan buildTestPlan(OpenBBTContext context) {
 		return planBuilder.buildTestPlan(context);
 	}
+
 
 
 }
