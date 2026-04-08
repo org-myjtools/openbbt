@@ -34,18 +34,13 @@
         "icon": "$(cloud-download)"
       },
       {
-        "command": "openbbt.testPlan.build",
-        "title": "OpenBBT: Build Plan",
-        "icon": "$(tools)"
+        "command": "openbbt.testPlan.refresh",
+        "title": "OpenBBT: Refresh",
+        "icon": "$(refresh)"
       },
       {
         "command": "openbbt.openSource",
         "title": "OpenBBT: Open Source Location"
-      },
-      {
-        "command": "openbbt.restartLsp",
-        "title": "OpenBBT: Restart LSP Connection",
-        "icon": "$(debug-restart)"
       },
       {
         "command": "openbbt.executions.run",
@@ -119,12 +114,7 @@
           "group": "navigation"
         },
         {
-          "command": "openbbt.testPlan.build",
-          "when": "view == openbbt.testPlan",
-          "group": "navigation"
-        },
-        {
-          "command": "openbbt.restartLsp",
+          "command": "openbbt.testPlan.refresh",
           "when": "view == openbbt.testPlan",
           "group": "navigation"
         },

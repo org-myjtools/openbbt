@@ -296,7 +296,10 @@ function activate(context) {
         testPlanProvider.invalidate();
         executionProvider.refresh();
     }
-    context.subscriptions.push(vscode.commands.registerCommand('openbbt.testPlan.build', () => doBuildPlan()));
+    context.subscriptions.push(vscode.commands.registerCommand('openbbt.testPlan.refresh', async () => {
+        await startClient();
+        await doBuildPlan();
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.openSource', async (source) => {
         const match = source.match(/^(.*)\[(\d+),(\d+)\]$/);
         if (!match) {
@@ -351,10 +354,6 @@ function activate(context) {
     }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.contributors.refresh', async () => {
         await contributorsProvider.refresh();
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('openbbt.restartLsp', async () => {
-        await startClient();
-        vscode.window.showInformationMessage('OpenBBT: LSP connection restarted.');
     }));
     context.subscriptions.push(vscode.commands.registerCommand('openbbt.executions.deleteExecution', async (item) => {
         if (!serveClient) {

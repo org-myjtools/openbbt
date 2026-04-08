@@ -37,6 +37,9 @@ export interface ExecNodeInfo {
     durationMs: number | null;
     message: string | null;
     attachmentCount: number;
+    testPassedCount?: number;
+    testErrorCount?: number;
+    testFailedCount?: number;
 }
 
 export interface AttachmentMeta {

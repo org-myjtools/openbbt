@@ -329,7 +329,10 @@ export function activate(context: vscode.ExtensionContext): void {
     }
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('openbbt.testPlan.build', () => doBuildPlan())
+        vscode.commands.registerCommand('openbbt.testPlan.refresh', async () => {
+            await startClient();
+            await doBuildPlan();
+        })
     );
 
     context.subscriptions.push(
@@ -398,12 +401,6 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand('openbbt.restartLsp', async () => {
-            await startClient();
-            vscode.window.showInformationMessage('OpenBBT: LSP connection restarted.');
-        })
-    );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('openbbt.executions.deleteExecution', async (item) => {

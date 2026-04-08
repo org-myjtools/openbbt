@@ -288,6 +288,9 @@ public class JsonRpcServer {
         obj.add("finishedAt", node.endTime()   != null ? new JsonPrimitive(node.endTime().toString())    : JsonNull.INSTANCE);
         obj.add("durationMs", node.startTime() != null && node.endTime() != null ? new JsonPrimitive(node.duration()) : JsonNull.INSTANCE);
         obj.add("message",    node.message()   != null ? new JsonPrimitive(node.message())               : JsonNull.INSTANCE);
+        obj.add("testPassedCount", node.testPassedCount() != null ? new JsonPrimitive(node.testPassedCount()) : JsonNull.INSTANCE);
+        obj.add("testErrorCount",  node.testErrorCount()  != null ? new JsonPrimitive(node.testErrorCount())  : JsonNull.INSTANCE);
+        obj.add("testFailedCount", node.testFailedCount() != null ? new JsonPrimitive(node.testFailedCount()) : JsonNull.INSTANCE);
         int attachmentCount = executionRepository.listAttachmentIds(node.executionNodeID()).size();
         obj.addProperty("attachmentCount", attachmentCount);
         return obj;
