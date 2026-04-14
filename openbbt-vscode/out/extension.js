@@ -325,8 +325,28 @@ function activate(context) {
             vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
             return;
         }
+        const suitesInput = await vscode.window.showInputBox({
+            title: 'OpenBBT: Test Suites',
+            prompt: 'Enter test suite names separated by commas, or leave blank to run all suites',
+            placeHolder: 'e.g. smoke, regression',
+        });
+        if (suitesInput === undefined) {
+            return;
+        }
+        const profileInput = await vscode.window.showInputBox({
+            title: 'OpenBBT: Profile',
+            prompt: 'Enter the profile name to activate, or leave blank for none',
+            placeHolder: 'e.g. staging',
+        });
+        if (profileInput === undefined) {
+            return;
+        }
+        const suites = suitesInput.trim()
+            ? suitesInput.split(',').map(s => s.trim()).filter(s => s.length > 0)
+            : undefined;
+        const profile = profileInput.trim() || undefined;
         try {
-            const result = await serveClient.exec(true);
+            const result = await serveClient.exec(true, suites, profile);
             executionProvider.refresh(true);
             executionProvider.startPolling(result.executionId);
             if (result.planId) {

@@ -5,6 +5,7 @@ import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.*;
+import org.myjtools.openbbt.core.execution.Profile;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.persistence.AttachmentRepository;
@@ -41,6 +42,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final Lazy<TestExecutionRepository> executionRepository = Lazy.of(this::openExecutionRepository);
 	private final Lazy<AttachmentRepository> attachmentRepository = Lazy.of(this::openAttachmentRepository);
 	private final Lazy<DataTypes> dataTypes = Lazy.of(this::collectDataTypes);
+	private final Profile profile;
 
 	public OpenBBTRuntime(Config configuration) {
 		this(configuration, Instant::now);
@@ -48,16 +50,18 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 
 	public OpenBBTRuntime(Config configuration, Clock clock) {
+		this.profile = Profile.NONE;
 		this.readOnly = false;
 		this.clock = clock;
 		this.pluginManager = new OpenBBTPluginManager(configuration);
 		this.extensionManager = ExtensionManager
 			.create(ModuleLayerProvider.compose(ModuleLayerProvider.boot(),pluginManager.moduleLayerProvider()))
 			.withInjectionProvider(this);
-		this.config = extensionManager.getExtensions(ConfigProvider.class)
+		Config rawConfig = extensionManager.getExtensions(ConfigProvider.class)
 			.map(ConfigProvider::config)
 			.reduce(Config.empty(), Config::append)
 			.append(configuration);
+		this.config = profile.applyProfile(rawConfig);
 		this.repositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
 			.orElse(null);
 		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
@@ -76,6 +80,26 @@ public class OpenBBTRuntime implements InjectionProvider {
 	}
 
 
+	private OpenBBTRuntime(OpenBBTRuntime copy, Profile profile) {
+		this.clock = copy.clock;
+		this.extensionManager = copy.extensionManager;
+		this.pluginManager = copy.pluginManager;
+		this.config = profile.applyProfile(copy.config);
+		this.repositoryFactory = copy.repositoryFactory;
+		this.resourceFinder = copy.resourceFinder;
+		this.resourceSet = copy.resourceSet;
+		this.planBuilder = copy.planBuilder;
+		this.contentTypes = copy.contentTypes;
+		this.readOnly = copy.readOnly;
+		this.profile = profile;
+	}
+
+
+	public OpenBBTRuntime withProfile(Profile profile) {
+		return new OpenBBTRuntime(this,profile);
+	}
+
+
 	/**
 	 * Creates a lightweight runtime that only initializes the repository, skipping plugin
 	 * loading and resource scanning. Use this when only read access to stored plans is needed.
@@ -89,16 +113,18 @@ public class OpenBBTRuntime implements InjectionProvider {
 	 * Private constructor for repository-only runtime. The 'ignored' parameter is just a dummy to differentiate the signature.
 	 */
 	private OpenBBTRuntime(Config configuration, boolean ignored) {
+		this.profile = Profile.NONE;
 		this.readOnly = true;
 		this.clock = Instant::now;
 		this.pluginManager = null;
 		this.extensionManager = ExtensionManager
 			.create(ModuleLayerProvider.boot())
 			.withInjectionProvider(this);
-		this.config = extensionManager.getExtensions(ConfigProvider.class)
+		var rawConfig = extensionManager.getExtensions(ConfigProvider.class)
 			.map(ConfigProvider::config)
 			.reduce(Config.empty(), Config::append)
 			.append(configuration);
+		this.config = profile.applyProfile(rawConfig);
 		this.repositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
 			.orElse(null);
 		this.resourceFinder = null;
@@ -260,6 +286,10 @@ public class OpenBBTRuntime implements InjectionProvider {
 		return planBuilder.buildTestPlan(context);
 	}
 
+
+	public Profile profile() {
+		return profile;
+	}
 
 
 }

@@ -43,8 +43,10 @@ public class JsonRpcServer {
          * Execute the current plan synchronously.
          * {@code onExecutionCreated} is called with (executionID, planID) as soon as the
          * execution record exists, before any test steps run.
+         * {@code profileName} is the optional profile to activate for this execution.
+         * {@code suites} is the list of test suite names to include; empty means all suites.
          */
-        TestExecution exec(BiConsumer<UUID, UUID> onExecutionCreated);
+        TestExecution exec(BiConsumer<UUID, UUID> onExecutionCreated, String profileName, List<String> suites);
     }
 
     private final InputStream in;
@@ -340,9 +342,16 @@ public class JsonRpcServer {
             throw new IllegalStateException("exec handler not configured");
         }
         boolean detach = params.has("detach") && params.get("detach").getAsBoolean();
+        String profileName = params.has("profile") && !params.get("profile").isJsonNull()
+            ? params.get("profile").getAsString()
+            : null;
+        List<String> suites = params.has("suites") && params.get("suites").isJsonArray()
+            ? params.getAsJsonArray("suites").asList().stream()
+                .map(JsonElement::getAsString).toList()
+            : List.of();
 
         if (!detach) {
-            TestExecution ex = execHandler.exec(null);
+            TestExecution ex = execHandler.exec(null, profileName, suites);
             JsonObject result = new JsonObject();
             result.addProperty("executionId", ex.executionID().toString());
             result.addProperty("planId", ex.planID().toString());
@@ -365,7 +374,7 @@ public class JsonRpcServer {
                     idRef.set(id);
                     planIdRef.set(planId);
                     latch.countDown();
-                });
+                }, profileName, suites);
             } catch (Throwable t) {
                 errorRef.set(t);
                 latch.countDown();

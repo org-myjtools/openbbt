@@ -65,6 +65,13 @@ public class MainCommand implements Runnable {
 
 
 	@CommandLine.Option(
+		names = {"-P", "--profile"},
+		description = "Profile name to activate",
+		scope = CommandLine.ScopeType.INHERIT
+	)
+	String profile;
+
+	@CommandLine.Option(
 		names = {"--help"},
 		description = "Show command help",
 		scope = CommandLine.ScopeType.INHERIT

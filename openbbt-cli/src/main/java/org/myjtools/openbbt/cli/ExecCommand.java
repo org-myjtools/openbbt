@@ -136,7 +136,7 @@ public final class ExecCommand extends AbstractCommand {
                 }
             }
         }
-        return new OpenBBTRuntime(context.configuration());
+        return new OpenBBTRuntime(context.configuration()).withProfile(profile(parent.profile));
     }
 
     private TestPlan buildPlan(OpenBBTContext context, OpenBBTRuntime runtime) {

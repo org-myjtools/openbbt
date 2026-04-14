@@ -43,7 +43,7 @@ public class PlanBuilder {
 		UUID projectID = testPlanRepository.persistProject(context.testProject());
 
 		String resourceSetHash = runtime.resourceSet().hash();
-		String configurationHash = Hash.of(runtime.configuration().toString());
+		String configurationHash = Hash.of(runtime.configuration().toString() + context.testSuites().toString());
 
 		TestPlan testPlan = testPlanRepository.getPlan(context.testProject(), resourceSetHash, configurationHash).orElse(null);
 		if (testPlan == null) {

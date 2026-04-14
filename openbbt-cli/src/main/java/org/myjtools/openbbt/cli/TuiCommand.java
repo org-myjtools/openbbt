@@ -15,7 +15,7 @@ public final class TuiCommand extends AbstractCommand {
 	@Override
 	protected void execute() {
 		OpenBBTContext context = getContext();
-		OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration());
+		OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration()).withProfile(profile(parent.profile));
 		try {
 			TestPlan testPlan = runtime.buildTestPlan(context);
 			TuiApp.launch(runtime, testPlan);

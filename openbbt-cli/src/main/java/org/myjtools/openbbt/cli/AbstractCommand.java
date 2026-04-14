@@ -5,6 +5,7 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTFile;
+import org.myjtools.openbbt.core.execution.Profile;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import java.io.File;
@@ -38,6 +39,19 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 				e.getMessage()
 			);
 		}
+	}
+
+	protected Profile profile(String profileName) {
+		if (profileName == null || profileName.isBlank()) {
+			return Profile.NONE;
+		}
+		var profiles = readConfigurationFile().profiles();
+		var properties = profiles.get(profileName);
+		if (properties == null) {
+			throw new OpenBBTException("Profile '{}' not found in configuration", profileName);
+		}
+		return new Profile(profileName, properties);
+
 	}
 
 	@Override

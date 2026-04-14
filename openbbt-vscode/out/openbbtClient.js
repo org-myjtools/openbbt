@@ -76,8 +76,15 @@ class OpenBBTClient {
     async deleteUnexecutedPlans() {
         await this.call('plans/deleteUnexecuted', {});
     }
-    async exec(detach = false) {
-        return this.call('exec', { detach });
+    async exec(detach = false, suites, profile) {
+        const params = { detach };
+        if (suites && suites.length > 0) {
+            params.suites = suites;
+        }
+        if (profile) {
+            params.profile = profile;
+        }
+        return this.call('exec', params);
     }
     async getExecutionNode(executionId, planNodeId) {
         try {
