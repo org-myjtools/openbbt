@@ -218,6 +218,7 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
             return plans.map(plan => {
                 const parts: string[] = [`${plan.testCaseCount ?? 0}`];
                 if (plan.hasIssues) { parts.push('⚠ issues'); }
+                parts.push(plan.testCases ? plan.testCases : 'all suites');
                 return new ExecutionItem(
                     'plan',
                     formatDate(plan.createdAt),
@@ -252,18 +253,19 @@ export class ExecutionProvider implements vscode.TreeDataProvider<ExecutionItem>
                 }
             }
             return executions.map(ex => {
-                let description: string | undefined;
+                const parts: string[] = [];
                 if (ex.testPassedCount !== undefined && ex.testErrorCount !== undefined && ex.testFailedCount !== undefined) {
                     const total = ex.testPassedCount + ex.testErrorCount + ex.testFailedCount;
-                    description = `${ex.testPassedCount} / ${total}`;
+                    parts.push(`${ex.testPassedCount} / ${total}`);
                 }
+                if (ex.profile) { parts.push(`profile: ${ex.profile}`); }
                 return new ExecutionItem(
                     'execution',
                     formatDate(ex.executedAt),
                     vscode.TreeItemCollapsibleState.None,
                     undefined,
                     ex,
-                    description,
+                    parts.length > 0 ? parts.join(' | ') : undefined,
                 );
             });
         } catch {

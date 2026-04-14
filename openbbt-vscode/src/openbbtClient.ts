@@ -13,6 +13,7 @@ export interface PlanListItem {
     createdAt: string;
     hasIssues: boolean;
     testCaseCount?: number;
+    testCases?: string;
 }
 
 export interface ExecutionListItem {
@@ -25,6 +26,7 @@ export interface ExecutionListItem {
     testPassedCount?: number;
     testErrorCount?: number;
     testFailedCount?: number;
+    profile?: string;
 }
 
 export interface ExecNodeInfo {
