@@ -548,7 +548,7 @@ abstract class AbstractRepositoryTest {
 		TestProject testProject = new TestProject("MyProject", "desc", "MyOrg", List.of());
 		UUID projectID = repo.persistProject(testProject);
 
-		TestPlan testPlan = new TestPlan(null, projectID, Instant.now(), "rHash", "cHash", root, 0);
+		TestPlan testPlan = new TestPlan(null, projectID, Instant.now(), "rHash", "cHash", root, 0, null);
 		TestPlan saved = repo.persistPlan(testPlan);
 
 		assertThat(saved.planID()).isNotNull();
@@ -565,7 +565,7 @@ abstract class AbstractRepositoryTest {
 		UUID projectID = repo.persistProject(testProject);
 		UUID explicitID = UUID.randomUUID();
 
-		TestPlan testPlan = new TestPlan(explicitID, projectID, Instant.now(), "rHash", "cHash", root, 0);
+		TestPlan testPlan = new TestPlan(explicitID, projectID, Instant.now(), "rHash", "cHash", root, 0, null);
 		TestPlan saved = repo.persistPlan(testPlan);
 
 		assertThat(saved.planID()).isEqualTo(explicitID);
@@ -578,7 +578,7 @@ abstract class AbstractRepositoryTest {
 		UUID projectID = repo.persistProject(testProject);
 		Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
 
-		TestPlan testPlan = new TestPlan(null, projectID, now, "rHash", "cHash", root, 0);
+		TestPlan testPlan = new TestPlan(null, projectID, now, "rHash", "cHash", root, 0, null);
 		TestPlan saved = repo.persistPlan(testPlan);
 
 		Optional<TestPlan> found = repo.getPlan(testProject, "rHash", "cHash");
@@ -595,7 +595,7 @@ abstract class AbstractRepositoryTest {
 		TestProject testProject = new TestProject("MyProject", "desc", "MyOrg", List.of());
 		UUID projectID = repo.persistProject(testProject);
 
-		repo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rHash", "cHash", root, 0));
+		repo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rHash", "cHash", root, 0, null));
 
 		assertThat(repo.getPlan(testProject, "otherHash", "cHash")).isEmpty();
 		assertThat(repo.getPlan(testProject, "rHash", "otherHash")).isEmpty();
@@ -614,7 +614,7 @@ abstract class AbstractRepositoryTest {
 		TestProject testProject = new TestProject("MyProject", "desc", "MyOrg", List.of());
 		UUID projectID = repo.persistProject(testProject);
 
-		TestPlan saved = repo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rHash", "cHash", root, 0));
+		TestPlan saved = repo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rHash", "cHash", root, 0, null));
 
 		Optional<TestPlan> found = repo.getPlan(saved.planID());
 
@@ -634,7 +634,7 @@ abstract class AbstractRepositoryTest {
 		UUID root = repo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
 		TestProject testProject = new TestProject(project, "desc", organization, List.of());
 		UUID projectId = repo.persistProject(testProject);
-		return repo.persistPlan(new TestPlan(null, projectId, createdAt, "rHash", "cHash", root, 0));
+		return repo.persistPlan(new TestPlan(null, projectId, createdAt, "rHash", "cHash", root, 0, null));
 	}
 
 	@Test

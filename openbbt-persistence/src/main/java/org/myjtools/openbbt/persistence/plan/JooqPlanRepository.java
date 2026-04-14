@@ -61,6 +61,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	private static final Field<String> FIELD_CONFIGURATION_HASH = DSL.field("configuration_hash", String.class);
 	private static final Field<UUID> FIELD_PLAN_NODE_ROOT = DSL.field("plan_node_root", UUID.class);
 	private static final Field<Integer> FIELD_TEST_CASE_COUNT = DSL.field("test_case_count", Integer.class);
+	private static final Field<String> FIELD_SUITES = DSL.field("suites", String.class);
 
 	private final DSLContext dsl;
 	private final Connection directConnection;
@@ -896,6 +897,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			.set(FIELD_CONFIGURATION_HASH, testPlan.configurationHash())
 			.set(FIELD_PLAN_NODE_ROOT, testPlan.planNodeRoot())
 			.set(FIELD_TEST_CASE_COUNT, testPlan.testCaseCount())
+			.set(FIELD_SUITES, testPlan.suites())
 			.execute();
 		return new TestPlan(
 			id,
@@ -904,7 +906,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			testPlan.resourceSetHash(),
 			testPlan.configurationHash(),
 			testPlan.planNodeRoot(),
-			testPlan.testCaseCount()
+			testPlan.testCaseCount(),
+			testPlan.suites()
 		);
 	}
 
@@ -965,7 +968,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		return dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
 				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
-				FIELD_TEST_CASE_COUNT
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
 			)
 			.from(TABLE_PLAN)
 			.orderBy(FIELD_CREATED_AT.desc())
@@ -978,7 +981,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		var query = dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
 				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
-				FIELD_TEST_CASE_COUNT
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
 			)
 			.from(TABLE_PLAN)
 			.join(TABLE_PROJECT).using(FIELD_PROJECT_ID)
@@ -1002,7 +1005,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		var query = dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
 				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
-				FIELD_TEST_CASE_COUNT
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
 			)
 			.from(TABLE_PLAN)
 			.join(TABLE_PROJECT).using(FIELD_PROJECT_ID)
@@ -1025,7 +1028,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			.flatMap(projectID -> dsl.select(
 					FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
 					FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
-					FIELD_TEST_CASE_COUNT
+					FIELD_TEST_CASE_COUNT, FIELD_SUITES
 				)
 				.from(TABLE_PLAN)
 				.where(FIELD_PROJECT_ID.eq(projectID))
@@ -1056,7 +1059,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		return dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
 				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
-				FIELD_TEST_CASE_COUNT
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
 			)
 			.from(TABLE_PLAN)
 			.where(FIELD_PLAN_ID.eq(planID))
@@ -1073,7 +1076,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			rec.get(FIELD_RESOURCE_SET_HASH),
 			rec.get(FIELD_CONFIGURATION_HASH),
 			rec.get(FIELD_PLAN_NODE_ROOT),
-			testCaseCount != null ? testCaseCount : 0
+			testCaseCount != null ? testCaseCount : 0,
+			rec.get(FIELD_SUITES)
 		);
 	}
 

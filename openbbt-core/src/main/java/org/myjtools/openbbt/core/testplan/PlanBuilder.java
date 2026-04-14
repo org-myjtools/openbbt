@@ -57,6 +57,9 @@ public class PlanBuilder {
 					TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
 				)
 			);
+			String suites = context.testSuites().isEmpty()
+				? null
+				: String.join(",", context.testSuites());
 			testPlan = new TestPlan(
 				null,
 				projectID,
@@ -64,7 +67,8 @@ public class PlanBuilder {
 				resourceSetHash,
 				configurationHash,
 				rootNodeID,
-				testCaseCount
+				testCaseCount,
+				suites
 			);
 			testPlan = testPlanRepository.persistPlan(testPlan);
 			testPlanRepository.assignPlanToNodes(testPlan.planID(), rootNodeID);

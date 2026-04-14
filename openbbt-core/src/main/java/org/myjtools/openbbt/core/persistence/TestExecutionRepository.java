@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface TestExecutionRepository extends Repository {
 
-	TestExecution newExecution(UUID planID, Instant executedAt);
+	TestExecution newExecution(UUID planID, Instant executedAt, String profile);
 
 	UUID newExecutionNode(UUID executionID, UUID testPlanNodeID);
 

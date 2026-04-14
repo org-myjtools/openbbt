@@ -221,6 +221,7 @@ public class JsonRpcServer {
                 .map(n -> n.hasIssues()).orElse(false);
             obj.addProperty("hasIssues", hasIssues);
             obj.addProperty("testCaseCount", plan.testCaseCount());
+            if (plan.suites() != null) obj.addProperty("testCases", plan.suites());
             arr.add(obj);
         }
         return arr;
@@ -234,6 +235,7 @@ public class JsonRpcServer {
         obj.addProperty("planId",      plan.planID().toString());
         obj.addProperty("createdAt",   plan.createdAt().toString());
         obj.addProperty("planNodeRoot", plan.planNodeRoot().toString());
+        if (plan.suites() != null) obj.addProperty("suites", plan.suites());
         repository.getProject(plan.projectID()).ifPresent(p -> {
             obj.addProperty("organization", p.organization());
             obj.addProperty("project",      p.name());
@@ -268,6 +270,7 @@ public class JsonRpcServer {
                 obj.addProperty("testErrorCount",  ex.testErrorCount());
                 obj.addProperty("testFailedCount", ex.testFailedCount());
             }
+            if (ex.profile() != null) obj.addProperty("profile", ex.profile());
             arr.add(obj);
         }
         return arr;
@@ -355,6 +358,7 @@ public class JsonRpcServer {
             JsonObject result = new JsonObject();
             result.addProperty("executionId", ex.executionID().toString());
             result.addProperty("planId", ex.planID().toString());
+            if (ex.profile() != null) result.addProperty("profile", ex.profile());
             if (ex.executionRootNodeID() != null && executionRepository != null) {
                 executionRepository.getExecutionNodeResult(ex.executionRootNodeID())
                     .ifPresent(r -> result.addProperty("result", r.name()));

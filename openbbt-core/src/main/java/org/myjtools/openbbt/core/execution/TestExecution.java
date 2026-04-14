@@ -20,5 +20,6 @@ public class TestExecution {
 	private Integer testPassedCount;
 	private Integer testErrorCount;
 	private Integer testFailedCount;
+	private String profile;
 
 }

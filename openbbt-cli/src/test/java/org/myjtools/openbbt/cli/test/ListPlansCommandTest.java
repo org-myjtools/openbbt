@@ -75,7 +75,7 @@ class ListPlansCommandTest {
             for (int i = 0; i < 3; i++) {
                 UUID root = repo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root" + i));
                 Instant createdAt = Instant.now().minusSeconds(200L - i * 100);
-                TestPlan plan = repo.persistPlan(new TestPlan(null, projectId, createdAt, "h" + i, "c" + i, root, 0));
+                TestPlan plan = repo.persistPlan(new TestPlan(null, projectId, createdAt, "h" + i, "c" + i, root, 0, null));
                 planIds.add(plan.planID().toString());
             }
 
@@ -83,7 +83,7 @@ class ListPlansCommandTest {
             TestProject other = new TestProject(OTHER_PROJECT, "desc", ORGANIZATION, List.of());
             UUID otherId = repo.persistProject(other);
             UUID otherRoot = repo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("otherRoot"));
-            repo.persistPlan(new TestPlan(null, otherId, Instant.now(), "hx", "cx", otherRoot, 0));
+            repo.persistPlan(new TestPlan(null, otherId, Instant.now(), "hx", "cx", otherRoot, 0, null));
         }
     }
 

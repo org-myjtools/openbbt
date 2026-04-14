@@ -51,7 +51,7 @@ abstract class AbstractExecutionRepositoryTest {
 	private UUID persistPlanWithRoot() {
 		UUID root = planRepo.persistNode(new TestPlanNode().nodeType(NodeType.TEST_PLAN).name("root"));
 		UUID projectID = planRepo.persistProject(new TestProject("P", "desc", "Org", List.of()));
-		TestPlan plan = planRepo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rh", "ch", root, 0));
+		TestPlan plan = planRepo.persistPlan(new TestPlan(null, projectID, Instant.now(), "rh", "ch", root, 0, null));
 		return plan.planID();
 	}
 
@@ -68,7 +68,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planID = persistPlanWithRoot();
 		Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-		TestExecution execution = repo.newExecution(planID, now);
+		TestExecution execution = repo.newExecution(planID, now, null);
 
 		assertThat(execution.executionID()).isNotNull();
 		assertThat(execution.planID()).isEqualTo(planID);
@@ -79,8 +79,8 @@ abstract class AbstractExecutionRepositoryTest {
 	void newExecution_eachCallProducesDistinctId() {
 		UUID planID = persistPlanWithRoot();
 
-		TestExecution first = repo.newExecution(planID, Instant.now());
-		TestExecution second = repo.newExecution(planID, Instant.now());
+		TestExecution first = repo.newExecution(planID, Instant.now(), null);
+		TestExecution second = repo.newExecution(planID, Instant.now(), null);
 
 		assertThat(first.executionID()).isNotEqualTo(second.executionID());
 	}
@@ -93,7 +93,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
@@ -107,7 +107,7 @@ abstract class AbstractExecutionRepositoryTest {
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
 		UUID casePlanNodeID = persistPlanNodeUnder(rootPlanNodeID, NodeType.TEST_CASE, "case");
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 
 		UUID node1 = repo.newExecutionNode(execution.executionID(), rootPlanNodeID);
 		UUID node2 = repo.newExecutionNode(execution.executionID(), casePlanNodeID);
@@ -123,7 +123,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		Optional<UUID> found = repo.getExecutionNodeByPlanNode(execution.executionID(), planNodeID);
@@ -134,7 +134,7 @@ abstract class AbstractExecutionRepositoryTest {
 	@Test
 	void getExecutionNodeByPlanNode_returnsEmptyForUnknownPlanNode() {
 		UUID planID = persistPlanWithRoot();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 
 		Optional<UUID> found = repo.getExecutionNodeByPlanNode(execution.executionID(), UUID.randomUUID());
 
@@ -147,8 +147,8 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution exec1 = repo.newExecution(planID, Instant.now());
-		TestExecution exec2 = repo.newExecution(planID, Instant.now());
+		TestExecution exec1 = repo.newExecution(planID, Instant.now(), null);
+		TestExecution exec2 = repo.newExecution(planID, Instant.now(), null);
 		UUID nodeInExec1 = repo.newExecutionNode(exec1.executionID(), planNodeID);
 		UUID nodeInExec2 = repo.newExecutionNode(exec2.executionID(), planNodeID);
 
@@ -164,7 +164,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 		Instant startedAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
@@ -179,7 +179,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		assertThat(repo.getExecutionNodeStartedAt(executionNodeID)).isEmpty();
@@ -193,7 +193,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 		Instant finishedAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
@@ -209,7 +209,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 
 		for (ExecutionResult result : ExecutionResult.values()) {
 			UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
@@ -224,7 +224,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		assertThat(repo.getExecutionNodeResult(executionNodeID)).isEmpty();
@@ -239,7 +239,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		repo.updateExecutionNodeMessage(executionNodeID, "assertion failed: expected 200 but was 404");
@@ -254,7 +254,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		assertThat(repo.getExecutionNodeMessage(executionNodeID)).isEmpty();
@@ -266,7 +266,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		repo.updateExecutionNodeMessage(executionNodeID, "first message");
@@ -283,7 +283,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		UUID attachmentID = repo.newAttachment(executionNodeID);
@@ -298,7 +298,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID planNodeID = planRepo.searchNodes(
 			org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria.withNodeType(NodeType.TEST_PLAN)
 		).findFirst().orElseThrow();
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		UUID att1 = repo.newAttachment(executionNodeID);
@@ -316,7 +316,7 @@ abstract class AbstractExecutionRepositoryTest {
 	}
 
 	private TestExecution executionWithRootNode(UUID planID, UUID planNodeRoot, Instant executedAt, ExecutionResult result) {
-		TestExecution ex = repo.newExecution(planID, executedAt);
+		TestExecution ex = repo.newExecution(planID, executedAt, null);
 		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), planNodeRoot);
 		repo.updateExecutionNodeFinish(rootExecNodeID, result, executedAt.plusSeconds(1));
 		return ex;
@@ -375,7 +375,7 @@ abstract class AbstractExecutionRepositoryTest {
 	void listExecutions_populatesExecutionRootNodeID() {
 		UUID planID = persistPlanWithRoot();
 		UUID rootNodeID = rootPlanNodeOf(planID);
-		TestExecution ex = repo.newExecution(planID, Instant.now());
+		TestExecution ex = repo.newExecution(planID, Instant.now(), null);
 		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), rootNodeID);
 
 		List<TestExecution> result = repo.listExecutions(planID, rootNodeID, 0, 0);
@@ -387,7 +387,7 @@ abstract class AbstractExecutionRepositoryTest {
 	void listExecutions_executionRootNodeIdIsNullWhenNoExecutionNodes() {
 		UUID planID = persistPlanWithRoot();
 		UUID rootNodeID = rootPlanNodeOf(planID);
-		repo.newExecution(planID, Instant.now());
+		repo.newExecution(planID, Instant.now(), null);
 
 		List<TestExecution> result = repo.listExecutions(planID, rootNodeID, 0, 0);
 		assertThat(result).hasSize(1);
@@ -464,7 +464,7 @@ abstract class AbstractExecutionRepositoryTest {
 	void getExecutionNodeResult_returnsResultAfterFinish() {
 		UUID planID = persistPlanWithRoot();
 		UUID rootNodeID = rootPlanNodeOf(planID);
-		TestExecution ex = repo.newExecution(planID, Instant.now());
+		TestExecution ex = repo.newExecution(planID, Instant.now(), null);
 		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), rootNodeID);
 		repo.updateExecutionNodeFinish(rootExecNodeID, ExecutionResult.PASSED, Instant.now());
 
@@ -475,7 +475,7 @@ abstract class AbstractExecutionRepositoryTest {
 	void getExecutionNodeResult_returnsEmptyBeforeFinish() {
 		UUID planID = persistPlanWithRoot();
 		UUID rootNodeID = rootPlanNodeOf(planID);
-		TestExecution ex = repo.newExecution(planID, Instant.now());
+		TestExecution ex = repo.newExecution(planID, Instant.now(), null);
 		UUID rootExecNodeID = repo.newExecutionNode(ex.executionID(), rootNodeID);
 
 		assertThat(repo.getExecutionNodeResult(rootExecNodeID)).isEmpty();
@@ -492,7 +492,7 @@ abstract class AbstractExecutionRepositoryTest {
 		Instant startedAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 		Instant finishedAt = startedAt.plusSeconds(2);
 
-		TestExecution execution = repo.newExecution(planID, startedAt);
+		TestExecution execution = repo.newExecution(planID, startedAt, null);
 		UUID executionNodeID = repo.newExecutionNode(execution.executionID(), planNodeID);
 
 		repo.updateExecutionNodeStart(executionNodeID, startedAt);
@@ -517,7 +517,7 @@ abstract class AbstractExecutionRepositoryTest {
 		UUID casePlanNodeID = persistPlanNodeUnder(rootPlanNodeID, NodeType.TEST_CASE, "case1");
 		UUID stepPlanNodeID = persistPlanNodeUnder(casePlanNodeID, NodeType.STEP, "step1");
 
-		TestExecution execution = repo.newExecution(planID, Instant.now());
+		TestExecution execution = repo.newExecution(planID, Instant.now(), null);
 		UUID rootExecNodeID = repo.newExecutionNode(execution.executionID(), rootPlanNodeID);
 		UUID caseExecNodeID = repo.newExecutionNode(execution.executionID(), casePlanNodeID);
 		UUID stepExecNodeID = repo.newExecutionNode(execution.executionID(), stepPlanNodeID);

@@ -79,7 +79,8 @@ public class TestPlanExecutor {
 		if (planRoot.hasIssues()) {
 			throw new OpenBBTException("Test plan has issues, cannot be executed");
 		}
-		TestExecution execution = testExecutionRepository.newExecution(planID, runtime.clock().now());
+		String profileName = runtime.profile().name().isBlank() ? null : runtime.profile().name();
+		TestExecution execution = testExecutionRepository.newExecution(planID, runtime.clock().now(), profileName);
 		if (onExecutionCreated != null) {
 			onExecutionCreated.accept(execution.executionID());
 		}

@@ -41,6 +41,7 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 	private static final Field<Integer> FIELD_TEST_FAILED_COUNT = DSL.field("test_failed_count", Integer.class);
 
 	private static final Field<UUID> FIELD_ATTACHMENT_ID = DSL.field("attachment_id", UUID.class);
+	private static final Field<String> FIELD_PROFILE = DSL.field("profile", String.class);
 
 	private final DSLContext dsl;
 	private final Connection directConnection;
@@ -69,17 +70,19 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 
 
 	@Override
-	public TestExecution newExecution(UUID planID, Instant executedAt) {
+	public TestExecution newExecution(UUID planID, Instant executedAt, String profile) {
 		UUID id = UUIDGenerator.generateUUID();
 		dsl.insertInto(TABLE_EXECUTION)
 		   .set(FIELD_EXECUTION_ID, id)
 		   .set(FIELD_PLAN_ID, planID)
 		   .set(FIELD_EXECUTED_AT, LocalDateTime.ofInstant(executedAt, ZoneOffset.UTC))
+		   .set(FIELD_PROFILE, profile)
 		   .execute();
 		TestExecution execution = new TestExecution();
 		execution.executionID(id);
 		execution.planID(planID);
 		execution.executedAt(executedAt);
+		execution.profile(profile);
 		return execution;
 	}
 
@@ -168,9 +171,10 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 		var fPassedCount = DSL.field("execution.test_passed_count", Integer.class);
 		var fErrorCount  = DSL.field("execution.test_error_count",  Integer.class);
 		var fFailedCount = DSL.field("execution.test_failed_count", Integer.class);
+		var fProfile     = DSL.field("execution.profile",           String.class);
 
 		var query = dsl
-			.select(fExecId, FIELD_PLAN_ID, FIELD_EXECUTED_AT, fEnNodeId, fPassedCount, fErrorCount, fFailedCount)
+			.select(fExecId, FIELD_PLAN_ID, FIELD_EXECUTED_AT, fEnNodeId, fPassedCount, fErrorCount, fFailedCount, fProfile)
 			.from(TABLE_EXECUTION)
 			.leftJoin(TABLE_EXECUTION_NODE)
 				.on(fEnExecId.eq(fExecId)
@@ -188,6 +192,7 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 			ex.testPassedCount(rec.value5());
 			ex.testErrorCount(rec.value6());
 			ex.testFailedCount(rec.value7());
+			ex.profile(rec.value8());
 			return ex;
 		});
 	}
