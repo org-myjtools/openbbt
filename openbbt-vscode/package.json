@@ -48,6 +48,11 @@
         "icon": "$(run-all)"
       },
       {
+        "command": "openbbt.executions.rerun",
+        "title": "OpenBBT: Re-run",
+        "icon": "$(run-all)"
+      },
+      {
         "command": "openbbt.executions.deleteExecution",
         "title": "OpenBBT: Delete Execution",
         "icon": "$(trash)"
@@ -126,19 +131,19 @@
       ],
       "view/item/context": [
         {
-          "command": "openbbt.executions.run",
-          "when": "view == openbbt.executions && viewItem == plan",
+          "command": "openbbt.executions.rerun",
+          "when": "view == openbbt.executions && viewItem == execution",
           "group": "inline@1"
         },
         {
           "command": "openbbt.executions.deleteExecution",
           "when": "view == openbbt.executions && viewItem == execution",
-          "group": "inline"
+          "group": "inline@2"
         },
         {
           "command": "openbbt.executions.deletePlan",
           "when": "view == openbbt.executions && viewItem == plan",
-          "group": "inline@2"
+          "group": "inline"
         }
       ]
     },

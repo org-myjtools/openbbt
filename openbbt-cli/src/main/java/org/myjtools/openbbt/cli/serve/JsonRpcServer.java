@@ -345,13 +345,29 @@ public class JsonRpcServer {
             throw new IllegalStateException("exec handler not configured");
         }
         boolean detach = params.has("detach") && params.get("detach").getAsBoolean();
-        String profileName = params.has("profile") && !params.get("profile").isJsonNull()
-            ? params.get("profile").getAsString()
-            : null;
-        List<String> suites = params.has("suites") && params.get("suites").isJsonArray()
-            ? params.getAsJsonArray("suites").asList().stream()
-                .map(JsonElement::getAsString).toList()
-            : List.of();
+        String profileName;
+        List<String> suites;
+        if (params.has("rerun") && !params.get("rerun").isJsonNull()) {
+            if (executionRepository == null)
+                throw new IllegalStateException("Execution repository not available");
+            UUID rerunId = UUID.fromString(params.get("rerun").getAsString());
+            TestExecution sourceEx = executionRepository.getExecution(rerunId)
+                .orElseThrow(() -> new IllegalArgumentException("Execution not found: " + rerunId));
+            profileName = sourceEx.profile();
+            TestPlan sourcePlan = repository.getPlan(sourceEx.planID())
+                .orElseThrow(() -> new IllegalArgumentException("Plan not found: " + sourceEx.planID()));
+            suites = sourcePlan.suites() != null && !sourcePlan.suites().isBlank()
+                ? List.of(sourcePlan.suites().split(","))
+                : List.of();
+        } else {
+            profileName = params.has("profile") && !params.get("profile").isJsonNull()
+                ? params.get("profile").getAsString()
+                : null;
+            suites = params.has("suites") && params.get("suites").isJsonArray()
+                ? params.getAsJsonArray("suites").asList().stream()
+                    .map(JsonElement::getAsString).toList()
+                : List.of();
+        }
 
         if (!detach) {
             TestExecution ex = execHandler.exec(null, profileName, suites);

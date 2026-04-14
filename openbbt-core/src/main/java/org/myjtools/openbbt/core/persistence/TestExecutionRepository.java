@@ -50,6 +50,8 @@ public interface TestExecutionRepository extends Repository {
 	 */
 	List<TestExecution> listExecutions(UUID planID, UUID planNodeRoot, int offset, int max);
 
+	Optional<TestExecution> getExecution(UUID executionId);
+
 	/**
 	 * Retrieve the result of a single execution node.
 	 *

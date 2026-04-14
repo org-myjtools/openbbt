@@ -160,6 +160,26 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 
 
 	@Override
+	public Optional<TestExecution> getExecution(UUID executionId) {
+		return dsl.select(FIELD_EXECUTION_ID, FIELD_PLAN_ID, FIELD_EXECUTED_AT, FIELD_PROFILE,
+				FIELD_TEST_PASSED_COUNT, FIELD_TEST_ERROR_COUNT, FIELD_TEST_FAILED_COUNT)
+			.from(TABLE_EXECUTION)
+			.where(FIELD_EXECUTION_ID.eq(executionId))
+			.fetchOptional(rec -> {
+				TestExecution ex = new TestExecution();
+				ex.executionID(rec.value1());
+				ex.planID(rec.value2());
+				ex.executedAt(rec.value3().toInstant(ZoneOffset.UTC));
+				ex.profile(rec.value4());
+				ex.testPassedCount(rec.value5());
+				ex.testErrorCount(rec.value6());
+				ex.testFailedCount(rec.value7());
+				return ex;
+			});
+	}
+
+
+	@Override
 	public List<TestExecution> listExecutions(UUID planID, UUID planNodeRoot, int offset, int max) {
 		// Two-table JOIN: execution LEFT JOIN execution_node.
 		// planNodeRoot is a parameter, so no cross-domain join to the plan table is needed.

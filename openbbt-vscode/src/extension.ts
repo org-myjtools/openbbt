@@ -405,6 +405,34 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('openbbt.executions.rerun', async (item) => {
+            if (!serveClient) {
+                vscode.window.showErrorMessage('OpenBBT: serve connection not available.');
+                return;
+            }
+            const executionId: string = item?.execution?.executionId;
+            if (!executionId) { return; }
+            try {
+                const result = await serveClient.rerun(executionId, true);
+                executionProvider.refresh(true);
+                executionProvider.startPolling(result.executionId);
+                if (result.planId) {
+                    const executions = await serveClient.listExecutionsByPlan(result.planId);
+                    const execItem = executions.find(e => e.executionId === result.executionId);
+                    if (execItem) {
+                        const label = execItem.executedAt.substring(0, 19);
+                        await openExecutionDetail(context, serveClient!, execItem, label);
+                    }
+                }
+                vscode.window.showInformationMessage(`OpenBBT: execution ${result.executionId.substring(0, 8)} started`);
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                vscode.window.showErrorMessage(`OpenBBT: re-run failed — ${msg}`);
+            }
+        })
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('openbbt.executions.openDetail', async (execution) => {
             if (!serveClient) {
                 vscode.window.showErrorMessage('OpenBBT: serve connection not available.');

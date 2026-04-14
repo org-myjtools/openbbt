@@ -191,6 +191,10 @@ export class OpenBBTClient {
         return this.call('exec', params) as Promise<ExecResult>;
     }
 
+    async rerun(executionId: string, detach = false): Promise<ExecResult> {
+        return this.call('exec', { detach, rerun: executionId }) as Promise<ExecResult>;
+    }
+
     async getExecutionNode(executionId: string, planNodeId: string): Promise<ExecNodeInfo | null> {
         try {
             return await this.call('executions/node', { executionId, planNodeId }) as ExecNodeInfo;
