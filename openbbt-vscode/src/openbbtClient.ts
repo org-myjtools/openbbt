@@ -160,6 +160,10 @@ export class OpenBBTClient {
         return this.call('browse/plans', {}) as Promise<PlanInfo[]>;
     }
 
+    async buildPlan(): Promise<PlanInfo> {
+        return this.call('browse/plan', {}) as Promise<PlanInfo>;
+    }
+
     async getNode(nodeId: string): Promise<NodeInfo> {
         return this.call('browse/node', { nodeId }) as Promise<NodeInfo>;
     }
@@ -168,8 +172,8 @@ export class OpenBBTClient {
         return this.call('browse/children', { nodeId }) as Promise<NodeInfo[]>;
     }
 
-    async getPlan(planId: string): Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string }> {
-        return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string }>;
+    async getPlan(planId: string): Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string; suites?: string }> {
+        return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string; suites?: string }>;
     }
 
     async listPlansByProject(organization: string, project: string, offset = 0, max = 0, withExecutions = false): Promise<PlanListItem[]> {

@@ -35,6 +35,11 @@ public class PlanBuilder {
 	 * @throws OpenBBTException if the test plan could not be assembled or registered
 	 */
 	public TestPlan buildTestPlan(OpenBBTContext context) {
+		return buildTestPlan(context, List.of());
+	}
+
+
+	public TestPlan buildTestPlan(OpenBBTContext context, List<String> selectedSuites) {
 
 
 		TestPlanRepository testPlanRepository = runtime.getRepository(TestPlanRepository.class);
@@ -57,9 +62,9 @@ public class PlanBuilder {
 					TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
 				)
 			);
-			String suites = context.testSuites().isEmpty()
+			String suites = selectedSuites.isEmpty()
 				? null
-				: String.join(",", context.testSuites());
+				: String.join(",", selectedSuites);
 			testPlan = new TestPlan(
 				null,
 				projectID,

@@ -226,6 +226,7 @@ class ExecutionProvider {
                 if (plan.hasIssues) {
                     parts.push('⚠ issues');
                 }
+                parts.push(plan.testCases ? plan.testCases : 'all suites');
                 return new ExecutionItem('plan', formatDate(plan.createdAt), expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed, plan.planId, undefined, parts.join(' | '), plan.hasIssues);
             });
         }
@@ -252,12 +253,15 @@ class ExecutionProvider {
                 }
             }
             return executions.map(ex => {
-                let description;
+                const parts = [];
                 if (ex.testPassedCount !== undefined && ex.testErrorCount !== undefined && ex.testFailedCount !== undefined) {
                     const total = ex.testPassedCount + ex.testErrorCount + ex.testFailedCount;
-                    description = `${ex.testPassedCount} / ${total}`;
+                    parts.push(`${ex.testPassedCount} / ${total}`);
                 }
-                return new ExecutionItem('execution', formatDate(ex.executedAt), vscode.TreeItemCollapsibleState.None, undefined, ex, description);
+                if (ex.profile) {
+                    parts.push(`profile: ${ex.profile}`);
+                }
+                return new ExecutionItem('execution', formatDate(ex.executedAt), vscode.TreeItemCollapsibleState.None, undefined, ex, parts.length > 0 ? parts.join(' | ') : undefined);
             });
         }
         catch {

@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.cli;
 
+import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.cli.serve.JsonRpcServer;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTException;
@@ -12,7 +13,6 @@ import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 import org.myjtools.openbbt.core.util.Log;
 import picocli.CommandLine;
-import org.myjtools.imconfig.Config;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +55,7 @@ public final class ServeCommand extends AbstractCommand {
             TestPlan plan;
             OpenBBTRuntime execRuntime = runtime.withProfile(profile(profileName));
             try {
-                plan = execRuntime.buildTestPlan(execContext);
+                plan = execRuntime.buildTestPlan(execContext, suites);
             } catch (Exception e) {
                 throw new OpenBBTException(e, "Failed to build test plan: {}", e.getMessage());
             }
@@ -64,6 +64,14 @@ public final class ServeCommand extends AbstractCommand {
                 ? id -> onExecutionCreated.accept(id, planId)
                 : null;
             return new TestPlanExecutor(execRuntime).execute(planId, cb);
+        };
+
+        JsonRpcServer.PlanHandler planHandler = () -> {
+            try {
+                return runtime.buildTestPlan(context, List.of());
+            } catch (Exception e) {
+                throw new OpenBBTException(e, "Failed to build test plan: {}", e.getMessage());
+            }
         };
 
         new JsonRpcServer(System.in, System.out, new JsonRpcServer.RepositoryFactory() {
@@ -76,6 +84,6 @@ public final class ServeCommand extends AbstractCommand {
             @Override public AttachmentRepository openAttachment() {
                 return runtime.getRepository(AttachmentRepository.class);
             }
-        }, execHandler, runtime::getContributors).run();
+        }, execHandler, planHandler, runtime::getContributors).run();
     }
 }

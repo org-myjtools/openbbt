@@ -29,6 +29,10 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 		);
 	}
 
+	protected List<String> getSelectedSuites() {
+		return parent.suites == null ? List.of() : parent.suites;
+	}
+
 	protected OpenBBTFile readConfigurationFile() {
 		try (var reader = Files.newReader(new File(parent.configurationFile), java.nio.charset.StandardCharsets.UTF_8)) {
 		    return OpenBBTFile.read(reader);

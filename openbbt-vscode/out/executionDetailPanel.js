@@ -73,6 +73,8 @@ async function openExecutionDetail(context, client, execution, label) {
                     planCreatedAt: planInfo?.createdAt ? formatDate(planInfo.createdAt) : '',
                     executedAt: formatDate(execution.executedAt),
                     executionId: execution.executionId,
+                    suites: planInfo?.suites ?? '',
+                    profile: execution.profile,
                     testPassedCount: execution.testPassedCount,
                     testErrorCount: execution.testErrorCount,
                     testFailedCount: execution.testFailedCount,
@@ -700,9 +702,12 @@ function buildHtml(webview, _extensionUri) {
       title.textContent = (h.organization && h.project) ? h.organization + ' / ' + h.project : (h.organization || h.project || 'Execution');
       const meta = document.createElement('div');
       meta.className = 'header-meta';
+      const suitesLabel = h.suites && h.suites.length > 0 ? h.suites : 'todos';
       meta.innerHTML =
         '<span>Plan: ' + h.planId + (h.planCreatedAt ? '  ·  ' + h.planCreatedAt : '') + '</span>' +
-        '<span>Execution: ' + h.executionId + '  ·  ' + h.executedAt + '</span>';
+        '<span>Execution: ' + h.executionId + '  ·  ' + h.executedAt + '</span>' +
+        '<span>Test Suites: ' + suitesLabel + '</span>' +
+        (h.profile ? '<span>Profile: ' + h.profile + '</span>' : '');
       left.appendChild(title);
       left.appendChild(meta);
       box.appendChild(left);

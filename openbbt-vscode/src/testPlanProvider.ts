@@ -126,14 +126,8 @@ export class TestPlanProvider implements vscode.TreeDataProvider<TestPlanItem> {
 
     private async fetchRoots(): Promise<TestPlanItem[]> {
         try {
-            this.log('[tree] calling listPlans()');
-            const plans = await this.client!.listPlans();
-            this.log(`[tree] listPlans() returned ${plans.length} plan(s)`);
-            if (plans.length === 0) {
-                this.rootItems = [];
-                return [];
-            }
-            const plan = plans[0];
+            this.log('[tree] calling buildPlan()');
+            const plan = await this.client!.buildPlan();
             this.log(`[tree] fetching root node ${plan.planNodeRoot}`);
             const rootNode = await this.client!.getNode(plan.planNodeRoot);
             this.log(`[tree] root node: ${rootNode.nodeType} "${rootNode.name}" childCount=${rootNode.childCount}`);

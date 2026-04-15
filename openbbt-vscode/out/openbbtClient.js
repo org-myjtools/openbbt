@@ -58,6 +58,9 @@ class OpenBBTClient {
     async listPlans() {
         return this.call('browse/plans', {});
     }
+    async buildPlan() {
+        return this.call('browse/plan', {});
+    }
     async getNode(nodeId) {
         return this.call('browse/node', { nodeId });
     }
@@ -85,6 +88,9 @@ class OpenBBTClient {
             params.profile = profile;
         }
         return this.call('exec', params);
+    }
+    async rerun(executionId, detach = false) {
+        return this.call('exec', { detach, rerun: executionId });
     }
     async getExecutionNode(executionId, planNodeId) {
         try {

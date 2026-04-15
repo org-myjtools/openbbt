@@ -49,10 +49,20 @@ public class JsonRpcServer {
         TestExecution exec(BiConsumer<UUID, UUID> onExecutionCreated, String profileName, List<String> suites);
     }
 
+    @FunctionalInterface
+    public interface PlanHandler {
+        /**
+         * Build (or retrieve from cache) the test plan for all suites.
+         * Returns the persisted {@link TestPlan}.
+         */
+        TestPlan build();
+    }
+
     private final InputStream in;
     private final OutputStream out;
     private final RepositoryFactory factory;
     private final ExecHandler execHandler;
+    private final PlanHandler planHandler;
     private final ContributorsProvider contributorsProvider;
     private TestPlanRepository repository;
     private TestExecutionRepository executionRepository;
@@ -60,18 +70,23 @@ public class JsonRpcServer {
     private volatile boolean running = true;
 
     public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory) {
-        this(in, out, factory, null, null);
+        this(in, out, factory, null, null, null);
     }
 
     public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler) {
-        this(in, out, factory, execHandler, null);
+        this(in, out, factory, execHandler, null, null);
     }
 
     public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler, ContributorsProvider contributorsProvider) {
+        this(in, out, factory, execHandler, null, contributorsProvider);
+    }
+
+    public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler, PlanHandler planHandler, ContributorsProvider contributorsProvider) {
         this.in = in;
         this.out = out;
         this.factory = factory;
         this.execHandler = execHandler;
+        this.planHandler = planHandler;
         this.contributorsProvider = contributorsProvider;
     }
 
@@ -147,6 +162,7 @@ public class JsonRpcServer {
         try {
             JsonElement result = switch (method) {
                 case "browse/plans"    -> handlePlans();
+                case "browse/plan"     -> handlePlanBuild();
                 case "browse/node"     -> handleNode(params);
                 case "browse/children" -> handleChildren(params);
                 case "plans/list"      -> handleListPlans(params);
@@ -176,8 +192,14 @@ public class JsonRpcServer {
     // --- Handlers ---
 
     private JsonArray handlePlans() {
+        List<TestPlan> allPlans = repository.listPlans();
+        // Prefer plans with no suite filter (suites == null = all suites), fall back to newest
+        List<TestPlan> plans = allPlans.stream().filter(p -> p.suites() == null).toList();
+        if (plans.isEmpty()) {
+            plans = allPlans;
+        }
         JsonArray arr = new JsonArray();
-        for (TestPlan plan : repository.listPlans()) {
+        for (TestPlan plan : plans) {
             JsonObject obj = new JsonObject();
             obj.addProperty("planId", plan.planID().toString());
             obj.addProperty("projectId", plan.projectID().toString());
@@ -187,6 +209,20 @@ public class JsonRpcServer {
             arr.add(obj);
         }
         return arr;
+    }
+
+    private JsonObject handlePlanBuild() {
+        if (planHandler == null) {
+            throw new IllegalStateException("plan handler not configured");
+        }
+        TestPlan plan = planHandler.build();
+        JsonObject obj = new JsonObject();
+        obj.addProperty("planId", plan.planID().toString());
+        obj.addProperty("projectId", plan.projectID().toString());
+        obj.addProperty("createdAt", plan.createdAt().toString());
+        obj.addProperty("planNodeRoot", plan.planNodeRoot().toString());
+        obj.addProperty("testCaseCount", plan.testCaseCount());
+        return obj;
     }
 
     private JsonObject handleNode(JsonObject params) {

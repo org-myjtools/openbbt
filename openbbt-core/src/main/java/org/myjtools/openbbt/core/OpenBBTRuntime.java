@@ -286,6 +286,10 @@ public class OpenBBTRuntime implements InjectionProvider {
 		return planBuilder.buildTestPlan(context);
 	}
 
+	public TestPlan buildTestPlan(OpenBBTContext context, List<String> selectedSuites) {
+		return planBuilder.buildTestPlan(context, selectedSuites);
+	}
+
 
 	public Profile profile() {
 		return profile;
