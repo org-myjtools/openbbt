@@ -1,7 +1,7 @@
 package org.myjtools.openbbt.cli;
 
 import org.myjtools.imconfig.Config;
-import org.myjtools.openbbt.cli.serve.JsonRpcServer;
+import org.myjtools.openbbt.jsonrpc.serve.JsonRpcServer;
 import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTPluginManager;

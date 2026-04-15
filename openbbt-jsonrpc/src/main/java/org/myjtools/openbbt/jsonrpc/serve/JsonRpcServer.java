@@ -1,4 +1,4 @@
-package org.myjtools.openbbt.cli.serve;
+package org.myjtools.openbbt.jsonrpc.serve;
 
 import com.google.gson.*;
 import org.myjtools.openbbt.core.execution.TestExecution;

@@ -38,6 +38,7 @@
 		<module>openbbt-persistence</module>
 		<module>openbbt-plugin-starter</module>
 		<module>openbbt-test-support</module>
+		<module>openbbt-jsonrpc</module>
 		<module>openbbt-cli</module>
 		<module>openbbt-it</module>
 		<module>openbbt-docgen-maven-plugin</module>

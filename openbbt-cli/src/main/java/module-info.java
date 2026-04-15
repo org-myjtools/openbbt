@@ -11,9 +11,9 @@ module org.myjtools.openbbt.cli {
 	requires ch.qos.logback.core;
 	requires org.myjtools.openbbt.tui;
 	requires org.myjtools.openbbt.lsp;
+	requires org.myjtools.openbbt.jsonrpc;
 	requires com.google.gson;
 
 	opens org.myjtools.openbbt.cli to info.picocli;
-	opens org.myjtools.openbbt.cli.serve to info.picocli;
 
 }
