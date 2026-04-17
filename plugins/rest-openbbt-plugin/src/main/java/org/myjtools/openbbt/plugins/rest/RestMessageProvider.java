@@ -18,9 +18,9 @@ public class RestMessageProvider extends StepDocMessageAdapter implements Messag
 	@Override
 	protected Map<String, String> languageResources() {
 		var map = new LinkedHashMap<String, String>();
-		map.put("dsl", "core-steps_dsl.yaml");
-		map.put("en",  "core-steps_en.yaml");
-		map.put("es",  "core-steps_es.yaml");
+		map.put("dsl", "steps_dsl.yaml");
+		map.put("en",  "steps_en.yaml");
+		map.put("es",  "steps_es.yaml");
 		return map;
 	}
 

@@ -4,7 +4,7 @@ import org.myjtools.jexten.ExtensionPoint;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.testplan.TestPlan;
 
-@ExtensionPoint
+@ExtensionPoint(version = "1.0")
 public interface TestPlanValidator {
 
 	/**

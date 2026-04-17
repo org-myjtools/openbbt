@@ -1,11 +1,12 @@
 package org.myjtools.openbbt.core.contributors;
 
 import org.myjtools.jexten.ExtensionPoint;
-import java.util.UUID;
+import org.myjtools.openbbt.core.events.Event;
 
 @ExtensionPoint(version = "1.0")
-public interface ReportBuilder {
+public interface EventObserver extends Contributor {
 
-	void buildReport(UUID executionID);
+
+	void onEvent(Event event);
 
 }

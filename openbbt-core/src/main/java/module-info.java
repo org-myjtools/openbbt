@@ -38,6 +38,12 @@ module org.myjtools.openbbt.core {
 	exports org.myjtools.openbbt.core.datatypes;
 	exports org.myjtools.openbbt.core.assertions;
 	exports org.myjtools.openbbt.core.docgen;
+	exports org.myjtools.openbbt.core.validator;
+	exports org.myjtools.openbbt.core.steps;
+	exports org.myjtools.openbbt.core.contenttypes;
+	exports org.myjtools.openbbt.core.persistence;
+	exports org.myjtools.openbbt.core.execution;
+	exports org.myjtools.openbbt.core.events;
 
 	opens org.myjtools.openbbt.core to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.messages to org.myjtools.jexten;
@@ -45,15 +51,10 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core.contributors to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.backend to org.myjtools.jexten;
 	opens org.myjtools.openbbt.core.assertions to org.myjtools.jexten;
-	exports org.myjtools.openbbt.core.contenttypes;
 	opens org.myjtools.openbbt.core.contenttypes to org.myjtools.jexten;
-	exports org.myjtools.openbbt.core.persistence;
 	opens org.myjtools.openbbt.core.persistence to org.myjtools.jexten;
-	exports org.myjtools.openbbt.core.execution;
 	opens org.myjtools.openbbt.core.execution to org.myjtools.jexten;
-	exports org.myjtools.openbbt.core.validator;
 	opens org.myjtools.openbbt.core.validator to org.myjtools.jexten;
-	exports org.myjtools.openbbt.core.steps;
 	opens org.myjtools.openbbt.core.steps to org.myjtools.jexten;
 
 	uses ContentType;
@@ -67,6 +68,7 @@ module org.myjtools.openbbt.core {
 	uses RepositoryFactory;
 	uses TestPlanValidator;
 	uses ReportBuilder;
+	uses EventObserver;
 
 	provides ContentType with
 			JSONContentType,

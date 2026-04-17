@@ -3,6 +3,10 @@ package org.myjtools.openbbt.core.execution;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
+import org.myjtools.openbbt.core.events.ExecutionFinished;
+import org.myjtools.openbbt.core.events.ExecutionNodeFinished;
+import org.myjtools.openbbt.core.events.ExecutionNodeStarted;
+import org.myjtools.openbbt.core.events.ExecutionStarted;
 import org.myjtools.openbbt.core.persistence.AttachmentRepository;
 import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
@@ -13,6 +17,7 @@ import org.myjtools.openbbt.core.util.Log;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -86,10 +91,16 @@ public class TestPlanExecutor {
 		}
 		UUID rootExecutionNodeID = createExecutionNodes(execution.executionID(), planRoot.nodeID());
 		execution.executionRootNodeID(rootExecutionNodeID);
+		runtime.eventBus().publish(
+			new ExecutionStarted(runtime.clock().now(), execution.executionID(), planID, profileName)
+		);
 
 		NodeResult rootResult = executeTestPlanNode(execution.executionID(), planRoot.nodeID(), null);
 		testExecutionRepository.updateExecutionTestCounts(
 			execution.executionID(), rootResult.passedCount(), rootResult.errorCount(), rootResult.failedCount()
+		);
+		runtime.eventBus().publish(
+			new ExecutionFinished(runtime.clock().now(), execution.executionID(), planID, profileName, rootResult.result)
 		);
 		return execution;
 	}
@@ -100,15 +111,27 @@ public class TestPlanExecutor {
 		.orElseThrow(
 			() -> new OpenBBTException("Execution node for test plan node with ID {} not found", testPlanNodeID)
 		);
-		testExecutionRepository.updateExecutionNodeStart(executionNodeID, runtime.clock().now());
+		Instant start = runtime.clock().now();
+		testExecutionRepository.updateExecutionNodeStart(executionNodeID, start);
+		runtime.eventBus().publish(
+			new ExecutionNodeStarted(start, executionID, executionNodeID, testPlanNodeID)
+		);
 		try {
 			NodeResult nodeResult = doExecuteTestPlanNode(executionID, executionNodeID, testPlanNodeID, backendExecutor);
-			testExecutionRepository.updateExecutionNodeFinish(executionNodeID, nodeResult.result(), runtime.clock().now());
+			Instant finish = runtime.clock().now();
+			testExecutionRepository.updateExecutionNodeFinish(executionNodeID, nodeResult.result(), finish);
+			runtime.eventBus().publish(
+				new ExecutionNodeFinished(finish, executionID, executionNodeID, testPlanNodeID, nodeResult.result())
+			);
 			return nodeResult;
 		} catch (Exception e) {
 			log.error("Unexpected error executing plan node {}: {}", testPlanNodeID, e.getMessage());
 			log.error(e);
-			testExecutionRepository.updateExecutionNodeFinish(executionNodeID, ExecutionResult.ERROR, runtime.clock().now());
+			Instant finish = runtime.clock().now();
+			testExecutionRepository.updateExecutionNodeFinish(executionNodeID, ExecutionResult.ERROR, finish);
+			runtime.eventBus().publish(
+				new ExecutionNodeFinished(finish, executionID, executionNodeID, testPlanNodeID, ExecutionResult.ERROR)
+			);
 			return new NodeResult(ExecutionResult.ERROR, 0, 0, 0);
 		}
 	}

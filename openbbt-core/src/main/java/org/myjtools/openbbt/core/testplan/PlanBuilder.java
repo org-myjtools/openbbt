@@ -6,6 +6,7 @@ import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.contributors.TestPlanValidator;
+import org.myjtools.openbbt.core.events.TestPlanCreated;
 import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.util.Hash;
@@ -98,6 +99,9 @@ public class PlanBuilder {
 				log.info("Test plan validated successfully with no issues");
 			}
 			log.debug("Registered new test plan: {}", testPlan.planID());
+			runtime.eventBus().publish(
+				new TestPlanCreated(runtime.clock().now(),testPlan.projectID(),testPlan.planID(),rootNode.hasIssues())
+			);
 		} else {
 			log.debug("Reusing existing test plan: {}", testPlan.planID());
 		}

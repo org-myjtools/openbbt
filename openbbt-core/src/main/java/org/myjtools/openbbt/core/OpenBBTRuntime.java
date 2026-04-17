@@ -5,6 +5,7 @@ import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.*;
+import org.myjtools.openbbt.core.events.EventBus;
 import org.myjtools.openbbt.core.execution.Profile;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
@@ -43,6 +44,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final Lazy<AttachmentRepository> attachmentRepository = Lazy.of(this::openAttachmentRepository);
 	private final Lazy<DataTypes> dataTypes = Lazy.of(this::collectDataTypes);
 	private final Profile profile;
+	private final EventBus eventBus;
 
 	public OpenBBTRuntime(Config configuration) {
 		this(configuration, Instant::now);
@@ -77,6 +79,8 @@ public class OpenBBTRuntime implements InjectionProvider {
 		}
 		this.contentTypes = ContentTypes.of(extensionManager.getExtensions(ContentType.class).toList());
 		this.planBuilder = new PlanBuilder(this);
+		this.eventBus = new EventBus();
+		getExtensions(EventObserver.class).forEach(eventBus::registerObserver);
 	}
 
 
@@ -92,6 +96,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 		this.contentTypes = copy.contentTypes;
 		this.readOnly = copy.readOnly;
 		this.profile = profile;
+		this.eventBus = copy.eventBus;
 	}
 
 
@@ -131,6 +136,8 @@ public class OpenBBTRuntime implements InjectionProvider {
 		this.resourceSet = null;
 		this.planBuilder = null;
 		this.contentTypes = null;
+		this.eventBus = new EventBus();
+		getExtensions(EventObserver.class).forEach(eventBus::registerObserver);
 	}
 
 
@@ -147,6 +154,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 	@Override
 	public Stream<Object> provideInstancesFor(Class<?> type, String name) {
+
 		if (type == Config.class) {
 			if (name == null || name.isEmpty()) {
 				return Stream.of(config);
@@ -191,6 +199,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 		}
 		if (type == ContentTypes.class) {
 			return streamOf(contentTypes);
+		}
+		if (type == EventBus.class) {
+			return streamOf(eventBus);
 		}
 		return Stream.empty();
 	}
@@ -295,5 +306,8 @@ public class OpenBBTRuntime implements InjectionProvider {
 		return profile;
 	}
 
+	public EventBus eventBus() {
+		return eventBus;
+	}
 
 }
