@@ -11,6 +11,7 @@ import picocli.CommandLine;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
 public abstract sealed class AbstractCommand implements Callable<Integer> permits BrowseCommand, DeleteExecutionCommand, DeletePlanCommand, ExecCommand, GetExecutionNodeCommand, InitCommand, InstallCommand, ListContributorsCommand, ListExecutionsCommand, ListPlansCommand, LspCommand, PlanCommand, PurgeCommand, ServeCommand, ShowConfigCommand, TuiCommand {
@@ -22,10 +23,21 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 
 
 	protected OpenBBTContext getContext() {
-		Map<String, String> params = parent.params == null ? Map.of() : parent.params;
+		Map<String, String> cliParams = parent.params == null ? Map.of() : parent.params;
+		Map<String, String> envParams = System.getenv();
+		Map<String, String> envFileParams = readEnvFileParams();
 		return readConfigurationFile().createContext(
-			Config.ofMap(params),
+			Config.ofMap(combineParams(cliParams, envFileParams, envParams)),
 			parent.suites == null ? List.of() : parent.suites
+		);
+	}
+
+
+	private Map<String,String> combineParams(Map<String, String>... params) {
+		return Map.ofEntries(
+			java.util.Arrays.stream(params)
+				.flatMap(m -> m.entrySet().stream())
+				.toArray(Map.Entry[]::new)
 		);
 	}
 
@@ -44,6 +56,26 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 			);
 		}
 	}
+
+
+	protected Map<String, String> readEnvFileParams() {
+		var file = new File(parent.configurationFile).getAbsoluteFile().getParentFile().toPath().resolve(".env").toFile();
+		if (!file.exists()) {
+			return Map.of();
+		}
+		try (var reader = Files.newReader(file, java.nio.charset.StandardCharsets.UTF_8)) {
+			Properties properties = new Properties();
+			properties.load(reader);
+			return properties.entrySet().stream()
+				.collect(java.util.stream.Collectors.toMap(
+					e -> e.getKey().toString(),
+					e -> e.getValue().toString()
+				));
+		} catch (Exception e) {
+			throw new OpenBBTException(e, "Failed to read env file: {}", e.getMessage());
+		}
+	}
+
 
 	protected Profile profile(String profileName) {
 		if (profileName == null || profileName.isBlank()) {
