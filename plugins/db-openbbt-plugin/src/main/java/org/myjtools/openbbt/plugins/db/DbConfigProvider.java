@@ -20,6 +20,8 @@ public class DbConfigProvider extends ConfigAdapter implements ConfigProvider {
 	public static final String DATASOURCE_SCHEMA = "schema";
 	public static final String DATASOURCE_CATALOG = "catalog";
 	public static final String DATASOURCE_DIALECT = "dialect";
+	public static final String DATASOURCE_QUOTE_IDENTIFIERS = "quoteIdentifiers";
+	public static final String NULL_VALUE = "db.nullValue";
 
 	@Override
 	protected String resource() {

@@ -3,10 +3,13 @@ package org.myjtools.openbbt.plugins.db;
 import org.myjtools.imconfig.Config;
 import org.myjtools.jexten.Extension;
 import org.myjtools.jexten.Scope;
+import org.myjtools.openbbt.core.Assertion;
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.core.contributors.StepExpression;
 import org.myjtools.openbbt.core.contributors.StepProvider;
+import org.myjtools.openbbt.core.contributors.TearDown;
+import org.myjtools.openbbt.core.testplan.Document;
 import org.myjtools.openbbt.plugins.db.jooq.JooqDbEngine;
-import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,14 +20,22 @@ import java.util.Map;
 )
 public class DbStepProvider implements StepProvider {
 
-	private Map<String, ConnectionParameters> connectionParameters = new HashMap<>();
-
 	private DbEngine engine;
+	private String alias;
 
 	@Override
 	public void init(Config config) {
-		Map<String, ConnectionParameters> connections = fillConnectionParameters(config);
-		engine = new JooqDbEngine(connections);
+		String nullValue = config.getString(DbConfigProvider.NULL_VALUE).orElse("");
+		engine = new JooqDbEngine(fillConnectionParameters(config), nullValue);
+	}
+
+	@TearDown
+	public void tearDown() {
+		try {
+			engine.close();
+		} catch (Exception e) {
+			throw new OpenBBTException(e, "Failed to close database engine");
+		}
 	}
 
 	private Map<String, ConnectionParameters> fillConnectionParameters(Config config) {
@@ -35,12 +46,8 @@ public class DbStepProvider implements StepProvider {
 			String url = datasourceConfig.getString(DbConfigProvider.DATASOURCE_URL).orElseThrow(
 				() -> new OpenBBTException("Missing URL for datasource {}",datasource)
 			);
-			String username = datasourceConfig.getString(DbConfigProvider.DATASOURCE_USERNAME).orElseThrow(
-				() -> new OpenBBTException("Missing username for datasource {}",datasource)
-			);
-			String password = datasourceConfig.getString(DbConfigProvider.DATASOURCE_PASSWORD).orElseThrow(
-				() -> new OpenBBTException("Missing password for datasource {}",datasource)
-			);
+			String username = datasourceConfig.getString(DbConfigProvider.DATASOURCE_USERNAME).orElse("");
+			String password = datasourceConfig.getString(DbConfigProvider.DATASOURCE_PASSWORD).orElse("");
 			String driver = datasourceConfig.getString(DbConfigProvider.DATASOURCE_DRIVER).orElseThrow(
 				() -> new OpenBBTException("Missing driver for datasource {}",datasource)
 			);
@@ -49,13 +56,27 @@ public class DbStepProvider implements StepProvider {
 			);
 			String schema = datasourceConfig.getString(DbConfigProvider.DATASOURCE_SCHEMA).orElse(null);
 			String catalog = datasourceConfig.getString(DbConfigProvider.DATASOURCE_CATALOG).orElse(null);
+			boolean quoteIdentifiers = datasourceConfig.get(DbConfigProvider.DATASOURCE_QUOTE_IDENTIFIERS, Boolean.class).orElse(true);
 
 			connections.put(
 				datasource,
-				new ConnectionParameters(url, username, password, driver, schema, catalog, dialect)
+				new ConnectionParameters(url, username, password, driver, schema, catalog, dialect, quoteIdentifiers)
 			);
 		}
 		return connections;
+	}
+
+
+
+	@StepExpression(value = "db.define.alias", args = {"alias:text"})
+	public void defineAlias(String alias) {
+		this.alias = alias;
+	}
+
+	@StepExpression(value = "db.assert.count", args = {"table:word"})
+	public void assertCountSql(String table, Assertion assertion) {
+		Integer count = engine.executeCountQueryFromTable(alias, table);
+		Assertion.assertThat(count, assertion);
 	}
 
 }

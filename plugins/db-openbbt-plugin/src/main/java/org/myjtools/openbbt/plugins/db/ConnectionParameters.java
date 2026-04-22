@@ -7,6 +7,7 @@ public record ConnectionParameters(
 	String driver,
 	String schema,
 	String catalog,
-	String dialect
+	String dialect,
+	boolean quoteIdentifiers
 ) {
 }
