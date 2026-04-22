@@ -15,6 +15,18 @@
     <dependencies>
         <dependency>
             <groupId>org.myjtools.openbbt</groupId>
+            <artifactId>openbbt-cli</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>4.7.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.myjtools.openbbt</groupId>
             <artifactId>openbbt-core</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
