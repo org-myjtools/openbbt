@@ -9,6 +9,7 @@ import org.myjtools.openbbt.core.execution.Profile;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import java.io.File;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -34,11 +35,11 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 
 
 	private Map<String,String> combineParams(Map<String, String>... params) {
-		return Map.ofEntries(
-			java.util.Arrays.stream(params)
-				.flatMap(m -> m.entrySet().stream())
-				.toArray(Map.Entry[]::new)
-		);
+		var combined = new LinkedHashMap<String, String>();
+		for (Map<String, String> paramSource : params) {
+			paramSource.forEach(combined::putIfAbsent);
+		}
+		return combined;
 	}
 
 	protected List<String> getSelectedSuites() {
