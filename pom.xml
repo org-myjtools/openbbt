@@ -36,7 +36,6 @@
 	<modules>
 		<module>openbbt-core</module>
 		<module>openbbt-persistence</module>
-		<module>openbbt-plugin-starter</module>
 		<module>openbbt-test-support</module>
 		<module>openbbt-jsonrpc</module>
 		<module>openbbt-cli</module>
@@ -87,6 +86,7 @@
 		<profile>
 			<id>plugins</id>
 			<modules>
+				<module>openbbt-plugin-starter</module>
 				<module>plugins/gherkin-openbbt-plugin</module>
 				<module>plugins/markdown-plan-openbbt-plugin</module>
 				<module>plugins/rest-openbbt-plugin</module>
