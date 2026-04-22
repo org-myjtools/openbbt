@@ -23,7 +23,6 @@ import java.util.Map;
 		PlanCommand.class,
 		ServeCommand.class,
 		ShowConfigCommand.class,
-		TuiCommand.class,
 		LspCommand.class
 	}
 )
