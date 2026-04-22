@@ -24,6 +24,12 @@
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 		<java.version>21</java.version>
+		<!-- Sonar reads the aggregate JaCoCo report (IT tests covering all modules)
+		     plus each module's own per-module report -->
+		<sonar.coverage.jacoco.xmlReportPaths>
+			${maven.multiModuleProjectDirectory}/openbbt-it/target/site/jacoco-aggregate/jacoco.xml,
+			${project.basedir}/target/site/jacoco/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 
 	<licenses>
