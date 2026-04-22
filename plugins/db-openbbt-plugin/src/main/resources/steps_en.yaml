@@ -1,0 +1,29 @@
+'db.define.alias':
+  expression: 'I use datasource {alias:text}'
+  example: |
+    Given I use datasource "main"
+  scenarios:
+    - title: Select a datasource before performing operations
+      gherkin: |
+        Given I use datasource "main"
+        Then the count of rows of table users is equal to 3
+
+
+'db.assert.count':
+  expression: 'the count of rows of table {table:word} {{integer-assertion}}'
+  assertion-hints:
+    - 'is equal to 0'
+    - 'is equal to 1'
+    - 'is greater than 0'
+    - 'is not equal to 0'
+  example: |
+    Then the count of rows of table users is equal to 3
+  scenarios:
+    - title: Assert table is empty after a deletion
+      gherkin: |
+        Given I use datasource "main"
+        Then the count of rows of table users is equal to 0
+    - title: Assert at least one row exists
+      gherkin: |
+        Given I use datasource "main"
+        Then the count of rows of table users is greater than 0

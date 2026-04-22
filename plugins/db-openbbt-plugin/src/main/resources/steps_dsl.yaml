@@ -1,0 +1,29 @@
+'db.define.alias':
+  expression: 'use db {alias:text}'
+  example: |
+    * use db "main"
+  scenarios:
+    - title: Select a datasource before performing operations
+      gherkin: |
+        * use db "main"
+        * count db table users = 3
+
+
+'db.assert.count':
+  expression: 'count db table {table:word} {{integer-assertion}}'
+  assertion-hints:
+    - '= 0'
+    - '= 1'
+    - '> 0'
+    - '!= 0'
+  example: |
+    * count db table users = 3
+  scenarios:
+    - title: Assert table is empty after a deletion
+      gherkin: |
+        * use db "main"
+        * count db table users = 0
+    - title: Assert at least one row exists
+      gherkin: |
+        * use db "main"
+        * count db table users > 0
