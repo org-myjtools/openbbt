@@ -11,6 +11,7 @@ module org.myjtools.openbbt.plugins.db.test {
     requires com.h2database;
     requires org.hsqldb;
     requires org.xerial.sqlitejdbc;
+    requires duckdb.jdbc;
 
     opens org.myjtools.plugins.db.test to org.junit.platform.commons;
 
