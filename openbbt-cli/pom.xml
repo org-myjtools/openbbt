@@ -37,11 +37,6 @@
         </dependency>
         <dependency>
             <groupId>org.myjtools.openbbt</groupId>
-            <artifactId>openbbt-tui</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.myjtools.openbbt</groupId>
             <artifactId>openbbt-lsp</artifactId>
             <version>${project.version}</version>
         </dependency>
