@@ -7,6 +7,7 @@
     <parent>
         <groupId>org.myjtools.openbbt</groupId>
         <artifactId>openbbt-plugin-starter</artifactId>
+		<relativePath>../../openbbt-plugin-starter/pom.xml</relativePath>
         <version>1.0.0-alpha1</version>
     </parent>
 
