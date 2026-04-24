@@ -93,7 +93,7 @@ class PlanValidatorTest {
 
 	private PlanResult buildPlan(String suiteName, Path tempDir) {
 		Config config = Config.ofMap(Map.of(
-			OpenBBTConfig.ENV_PATH,          "target/.openbbt",
+			OpenBBTConfig.ENV_PATH,          tempDir.resolve("env").toString(),
 			OpenBBTConfig.PERSISTENCE_MODE,  OpenBBTConfig.PERSISTENCE_MODE_FILE,
 			OpenBBTConfig.PERSISTENCE_FILE,  tempDir.resolve("plan.db").toString()
 		));

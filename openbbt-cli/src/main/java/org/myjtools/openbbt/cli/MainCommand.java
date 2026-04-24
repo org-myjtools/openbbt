@@ -77,6 +77,9 @@ public class MainCommand implements Runnable {
 	)
 	boolean showHelp;
 
+	@CommandLine.Spec
+	CommandLine.Model.CommandSpec spec;
+
 
 	public static void main(String[] args) {
 		int exitCode = new CommandLine(new MainCommand()).execute(args);
@@ -87,7 +90,7 @@ public class MainCommand implements Runnable {
 
 	@Override
 	public void run() {
-		new CommandLine(this).usage(System.out);
+		spec.commandLine().usage(spec.commandLine().getOut());
 	}
 
 }

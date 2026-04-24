@@ -56,7 +56,7 @@ public final class ListExecutionsCommand extends AbstractCommand {
         TestExecutionRepository repository = runtime.getRepository(TestExecutionRepository.class);
         var planOpt = planRepository.getPlan(planId);
         if (planOpt.isEmpty()) {
-            if (json) System.out.println("[]");
+            if (json) out().println("[]");
             return;
         }
         List<TestExecution> executions = repository.listExecutions(planId, planOpt.get().planNodeRoot(), offset, max);
@@ -72,11 +72,11 @@ public final class ListExecutionsCommand extends AbstractCommand {
                 obj.addProperty("executedAt", ex.executedAt().toString());
                 result.add(obj);
             }
-            System.out.println(result);
+            out().println(result);
         } else {
             for (TestExecution ex : executions) {
                 String result = resolveResult(repository, ex);
-                System.out.println(ex.executionID() + " " + ex.executedAt() + " " + result);
+                out().println(ex.executionID() + " " + ex.executedAt() + " " + result);
             }
         }
     }

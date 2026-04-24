@@ -79,9 +79,9 @@ public final class BrowseCommand extends AbstractCommand {
             .orElseThrow(() -> new IllegalArgumentException("Test plan not found: " + target.planID));
         try {
             if (json) {
-                new TestPlanHierarchyFormatter(repository, depth).format(testPlan, System.out::print);
+                new TestPlanHierarchyFormatter(repository, depth).format(testPlan, out()::print);
             } else {
-                new TestPlanFormatter(repository, depth).format(testPlan, System.out::print);
+                new TestPlanFormatter(repository, depth).format(testPlan, out()::print);
             }
         } catch (Exception e) {
             log.warn("Error formatting test plan: {}", e.getMessage());
@@ -94,9 +94,9 @@ public final class BrowseCommand extends AbstractCommand {
             .orElseThrow(() -> new IllegalArgumentException("Node not found: " + target.nodeID));
         try {
             if (json) {
-                new TestPlanHierarchyFormatter(repository, depth).formatFromNode(node, System.out::print);
+                new TestPlanHierarchyFormatter(repository, depth).formatFromNode(node, out()::print);
             } else {
-                new TestPlanFormatter(repository, depth).formatFromNode(node, System.out::print);
+                new TestPlanFormatter(repository, depth).formatFromNode(node, out()::print);
             }
         } catch (Exception e) {
             log.warn("Error formatting node: {}", e.getMessage());

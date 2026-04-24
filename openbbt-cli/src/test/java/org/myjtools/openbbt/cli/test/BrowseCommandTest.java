@@ -13,7 +13,9 @@ import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,12 +26,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BrowseCommandTest {
 
+    static final String ENV_PATH = "target/.openbbt-browse";
+
     static String planID;
     static String rootNodeID;
 
     static final String[] BASE_ARGS = {
         "-f", "src/test/resources/openbbt.yaml",
-        "-D" + OpenBBTConfig.ENV_PATH + "=target/.openbbt",
+        "-D" + OpenBBTConfig.ENV_PATH + "=" + ENV_PATH,
         "-D" + OpenBBTConfig.PERSISTENCE_MODE + "=" + OpenBBTConfig.PERSISTENCE_MODE_FILE
     };
 
@@ -38,13 +42,13 @@ class BrowseCommandTest {
         new CommandLine(new MainCommand()).execute(
             "install",
             "-f", "src/test/resources/openbbt.yaml",
-            "-D" + OpenBBTConfig.ENV_PATH + "=target/.openbbt"
+            "-D" + OpenBBTConfig.ENV_PATH + "=" + ENV_PATH
         );
 
         try (var reader = new FileReader("src/test/resources/openbbt.yaml")) {
             OpenBBTFile file = OpenBBTFile.read(reader);
             Map<String, String> params = Map.of(
-                OpenBBTConfig.ENV_PATH, "target/.openbbt",
+                OpenBBTConfig.ENV_PATH, ENV_PATH,
                 OpenBBTConfig.RESOURCE_PATH, "src/test/resources/test-features",
                 OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_FILE
             );
@@ -75,9 +79,7 @@ class BrowseCommandTest {
 
     @Test
     void browseShowsPlanSummaryWithoutNodes() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--plan", planID)
-        ));
+        var out = captureStdout(args("browse", "--plan", planID));
         assertEquals(0, out.exitCode);
         assertTrue(out.text.contains("Plan ID:"));
         assertTrue(out.text.contains("Project ID:"));
@@ -87,9 +89,7 @@ class BrowseCommandTest {
 
     @Test
     void browseJsonShowsHierarchicalNodes() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--plan", planID, "--json")
-        ));
+        var out = captureStdout(args("browse", "--plan", planID, "--json"));
         assertEquals(0, out.exitCode);
         assertTrue(out.text.contains("\"planID\""));
         assertTrue(out.text.contains("\"nodes\""));
@@ -97,12 +97,8 @@ class BrowseCommandTest {
 
     @Test
     void browseJsonWithDepthLimitsTree() {
-        var fullOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--plan", planID, "--json")
-        ));
-        var depthOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--plan", planID, "--json", "--depth", "1")
-        ));
+        var fullOut = captureStdout(args("browse", "--plan", planID, "--json"));
+        var depthOut = captureStdout(args("browse", "--plan", planID, "--json", "--depth", "1"));
         assertEquals(0, fullOut.exitCode);
         assertEquals(0, depthOut.exitCode);
         assertTrue(depthOut.text.length() < fullOut.text.length(),
@@ -111,9 +107,7 @@ class BrowseCommandTest {
 
     @Test
     void browseNodeShowsHierarchicalText() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--node", rootNodeID)
-        ));
+        var out = captureStdout(args("browse", "--node", rootNodeID));
         assertEquals(0, out.exitCode);
         assertTrue(out.text.contains("[TEST_SUITE]") || out.text.contains("[TEST_PLAN]")
             || out.text.contains("[TEST_FEATURE]") || out.text.contains("[TEST_CASE]"));
@@ -121,9 +115,7 @@ class BrowseCommandTest {
 
     @Test
     void browseNodeJsonShowsSubtree() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--node", rootNodeID, "--json")
-        ));
+        var out = captureStdout(args("browse", "--node", rootNodeID, "--json"));
         assertEquals(0, out.exitCode);
         assertTrue(out.text.contains("\"nodeID\""));
         assertTrue(out.text.contains("\"nodes\""));
@@ -131,12 +123,8 @@ class BrowseCommandTest {
 
     @Test
     void browseNodeJsonWithDepthLimitsSubtree() {
-        var fullOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--node", rootNodeID, "--json")
-        ));
-        var depthOut = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("browse", "--node", rootNodeID, "--json", "--depth", "1")
-        ));
+        var fullOut = captureStdout(args("browse", "--node", rootNodeID, "--json"));
+        var depthOut = captureStdout(args("browse", "--node", rootNodeID, "--json", "--depth", "1"));
         assertEquals(0, fullOut.exitCode);
         assertEquals(0, depthOut.exitCode);
         assertTrue(depthOut.text.length() < fullOut.text.length(),
@@ -169,27 +157,13 @@ class BrowseCommandTest {
 
     record CapturedOutput(int exitCode, String text) {}
 
-    interface IntSupplier { int get(); }
-
-    static CapturedOutput captureStdout(IntSupplier action) {
-        PrintStream original = System.out;
-        var buffer = new ByteArrayOutputStream();
-        var tee = new PrintStream(new java.io.OutputStream() {
-            @Override public void write(int b) {
-                buffer.write(b);
-                original.write(b);
-            }
-            @Override public void write(byte[] b, int off, int len) {
-                buffer.write(b, off, len);
-                original.write(b, off, len);
-            }
-        });
-        System.setOut(tee);
-        try {
-            int code = action.get();
-            return new CapturedOutput(code, buffer.toString());
-        } finally {
-            System.setOut(original);
-        }
+    static CapturedOutput captureStdout(String... args) {
+        var stdout = new ByteArrayOutputStream();
+        var stderr = new ByteArrayOutputStream();
+        CommandLine commandLine = new CommandLine(new MainCommand());
+        commandLine.setOut(new PrintWriter(new OutputStreamWriter(stdout, StandardCharsets.UTF_8), true));
+        commandLine.setErr(new PrintWriter(new OutputStreamWriter(stderr, StandardCharsets.UTF_8), true));
+        int code = commandLine.execute(args);
+        return new CapturedOutput(code, stdout.toString(StandardCharsets.UTF_8));
     }
 }

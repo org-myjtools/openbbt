@@ -67,12 +67,12 @@ public final class ListPlansCommand extends AbstractCommand {
                 obj.addProperty("hasIssues", hasIssues);
                 result.add(obj);
             }
-            System.out.println(result);
+            out().println(result);
         } else {
             for (TestPlan plan : plans) {
                 boolean hasIssues = repository.getNodeData(plan.planNodeRoot())
                     .map(n -> n.hasIssues()).orElse(false);
-                System.out.println(plan.planID() + " " + plan.createdAt() + " " + (hasIssues ? "ISSUES" : "OK"));
+                out().println(plan.planID() + " " + plan.createdAt() + " " + (hasIssues ? "ISSUES" : "OK"));
             }
         }
     }

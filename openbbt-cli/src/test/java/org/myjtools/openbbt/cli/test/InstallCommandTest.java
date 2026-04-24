@@ -8,12 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InstallCommandTest {
 
+	private static final String ENV_PATH = "target/.openbbt-install";
+
 	@Test
 	void showHelp() {
 		int exitCode = new CommandLine(new MainCommand()).execute(
 			"install", "--help",
 			"-f","src/test/resources/openbbt.yaml",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt"
+			"-D"+OpenBBTConfig.ENV_PATH+"="+ENV_PATH
 		);
 		assertEquals(0, exitCode);
 	}
@@ -23,7 +25,7 @@ class InstallCommandTest {
 		int exitCode = new CommandLine(new MainCommand()).execute(
 			"install",
 			"-f","src/test/resources/openbbt.yaml",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt"
+			"-D"+OpenBBTConfig.ENV_PATH+"="+ENV_PATH
 		);
 		assertEquals(0, exitCode);
 	}
@@ -32,7 +34,7 @@ class InstallCommandTest {
 	void installTestWithClean() {
 		int exitCode = new CommandLine(new MainCommand()).execute(
 			"install",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
+			"-D"+OpenBBTConfig.ENV_PATH+"="+ENV_PATH,
 			"-f","src/test/resources/openbbt.yaml",
 			"--clean"
 		);

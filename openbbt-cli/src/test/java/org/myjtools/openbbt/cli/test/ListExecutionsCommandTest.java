@@ -20,9 +20,11 @@ import picocli.CommandLine;
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -104,9 +106,7 @@ class ListExecutionsCommandTest {
 
     @Test
     void listExecutionsOutputsJsonArrayWithExpectedFields() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", planId)
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", planId));
         assertEquals(0, out.exitCode());
         assertTrue(out.text().contains("\"executionId\""));
         assertTrue(out.text().contains("\"executedAt\""));
@@ -115,18 +115,14 @@ class ListExecutionsCommandTest {
 
     @Test
     void listExecutionsReturnsAllThreeExecutions() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", planId)
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", planId));
         assertEquals(0, out.exitCode());
         assertEquals(3, countOccurrences(out.text(), "\"executionId\""));
     }
 
     @Test
     void listExecutionsOrderedByExecutedAtDescending() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", planId)
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", planId));
         assertEquals(0, out.exitCode());
         // [0]=oldest, [2]=newest — desc order means [2] appears first
         int pos0 = out.text().indexOf(executionIds.get(0));
@@ -137,9 +133,7 @@ class ListExecutionsCommandTest {
 
     @Test
     void listExecutionsWithMaxLimitsResults() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", planId, "--max", "2")
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", planId, "--max", "2"));
         assertEquals(0, out.exitCode());
         assertEquals(2, countOccurrences(out.text(), "\"executionId\""));
     }
@@ -147,9 +141,7 @@ class ListExecutionsCommandTest {
     @Test
     void listExecutionsWithOffsetSkipsNewest() {
         // Desc order: [newest, middle, oldest]. Offset=1 skips newest -> [middle, oldest]
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", planId, "--offset", "1")
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", planId, "--offset", "1"));
         assertEquals(0, out.exitCode());
         assertEquals(2, countOccurrences(out.text(), "\"executionId\""));
         assertFalse(out.text().contains(executionIds.get(2)), "Newest should be skipped");
@@ -160,9 +152,7 @@ class ListExecutionsCommandTest {
     @Test
     void listExecutionsWithOffsetAndMaxPaginates() {
         // Desc: [newest, middle, oldest]. offset=1, max=1 -> [middle]
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", planId, "--offset", "1", "--max", "1")
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", planId, "--offset", "1", "--max", "1"));
         assertEquals(0, out.exitCode());
         assertEquals(1, countOccurrences(out.text(), "\"executionId\""));
         assertTrue(out.text().contains(executionIds.get(1)));
@@ -172,18 +162,14 @@ class ListExecutionsCommandTest {
 
     @Test
     void listExecutionsReturnsEmptyArrayForUnknownPlan() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", UUID.randomUUID().toString())
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", UUID.randomUUID().toString()));
         assertEquals(0, out.exitCode());
         assertEquals("[]", out.text().trim());
     }
 
     @Test
     void listExecutionsDoesNotIncludeExecutionsFromOtherPlans() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--json", "--plan-id", planId)
-        ));
+        var out = captureStdout(args("list-executions", "--json", "--plan-id", planId));
         assertEquals(0, out.exitCode());
         assertEquals(3, countOccurrences(out.text(), "\"executionId\""),
             "Must not include executions from other plans");
@@ -192,9 +178,7 @@ class ListExecutionsCommandTest {
     @Test
     void plainOutputContainsExecutionIdDateAndResult() {
         // Without --json: each line is "<id> <date> <result>"
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-executions", "--plan-id", planId)
-        ));
+        var out = captureStdout(args("list-executions", "--plan-id", planId));
         assertEquals(0, out.exitCode());
         String[] lines = out.text().trim().split("\\n");
         assertEquals(3, lines.length);
@@ -214,25 +198,13 @@ class ListExecutionsCommandTest {
 
     record CapturedOutput(int exitCode, String text) {}
 
-    interface IntSupplier { int get(); }
-
-    static CapturedOutput captureStdout(IntSupplier action) {
-        PrintStream original = System.out;
+    static CapturedOutput captureStdout(String... args) {
         var buffer = new ByteArrayOutputStream();
-        var tee = new PrintStream(new java.io.OutputStream() {
-            @Override public void write(int b) { buffer.write(b); original.write(b); }
-            @Override public void write(byte[] b, int off, int len) {
-                buffer.write(b, off, len);
-                original.write(b, off, len);
-            }
-        });
-        System.setOut(tee);
-        try {
-            int code = action.get();
-            return new CapturedOutput(code, buffer.toString());
-        } finally {
-            System.setOut(original);
-        }
+        CommandLine commandLine = new CommandLine(new MainCommand());
+        commandLine.setOut(new PrintWriter(new OutputStreamWriter(buffer, StandardCharsets.UTF_8), true));
+        commandLine.setErr(new PrintWriter(new OutputStreamWriter(new ByteArrayOutputStream(), StandardCharsets.UTF_8), true));
+        int code = commandLine.execute(args);
+        return new CapturedOutput(code, buffer.toString(StandardCharsets.UTF_8));
     }
 
     static int countOccurrences(String text, String token) {

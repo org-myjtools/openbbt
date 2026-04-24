@@ -9,6 +9,7 @@ import org.myjtools.openbbt.core.execution.Profile;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,18 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 	@CommandLine.ParentCommand
 	MainCommand parent;
 
+	@CommandLine.Spec
+	CommandLine.Model.CommandSpec spec;
+
 	protected abstract void execute();
+
+	protected PrintWriter out() {
+		return spec.commandLine().getOut();
+	}
+
+	protected PrintWriter err() {
+		return spec.commandLine().getErr();
+	}
 
 
 	protected OpenBBTContext getContext() {
@@ -105,13 +117,13 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 		}
 		try {
 			if (parent.showHelp) {
-				CommandLine.usage(this, System.out);
+				spec.commandLine().usage(out());
 				return 0;
 			}
 			execute();
 			return 0;
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			err().println(e.getMessage());
 			return 1;
 		}
 	}

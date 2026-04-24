@@ -24,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TestPlanBuilderTest {
 
+	private static final String ENV_PATH = "target/.openbbt-it-planbuilder";
+
 	@BeforeAll
 	static void installPlugins() throws IOException {
 		OpenBBTFile file = OpenBBTFile.read(new FileReader("src/test/resources/openbbt.yaml"));
 		var context = file.createContext(
-			Config.ofMap(Map.of(OpenBBTConfig.ENV_PATH, "target/.openbbt")),
+			Config.ofMap(Map.of(OpenBBTConfig.ENV_PATH, ENV_PATH)),
 			List.of()
 		);
 		OpenBBTPluginManager pluginManager = new OpenBBTPluginManager(context.configuration());
@@ -42,7 +44,7 @@ class TestPlanBuilderTest {
 		OpenBBTFile file = OpenBBTFile.read(new FileReader("src/test/resources/openbbt-no-suites.yaml"));
 		var context = file.createContext(
 			Config.ofMap(Map.of(
-				OpenBBTConfig.ENV_PATH, "target/.openbbt",
+				OpenBBTConfig.ENV_PATH, ENV_PATH,
 				OpenBBTConfig.RESOURCE_PATH, "src/test/resources/test-features",
 				OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT
 			)),
@@ -74,7 +76,7 @@ class TestPlanBuilderTest {
 		OpenBBTFile file = OpenBBTFile.read(new FileReader("src/test/resources/openbbt.yaml"));
 		var context = file.createContext(
 			Config.ofMap(Map.of(
-				OpenBBTConfig.ENV_PATH, "target/.openbbt",
+				OpenBBTConfig.ENV_PATH, ENV_PATH,
 				OpenBBTConfig.RESOURCE_PATH, "src/test/resources/test-features",
 				OpenBBTConfig.PERSISTENCE_MODE, OpenBBTConfig.PERSISTENCE_MODE_FILE,
 				OpenBBTConfig.PERSISTENCE_FILE, tempDir.resolve("plan.db").toString()

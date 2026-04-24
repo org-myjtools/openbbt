@@ -19,9 +19,10 @@ public final class ShowConfigCommand extends AbstractCommand {
 		log.debug("Showing configuration options...");
 		OpenBBTContext context = getContext();
 		OpenBBTRuntime cm = new OpenBBTRuntime(context.configuration());
-		log.info(ConfigFormatter.toMaskedString(cm.configuration()));
-		log.info("Available configuration options:\n");
-		log.info(cm.configuration().getDefinitionsToString());
+		out().println(ConfigFormatter.toMaskedString(cm.configuration()));
+		out().println("Available configuration options:");
+		out().println();
+		out().println(cm.configuration().getDefinitionsToString());
 
 	}
 

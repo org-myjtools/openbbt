@@ -57,16 +57,16 @@ public final class GetExecutionNodeCommand extends AbstractCommand {
             obj.add("finishedAt",  node.endTime()   != null ? new JsonPrimitive(node.endTime().toString())               : JsonNull.INSTANCE);
             obj.add("durationMs",  node.startTime() != null && node.endTime() != null ? new JsonPrimitive(node.duration()) : JsonNull.INSTANCE);
             obj.add("message",     node.message()   != null ? new JsonPrimitive(node.message())                          : JsonNull.INSTANCE);
-            System.out.println(obj);
+            out().println(obj);
         } else {
-            System.out.println("executionNodeId : " + node.executionNodeID());
-            System.out.println("executionId     : " + node.executionID());
-            System.out.println("planNodeId      : " + node.planNodeID());
-            System.out.println("result          : " + (node.result()    != null ? node.result().name()      : "-"));
-            System.out.println("startedAt       : " + (node.startTime() != null ? node.startTime()         : "-"));
-            System.out.println("finishedAt      : " + (node.endTime()   != null ? node.endTime()           : "-"));
-            System.out.println("durationMs      : " + (node.startTime() != null && node.endTime() != null ? node.duration() + "ms" : "-"));
-            System.out.println("message         : " + (node.message()   != null ? node.message()           : "-"));
+            out().println("executionNodeId : " + node.executionNodeID());
+            out().println("executionId     : " + node.executionID());
+            out().println("planNodeId      : " + node.planNodeID());
+            out().println("result          : " + (node.result()    != null ? node.result().name()      : "-"));
+            out().println("startedAt       : " + (node.startTime() != null ? node.startTime()         : "-"));
+            out().println("finishedAt      : " + (node.endTime()   != null ? node.endTime()           : "-"));
+            out().println("durationMs      : " + (node.startTime() != null && node.endTime() != null ? node.duration() + "ms" : "-"));
+            out().println("message         : " + (node.message()   != null ? node.message()           : "-"));
         }
     }
 }

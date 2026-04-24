@@ -13,9 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ListContributorsCommandTest {
 
+    static final String ENV_PATH = "target/.openbbt-listcontributors";
+
     static final String[] BASE_ARGS = {
         "-f", "src/test/resources/openbbt.yaml",
-        "-D" + OpenBBTConfig.ENV_PATH + "=target/.openbbt"
+        "-D" + OpenBBTConfig.ENV_PATH + "=" + ENV_PATH
     };
 
     @Test

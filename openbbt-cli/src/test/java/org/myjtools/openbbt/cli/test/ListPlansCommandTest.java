@@ -17,9 +17,11 @@ import picocli.CommandLine;
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,9 +99,7 @@ class ListPlansCommandTest {
 
     @Test
     void listPlansOutputsJsonArrayWithExpectedFields() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT)
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT));
         assertEquals(0, out.exitCode());
         assertTrue(out.text().contains("\"planId\""));
         assertTrue(out.text().contains("\"createdAt\""));
@@ -107,18 +107,14 @@ class ListPlansCommandTest {
 
     @Test
     void listPlansReturnsAllThreePlans() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT)
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT));
         assertEquals(0, out.exitCode());
         assertEquals(3, countOccurrences(out.text(), "\"planId\""));
     }
 
     @Test
     void listPlansOrderedByCreatedAtDescending() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT)
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT));
         assertEquals(0, out.exitCode());
         // planIds[2] is newest, [1] middle, [0] oldest — desc order means [2] appears first
         int pos0 = out.text().indexOf(planIds.get(0));
@@ -129,9 +125,7 @@ class ListPlansCommandTest {
 
     @Test
     void listPlansWithMaxLimitsResults() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT, "--max", "2")
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT, "--max", "2"));
         assertEquals(0, out.exitCode());
         assertEquals(2, countOccurrences(out.text(), "\"planId\""));
     }
@@ -139,9 +133,7 @@ class ListPlansCommandTest {
     @Test
     void listPlansWithOffsetSkipsNewestRecords() {
         // Desc order: [newest, middle, oldest]. Offset=1 skips newest -> [middle, oldest]
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT, "--offset", "1")
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT, "--offset", "1"));
         assertEquals(0, out.exitCode());
         assertEquals(2, countOccurrences(out.text(), "\"planId\""));
         assertFalse(out.text().contains(planIds.get(2)), "Newest plan should be skipped by offset=1");
@@ -152,9 +144,7 @@ class ListPlansCommandTest {
     @Test
     void listPlansWithOffsetAndMaxPaginatesCorrectly() {
         // Desc order: [newest, middle, oldest]. offset=1, max=1 -> [middle]
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT, "--offset", "1", "--max", "1")
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT, "--offset", "1", "--max", "1"));
         assertEquals(0, out.exitCode());
         assertEquals(1, countOccurrences(out.text(), "\"planId\""));
         assertTrue(out.text().contains(planIds.get(1)), "Middle plan should be returned");
@@ -164,18 +154,14 @@ class ListPlansCommandTest {
 
     @Test
     void listPlansReturnsEmptyArrayForUnknownProject() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", "Unknown", "--project", "Unknown")
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", "Unknown", "--project", "Unknown"));
         assertEquals(0, out.exitCode());
         assertEquals("[]", out.text().trim());
     }
 
     @Test
     void listPlansDoesNotIncludePlansFromOtherProject() {
-        var out = captureStdout(() -> new CommandLine(new MainCommand()).execute(
-            args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT)
-        ));
+        var out = captureStdout(args("list-plans", "--json", "--organization", ORGANIZATION, "--project", PROJECT));
         assertEquals(0, out.exitCode());
         assertEquals(3, countOccurrences(out.text(), "\"planId\""),
             "Plans from other project must not appear");
@@ -191,25 +177,13 @@ class ListPlansCommandTest {
 
     record CapturedOutput(int exitCode, String text) {}
 
-    interface IntSupplier { int get(); }
-
-    static CapturedOutput captureStdout(IntSupplier action) {
-        PrintStream original = System.out;
+    static CapturedOutput captureStdout(String... args) {
         var buffer = new ByteArrayOutputStream();
-        var tee = new PrintStream(new java.io.OutputStream() {
-            @Override public void write(int b) { buffer.write(b); original.write(b); }
-            @Override public void write(byte[] b, int off, int len) {
-                buffer.write(b, off, len);
-                original.write(b, off, len);
-            }
-        });
-        System.setOut(tee);
-        try {
-            int code = action.get();
-            return new CapturedOutput(code, buffer.toString());
-        } finally {
-            System.setOut(original);
-        }
+        CommandLine commandLine = new CommandLine(new MainCommand());
+        commandLine.setOut(new PrintWriter(new OutputStreamWriter(buffer, StandardCharsets.UTF_8), true));
+        commandLine.setErr(new PrintWriter(new OutputStreamWriter(new ByteArrayOutputStream(), StandardCharsets.UTF_8), true));
+        int code = commandLine.execute(args);
+        return new CapturedOutput(code, buffer.toString(StandardCharsets.UTF_8));
     }
 
     static int countOccurrences(String text, String token) {
