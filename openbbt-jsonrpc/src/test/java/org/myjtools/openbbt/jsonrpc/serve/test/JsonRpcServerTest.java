@@ -368,6 +368,32 @@ class JsonRpcServerTest {
     }
 
     @Test
+    void plansListIncludesIssuesCountAndSuiteSelection() {
+        UUID planId = UUID.randomUUID(), rootId = UUID.randomUUID(), projectId = UUID.randomUUID();
+        TestPlan p = new TestPlan(planId, projectId, Instant.EPOCH, "h1", "h2", rootId, 7, "suiteA,suiteB");
+        TestPlanNode root = node(rootId);
+        root.hasIssues(true);
+
+        List<JsonObject> responses = run(
+            () -> new StubPlanRepo() {
+                @Override public List<TestPlan> listPlans(String org, String proj, int off, int max, boolean withExecutions) {
+                    return List.of(p);
+                }
+                @Override public Optional<TestPlanNode> getNodeData(UUID id) {
+                    return id.equals(rootId) ? Optional.of(root) : Optional.empty();
+                }
+            },
+            req(1, "plans/list", "{\"organization\":\"org\",\"project\":\"proj\",\"withExecutions\":true}"),
+            req(99, "shutdown", "{}")
+        );
+
+        var result = responses.get(0).getAsJsonArray("result").get(0).getAsJsonObject();
+        assertThat(result.get("hasIssues").getAsBoolean()).isTrue();
+        assertThat(result.get("testCaseCount").getAsInt()).isEqualTo(7);
+        assertThat(result.get("testCases").getAsString()).isEqualTo("suiteA,suiteB");
+    }
+
+    @Test
     void plansGetReturnsPlanDetail() {
         UUID planId = UUID.randomUUID(), projectId = UUID.randomUUID(), rootId = UUID.randomUUID();
         TestPlan p = plan(planId, projectId, rootId);
@@ -527,6 +553,58 @@ class JsonRpcServerTest {
         assertThat(arr).hasSize(1);
         assertThat(arr.get(0).getAsJsonObject().get("executionId").getAsString())
             .isEqualTo(ex.executionID().toString());
+    }
+
+    @Test
+    void executionsListIncludesResultCountsAndProfileWhenAvailable() {
+        UUID planId = UUID.randomUUID(), rootId = UUID.randomUUID(), projectId = UUID.randomUUID();
+        UUID executionRootNodeId = UUID.randomUUID();
+        TestPlan p = plan(planId, projectId, rootId);
+
+        TestExecution ex = new TestExecution();
+        ex.executionID(UUID.randomUUID());
+        ex.planID(planId);
+        ex.executionRootNodeID(executionRootNodeId);
+        ex.executedAt(Instant.EPOCH);
+        ex.testPassedCount(5);
+        ex.testErrorCount(1);
+        ex.testFailedCount(2);
+        ex.profile("staging");
+
+        StubExecRepo execRepo = new StubExecRepo() {
+            @Override public List<TestExecution> listExecutions(UUID pid, UUID root, int off, int max) {
+                return List.of(ex);
+            }
+            @Override public Optional<ExecutionResult> getExecutionNodeResult(UUID id) {
+                return id.equals(executionRootNodeId) ? Optional.of(ExecutionResult.FAILED) : Optional.empty();
+            }
+        };
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new JsonRpcServer(
+            new ByteArrayInputStream(concat(
+                frame(req(1, "executions/list", "{\"planId\":\"" + planId + "\"}")),
+                frame(req(99, "shutdown", "{}"))
+            )),
+            out,
+            withExec(
+                new StubPlanRepo() {
+                    @Override public Optional<TestPlan> getPlan(UUID id) {
+                        return id.equals(planId) ? Optional.of(p) : Optional.empty();
+                    }
+                },
+                execRepo
+            ),
+            null, null, null
+        ).run();
+
+        var result = parseResponses(out.toByteArray()).get(0).getAsJsonArray("result").get(0).getAsJsonObject();
+        assertThat(result.get("executionRootNodeId").getAsString()).isEqualTo(executionRootNodeId.toString());
+        assertThat(result.get("result").getAsString()).isEqualTo("FAILED");
+        assertThat(result.get("testPassedCount").getAsInt()).isEqualTo(5);
+        assertThat(result.get("testErrorCount").getAsInt()).isEqualTo(1);
+        assertThat(result.get("testFailedCount").getAsInt()).isEqualTo(2);
+        assertThat(result.get("profile").getAsString()).isEqualTo("staging");
     }
 
     @Test

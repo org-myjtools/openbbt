@@ -4,6 +4,11 @@ import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.cli.MainCommand;
 import picocli.CommandLine;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ShowConfigCommandTest {
@@ -32,5 +37,46 @@ class ShowConfigCommandTest {
 		assertEquals(0, exitCode);
 	}
 
+	@Test
+	void showHelpWritesUsageToConfiguredStdout() {
+		var output = captureOutput(
+			"show-config", "--help",
+			"-f", "src/test/resources/openbbt.yaml",
+			"-D" + OpenBBTConfig.ENV_PATH + "=" + ENV_PATH
+		);
+
+		assertThat(output.exitCode()).isZero();
+		assertThat(output.stdout()).contains("Show the available configuration options");
+		assertThat(output.stderr()).isEmpty();
+	}
+
+	@Test
+	void showConfigWritesErrorsToConfiguredStderr() {
+		var output = captureOutput(
+			"show-config",
+			"-f", "src/test/resources/missing-openbbt.yaml",
+			"-D" + OpenBBTConfig.ENV_PATH + "=" + ENV_PATH
+		);
+
+		assertThat(output.exitCode()).isEqualTo(1);
+		assertThat(output.stdout()).isEmpty();
+		assertThat(output.stderr()).contains("Failed to read configuration file");
+	}
+
+	private static CapturedOutput captureOutput(String... args) {
+		var stdout = new ByteArrayOutputStream();
+		var stderr = new ByteArrayOutputStream();
+		CommandLine commandLine = new CommandLine(new MainCommand());
+		commandLine.setOut(new PrintWriter(new OutputStreamWriter(stdout, StandardCharsets.UTF_8), true));
+		commandLine.setErr(new PrintWriter(new OutputStreamWriter(stderr, StandardCharsets.UTF_8), true));
+		int exitCode = commandLine.execute(args);
+		return new CapturedOutput(
+			exitCode,
+			stdout.toString(StandardCharsets.UTF_8),
+			stderr.toString(StandardCharsets.UTF_8)
+		);
+	}
+
+	private record CapturedOutput(int exitCode, String stdout, String stderr) {}
 
 }

@@ -6,6 +6,7 @@ import org.myjtools.imconfig.Config;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.core.backend.ExecutionContext;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.testplan.DataTable;
 import org.myjtools.openbbt.core.testplan.Document;
@@ -122,6 +123,36 @@ class TestStepProviderBackend {
 			var backend = new StepProviderBackend(cm);
 			assertThatCode(backend::tearDown).doesNotThrowAnyException();
 		}
+
+		@Test
+		void testAssertIntegerVariable() {
+			assertCoreStepPasses("the integer variable count is equal to 5", "count", "5");
+		}
+
+		@Test
+		void testAssertDecimalVariable() {
+			assertCoreStepPasses("the decimal variable price is equal to 19.99", "price", "19.99");
+		}
+
+		@Test
+		void testAssertDateVariable() {
+			assertCoreStepPasses("the date variable expiryDate is equal to 2025-01-01", "expiryDate", "2025-01-01");
+		}
+
+		@Test
+		void testAssertTimeVariable() {
+			assertCoreStepPasses("the time variable scheduledAt is equal to 09:30:00", "scheduledAt", "09:30:00");
+		}
+
+		@Test
+		void testAssertDatetimeVariable() {
+			assertCoreStepPasses("the datetime variable createdAt is equal to 2025-01-01T10:30:00", "createdAt", "2025-01-01T10:30:00");
+		}
+
+		@Test
+		void testAssertTextVariable() {
+			assertCoreStepPasses("the text variable status contains \"ctiv\"", "status", "active");
+		}
 	}
 
 
@@ -228,6 +259,19 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			assertThatCode(backend::tearDown).doesNotThrowAnyException();
+		}
+	}
+
+	private void assertCoreStepPasses(String step, String variableName, String variableValue) {
+		var runtime = new OpenBBTRuntime(TEST_CONFIG);
+		var backend = new StepProviderBackend(runtime);
+		backend.setUp(null, null, Map.of());
+		try {
+			ExecutionContext.current().setVariable(variableName, variableValue);
+			assertThatCode(() -> backend.run(step, Locale.ENGLISH, null, null))
+				.doesNotThrowAnyException();
+		} finally {
+			backend.tearDown();
 		}
 	}
 
