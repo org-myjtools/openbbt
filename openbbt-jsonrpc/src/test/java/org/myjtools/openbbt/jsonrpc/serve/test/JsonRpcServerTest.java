@@ -650,6 +650,50 @@ class JsonRpcServerTest {
     }
 
     @Test
+    void executionsNodeReturnsOptionalFieldsAndAttachmentCount() {
+        UUID execId = UUID.randomUUID(), planNodeId = UUID.randomUUID(), execNodeId = UUID.randomUUID();
+
+        TestExecutionNode execNode = new TestExecutionNode();
+        execNode.executionID(execId);
+        execNode.executionNodeID(execNodeId);
+        execNode.planNodeID(planNodeId);
+        execNode.result(ExecutionResult.FAILED);
+        execNode.startTime(Instant.parse("2026-01-01T10:00:00Z"));
+        execNode.endTime(Instant.parse("2026-01-01T10:00:02Z"));
+        execNode.message("boom");
+        execNode.testPassedCount(1);
+        execNode.testErrorCount(2);
+        execNode.testFailedCount(3);
+
+        StubExecRepo execRepo = new StubExecRepo() {
+            @Override public Optional<TestExecutionNode> getExecutionNode(UUID eid, UUID pnid) {
+                return Optional.of(execNode);
+            }
+            @Override public List<UUID> listAttachmentIds(UUID id) {
+                return id.equals(execNodeId) ? List.of(UUID.randomUUID(), UUID.randomUUID()) : List.of();
+            }
+        };
+
+        List<JsonObject> responses = runWith(
+            withExec(new StubPlanRepo() {}, execRepo),
+            null, null, null,
+            req(1, "executions/node", "{\"executionId\":\"" + execId + "\",\"planNodeId\":\"" + planNodeId + "\"}"),
+            req(99, "shutdown", "{}")
+        );
+
+        var result = responses.get(0).getAsJsonObject("result");
+        assertThat(result.get("result").getAsString()).isEqualTo("FAILED");
+        assertThat(result.get("startedAt").getAsString()).isEqualTo("2026-01-01T10:00:00Z");
+        assertThat(result.get("finishedAt").getAsString()).isEqualTo("2026-01-01T10:00:02Z");
+        assertThat(result.get("durationMs").getAsLong()).isEqualTo(2000L);
+        assertThat(result.get("message").getAsString()).isEqualTo("boom");
+        assertThat(result.get("testPassedCount").getAsInt()).isEqualTo(1);
+        assertThat(result.get("testErrorCount").getAsInt()).isEqualTo(2);
+        assertThat(result.get("testFailedCount").getAsInt()).isEqualTo(3);
+        assertThat(result.get("attachmentCount").getAsInt()).isEqualTo(2);
+    }
+
+    @Test
     void executionsAttachmentsRequiresBothRepositories() {
         List<JsonObject> responses = run(
             () -> new StubPlanRepo() {},
@@ -699,6 +743,19 @@ class JsonRpcServerTest {
     }
 
     @Test
+    void executionsAttachmentsMissingNodeReturnsError() {
+        List<JsonObject> responses = runWith(
+            withAll(new StubPlanRepo() {}, new StubExecRepo() {}, new StubAttachRepo() {}),
+            null, null, null,
+            req(1, "executions/attachments", "{\"executionId\":\"" + UUID.randomUUID() + "\",\"planNodeId\":\"" + UUID.randomUUID() + "\"}"),
+            req(99, "shutdown", "{}")
+        );
+
+        assertThat(responses.get(0).getAsJsonObject("error").get("message").getAsString())
+            .contains("Execution node not found");
+    }
+
+    @Test
     void executionsGetAttachmentReturnsBase64Content() {
         UUID execId = UUID.randomUUID(), execNodeId = UUID.randomUUID(), attId = UUID.randomUUID();
         byte[] data = "hello".getBytes(StandardCharsets.UTF_8);
@@ -726,6 +783,20 @@ class JsonRpcServerTest {
         var result = responses.get(0).getAsJsonObject("result");
         assertThat(result.get("contentType").getAsString()).isEqualTo("text/plain");
         assertThat(result.get("data").getAsString()).isEqualTo(Base64.getEncoder().encodeToString(data));
+    }
+
+    @Test
+    void executionsGetAttachmentMissingReturnsError() {
+        List<JsonObject> responses = runWith(
+            withAll(new StubPlanRepo() {}, new StubExecRepo() {}, new StubAttachRepo() {}),
+            null, null, null,
+            req(1, "executions/attachment",
+                "{\"executionId\":\"" + UUID.randomUUID() + "\",\"executionNodeId\":\"" + UUID.randomUUID() + "\",\"attachmentId\":\"" + UUID.randomUUID() + "\"}"),
+            req(99, "shutdown", "{}")
+        );
+
+        assertThat(responses.get(0).getAsJsonObject("error").get("message").getAsString())
+            .contains("Attachment not found");
     }
 
     @Test
@@ -802,6 +873,9 @@ class JsonRpcServerTest {
         var arr = responses.get(0).getAsJsonArray("result");
         assertThat(arr).hasSize(1);
         assertThat(arr.get(0).getAsJsonObject().get("type").getAsString()).isEqualTo("StepProvider");
+        assertThat(arr.get(0).getAsJsonObject().getAsJsonArray("implementations"))
+            .extracting(v -> v.getAsString())
+            .containsExactly("impl.A", "impl.B");
     }
 
     @Test
@@ -820,6 +894,35 @@ class JsonRpcServerTest {
 
         var result = responses.get(0).getAsJsonObject("result");
         assertThat(result.get("executionId").getAsString()).isEqualTo(execId.toString());
+    }
+
+    @Test
+    void execSyncIncludesProfileAndResultWhenRepositoriesAvailable() {
+        UUID execId = UUID.randomUUID(), planId = UUID.randomUUID(), rootNodeId = UUID.randomUUID();
+        TestExecution ex = new TestExecution();
+        ex.executionID(execId);
+        ex.planID(planId);
+        ex.executedAt(Instant.EPOCH);
+        ex.profile("staging");
+        ex.executionRootNodeID(rootNodeId);
+
+        StubExecRepo execRepo = new StubExecRepo() {
+            @Override public Optional<ExecutionResult> getExecutionNodeResult(UUID id) {
+                return id.equals(rootNodeId) ? Optional.of(ExecutionResult.PASSED) : Optional.empty();
+            }
+        };
+
+        List<JsonObject> responses = runWith(
+            withExec(new StubPlanRepo() {}, execRepo),
+            (onCreated, profile, suites) -> ex,
+            null, null,
+            req(1, "exec", "{}"),
+            req(99, "shutdown", "{}")
+        );
+
+        var result = responses.get(0).getAsJsonObject("result");
+        assertThat(result.get("profile").getAsString()).isEqualTo("staging");
+        assertThat(result.get("result").getAsString()).isEqualTo("PASSED");
     }
 
     @Test
@@ -852,6 +955,20 @@ class JsonRpcServerTest {
         var result = responses.get(0).getAsJsonObject("result");
         assertThat(result.get("executionId").getAsString()).isEqualTo(execId.toString());
         assertThat(result.get("planId").getAsString()).isEqualTo(planId.toString());
+    }
+
+    @Test
+    void execDetachModeReturnsErrorWhenHandlerFailsBeforeStart() {
+        List<JsonObject> responses = runWith(
+            () -> new StubPlanRepo() {},
+            (onCreated, profile, suites) -> { throw new IllegalStateException("kaboom"); },
+            null, null,
+            req(1, "exec", "{\"detach\":true}"),
+            req(99, "shutdown", "{}")
+        );
+
+        assertThat(responses.get(0).getAsJsonObject("error").get("message").getAsString())
+            .contains("Execution failed to start");
     }
 
     @Test
@@ -891,6 +1008,24 @@ class JsonRpcServerTest {
 
         assertThat(responses.get(0).has("result")).isTrue();
         assertThat(opened).hasSizeGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void refreshClosesPreviousRepositoryWhenClosable() {
+        List<Boolean> closed = new ArrayList<>();
+
+        class ClosableRepo extends StubPlanRepo implements AutoCloseable {
+            @Override public void close() { closed.add(true); }
+        }
+
+        List<JsonObject> responses = run(
+            ClosableRepo::new,
+            req(1, "refresh", "{}"),
+            req(99, "shutdown", "{}")
+        );
+
+        assertThat(responses.get(0).has("result")).isTrue();
+        assertThat(closed).isNotEmpty();
     }
 
     @Test

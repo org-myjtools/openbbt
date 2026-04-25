@@ -13,6 +13,7 @@ import org.myjtools.openbbt.core.testplan.Document;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 class TestStepProviderBackend {
@@ -153,6 +154,19 @@ class TestStepProviderBackend {
 		void testAssertTextVariable() {
 			assertCoreStepPasses("the text variable status contains \"ctiv\"", "status", "active");
 		}
+
+		@Test
+		void testIsValidStepAndHintsAndListings() {
+			var runtime = new OpenBBTRuntime(TEST_CONFIG);
+			var backend = new StepProviderBackend(runtime);
+
+			assertThat(backend.isValidStep("Step without parameters", Locale.ENGLISH)).isTrue();
+			assertThat(backend.isValidStep("Step without parameterz", Locale.ENGLISH)).isFalse();
+			assertThat(backend.allStepsForLocale(Locale.ENGLISH)).isNotEmpty();
+			assertThat(backend.allStepsWithLabelForLocale(Locale.ENGLISH))
+				.anySatisfy(entry -> assertThat(entry.getKey()).isNotBlank());
+			assertThat(backend.hintsForStep("Step without parameterz", Locale.ENGLISH, 3)).isNotEmpty();
+		}
 	}
 
 
@@ -259,6 +273,19 @@ class TestStepProviderBackend {
 			var cm = new OpenBBTRuntime(TEST_CONFIG);
 			var backend = new StepProviderBackend(cm);
 			assertThatCode(backend::tearDown).doesNotThrowAnyException();
+		}
+
+		@Test
+		void testIsValidStepAndHintsAndListings() {
+			var runtime = new OpenBBTRuntime(TEST_CONFIG);
+			var backend = new StepProviderBackend(runtime);
+
+			assertThat(backend.isValidStep("Step without parameters", Locale.ENGLISH)).isTrue();
+			assertThat(backend.isValidStep("Step without parameterz", Locale.ENGLISH)).isFalse();
+			assertThat(backend.allStepsForLocale(Locale.ENGLISH)).isNotEmpty();
+			assertThat(backend.allStepsWithLabelForLocale(Locale.ENGLISH))
+				.anySatisfy(entry -> assertThat(entry.getKey()).isNotBlank());
+			assertThat(backend.hintsForStep("Step without parameterz", Locale.ENGLISH, 3)).isNotEmpty();
 		}
 	}
 
