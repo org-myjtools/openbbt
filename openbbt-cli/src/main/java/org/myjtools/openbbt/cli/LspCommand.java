@@ -4,6 +4,7 @@ import org.myjtools.openbbt.core.OpenBBTContext;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.lsp.LspApp;
 import picocli.CommandLine;
+import java.nio.file.Path;
 
 @CommandLine.Command(
 	name = "lsp",
@@ -13,6 +14,7 @@ public final class LspCommand extends AbstractCommand {
 
 	@Override
 	protected void execute() {
+		LogConfig.redirectToFile(Path.of(System.getProperty("user.home"), ".openbbt", "openbbt.log"));
 		OpenBBTRuntime runtime = null;
 		try {
 			OpenBBTContext context = getContext();

@@ -7,11 +7,12 @@ module org.myjtools.openbbt.cli {
 	requires com.google.common;
 	requires org.myjtools.imconfig;
 	requires org.slf4j;
-	requires org.myjtools.openbbt.tui;
-	requires org.myjtools.openbbt.lsp;
+	requires ch.qos.logback.classic;
+	requires ch.qos.logback.core;
+requires org.myjtools.openbbt.lsp;
+	requires org.myjtools.openbbt.jsonrpc;
 	requires com.google.gson;
 
 	opens org.myjtools.openbbt.cli to info.picocli;
-	opens org.myjtools.openbbt.cli.serve to info.picocli;
 
 }

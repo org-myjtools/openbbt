@@ -73,6 +73,11 @@ async function openExecutionDetail(context, client, execution, label) {
                     planCreatedAt: planInfo?.createdAt ? formatDate(planInfo.createdAt) : '',
                     executedAt: formatDate(execution.executedAt),
                     executionId: execution.executionId,
+                    suites: planInfo?.suites ?? '',
+                    profile: execution.profile,
+                    testPassedCount: execution.testPassedCount,
+                    testErrorCount: execution.testErrorCount,
+                    testFailedCount: execution.testFailedCount,
                 };
                 const payload = { type: 'init', node, header };
                 panel.webview.postMessage(payload);
@@ -159,6 +164,9 @@ function mergeResult(node, execInfo) {
         message: execInfo?.message ?? null,
         executionNodeId: execInfo?.executionNodeId ?? null,
         attachmentCount: execInfo?.attachmentCount ?? 0,
+        testPassedCount: execInfo?.testPassedCount,
+        testErrorCount: execInfo?.testErrorCount,
+        testFailedCount: execInfo?.testFailedCount,
     };
 }
 function contentTypeToExtension(contentType) {
@@ -273,17 +281,11 @@ function buildHtml(webview, _extensionUri) {
     flex-direction: column;
     gap: 2px;
   }
-  .header-result {
+  .header-donut {
     flex-shrink: 0;
-    width: 64px;
-    height: 64px;
-    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2em;
-    font-weight: bold;
-    color: #fff;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .spin { display: inline-block; animation: spin 1s linear infinite; }
@@ -315,6 +317,15 @@ function buildHtml(webview, _extensionUri) {
     background: var(--vscode-editor-inactiveSelectionBackground);
     font-weight: bold;
   }
+  .test-counts {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 0.8em;
+    white-space: nowrap;
+    opacity: 0.8;
+  }
+  .test-counts.all-passed { color: var(--vscode-testing-iconPassed, #388a34); }
+  .test-counts.has-failures { color: var(--vscode-testing-iconFailed, #c72e0f); }
   .tags { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: nowrap; overflow: hidden; }
   .tag {
     font-size: 0.75em;
@@ -455,25 +466,40 @@ function buildHtml(webview, _extensionUri) {
     return el;
   }
 
-  function applyHeaderBadge(el, status, result) {
-    el.removeAttribute('style');
-    el.innerHTML = '';
-    const resultColors = { PASSED: 'var(--vscode-testing-iconPassed, #388a34)', FAILED: 'var(--vscode-testing-iconFailed, #c72e0f)', ERROR: '#c72e0f', SKIPPED: 'var(--vscode-disabledForeground, #999)' };
-    const resultSymbols = { PASSED: '✓', FAILED: '✗', ERROR: '⚠', SKIPPED: '⊘' };
-    if (status === 'PENDING') {
-      el.style.background = 'var(--vscode-disabledForeground, #555)';
-      el.textContent = '○';
-      el.title = 'Pending';
-    } else if (status === 'RUNNING') {
-      el.style.background = 'var(--vscode-progressBar-background, #0078d4)';
-      el.innerHTML = '<span class="spin">↻</span>';
-      el.title = 'Running';
+  // Donut chart: green = passed, red = error+failed.
+  // Uses a circle with r=15.9155 so circumference ≈ 100, making dasharray values directly
+  // equal to percentages. Both arcs together always cover the full circle.
+  function createDonutChart(passed, error, failed) {
+    var total = passed + error + failed;
+    if (total === 0) return null;
+    var passedPct    = (passed / total) * 100;
+    var notPassedPct = 100 - passedPct;
+    var GREEN = 'var(--vscode-testing-iconPassed, #388a34)';
+    var RED   = 'var(--vscode-testing-iconFailed, #c72e0f)';
+    var cx = 21, cy = 21, r = 15.9155, sw = 5.5;
+    var arcs = '';
+    if (passedPct > 0 && passedPct < 100) {
+      // Green arc: starts at 12 o'clock, covers passedPct% clockwise
+      arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+        ' stroke="' + GREEN + '" stroke-width="' + sw + '"' +
+        ' stroke-dasharray="' + passedPct.toFixed(2) + ' ' + notPassedPct.toFixed(2) + '"' +
+        ' transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+      // Red arc: starts immediately after green arc.
+      // stroke-dashoffset = notPassedPct shifts the red dash to start at path position passedPct%.
+      arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+        ' stroke="' + RED + '" stroke-width="' + sw + '"' +
+        ' stroke-dasharray="' + notPassedPct.toFixed(2) + ' ' + passedPct.toFixed(2) + '"' +
+        ' stroke-dashoffset="' + notPassedPct.toFixed(2) + '"' +
+        ' transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
     } else {
-      el.style.background = resultColors[result] || 'var(--vscode-disabledForeground, #999)';
-      el.textContent = resultSymbols[result] || '✓';
-      el.title = result || 'Finished';
+      var color = passedPct === 100 ? GREEN : RED;
+      arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+        ' stroke="' + color + '" stroke-width="' + sw + '"/>';
     }
+    var svgTitle = passed + ' passed, ' + (failed + error) + ' failed / error of ' + total;
+    return '<svg viewBox="0 0 42 42" width="54" height="54"><title>' + svgTitle + '</title>' + arcs + '</svg>';
   }
+
 
   function createNodeEl(node, indentLevel) {
     const li = document.createElement('li');
@@ -507,6 +533,16 @@ function buildHtml(webview, _extensionUri) {
     const tagsEl = createTagsEl(node.tags);
     if (tagsEl) { row.appendChild(tagsEl); }
 
+    const aboveTestCase = ['TEST_PLAN','TEST_SUITE','TEST_FEATURE'].includes(node.nodeType);
+    if (aboveTestCase && node.testPassedCount !== undefined && node.testPassedCount !== null) {
+      const notPassed = (node.testFailedCount || 0) + (node.testErrorCount || 0);
+      const total = node.testPassedCount + notPassed;
+      const countsEl = document.createElement('span');
+      countsEl.className = 'test-counts ' + (notPassed > 0 ? 'has-failures' : 'all-passed');
+      countsEl.textContent = node.testPassedCount + ' / ' + total + ' passed';
+      countsEl.title = node.testPassedCount + ' passed, ' + (node.testFailedCount || 0) + ' failed, ' + (node.testErrorCount || 0) + ' error';
+      row.appendChild(countsEl);
+    }
 
     li.appendChild(row);
 
@@ -666,34 +702,26 @@ function buildHtml(webview, _extensionUri) {
       title.textContent = (h.organization && h.project) ? h.organization + ' / ' + h.project : (h.organization || h.project || 'Execution');
       const meta = document.createElement('div');
       meta.className = 'header-meta';
+      const suitesLabel = h.suites && h.suites.length > 0 ? h.suites : 'todos';
       meta.innerHTML =
         '<span>Plan: ' + h.planId + (h.planCreatedAt ? '  ·  ' + h.planCreatedAt : '') + '</span>' +
-        '<span>Execution: ' + h.executionId + '  ·  ' + h.executedAt + '</span>';
+        '<span>Execution: ' + h.executionId + '  ·  ' + h.executedAt + '</span>' +
+        '<span>Test Suites: ' + suitesLabel + '</span>' +
+        (h.profile ? '<span>Profile: ' + h.profile + '</span>' : '');
       left.appendChild(title);
       left.appendChild(meta);
       box.appendChild(left);
 
-      const result = msg.node.result;
-      const badge = document.createElement('div');
-      badge.className = 'header-result';
-      if (result) {
-        const resultColors = {
-          PASSED:  'var(--vscode-testing-iconPassed, #388a34)',
-          FAILED:  'var(--vscode-testing-iconFailed, #c72e0f)',
-          ERROR:   '#c72e0f',
-          SKIPPED: 'var(--vscode-disabledForeground, #999)',
-        };
-        const resultSymbols = { PASSED: '✓', FAILED: '✗', ERROR: '⚠', SKIPPED: '⊘' };
-        badge.style.background = resultColors[result] || 'var(--vscode-disabledForeground, #999)';
-        badge.textContent = resultSymbols[result] || '✓';
-        badge.title = result;
-      } else {
-        badge.style.background = 'var(--vscode-disabledForeground, #555)';
-        badge.innerHTML = '<span class="spin" style="font-size:1.2em">↻</span>';
-        badge.id = 'header-badge';
-        badge.title = msg.node.status;
+      if (h.testPassedCount !== undefined) {
+        var donutSvg = createDonutChart(h.testPassedCount, h.testErrorCount || 0, h.testFailedCount || 0);
+        if (donutSvg) {
+          var donutEl = document.createElement('div');
+          donutEl.className = 'header-donut';
+          donutEl.innerHTML = donutSvg;
+          box.appendChild(donutEl);
+        }
       }
-      box.appendChild(badge);
+
 
       headerEl.appendChild(box);
 
@@ -711,27 +739,10 @@ function buildHtml(webview, _extensionUri) {
       root.appendChild(createNodeEl(msg.node, 0));
       startPolling();
     } else if (msg.type === 'update') {
-      const resultColors = {
-        PASSED:  'var(--vscode-testing-iconPassed, #388a34)',
-        FAILED:  'var(--vscode-testing-iconFailed, #c72e0f)',
-        ERROR:   '#c72e0f',
-        SKIPPED: 'var(--vscode-disabledForeground, #999)',
-      };
-      const resultSymbols = { PASSED: '✓', FAILED: '✗', ERROR: '⚠', SKIPPED: '⊘' };
       for (const upd of msg.nodes) {
         nodeStatusMap.set(upd.nodeId, { status: upd.status, result: upd.result });
         const iconEl = statusIconEls.get(upd.nodeId);
         if (iconEl) { applyStatusIcon(iconEl, upd.status, upd.result); }
-        if (upd.nodeId === rootNodeId && upd.status === 'FINISHED' && upd.result) {
-          const badgeEl = document.getElementById('header-badge');
-          if (badgeEl) {
-            badgeEl.removeAttribute('id');
-            badgeEl.style.background = resultColors[upd.result] || 'var(--vscode-disabledForeground, #999)';
-            badgeEl.innerHTML = '';
-            badgeEl.textContent = resultSymbols[upd.result] || '✓';
-            badgeEl.title = upd.result;
-          }
-        }
       }
     } else if (msg.type === 'children') {
       const resolve = pendingExpand.get(msg.msgId);

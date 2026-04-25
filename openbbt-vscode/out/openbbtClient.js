@@ -58,6 +58,9 @@ class OpenBBTClient {
     async listPlans() {
         return this.call('browse/plans', {});
     }
+    async buildPlan() {
+        return this.call('browse/plan', {});
+    }
     async getNode(nodeId) {
         return this.call('browse/node', { nodeId });
     }
@@ -67,8 +70,8 @@ class OpenBBTClient {
     async getPlan(planId) {
         return this.call('plans/get', { planId });
     }
-    async listPlansByProject(organization, project, offset = 0, max = 0) {
-        return this.call('plans/list', { organization, project, offset, max });
+    async listPlansByProject(organization, project, offset = 0, max = 0, withExecutions = false) {
+        return this.call('plans/list', { organization, project, offset, max, withExecutions });
     }
     async listExecutionsByPlan(planId, offset = 0, max = 0) {
         return this.call('executions/list', { planId, offset, max });
@@ -76,8 +79,18 @@ class OpenBBTClient {
     async deleteUnexecutedPlans() {
         await this.call('plans/deleteUnexecuted', {});
     }
-    async exec(detach = false) {
-        return this.call('exec', { detach });
+    async exec(detach = false, suites, profile) {
+        const params = { detach };
+        if (suites && suites.length > 0) {
+            params.suites = suites;
+        }
+        if (profile) {
+            params.profile = profile;
+        }
+        return this.call('exec', params);
+    }
+    async rerun(executionId, detach = false) {
+        return this.call('exec', { detach, rerun: executionId });
     }
     async getExecutionNode(executionId, planNodeId) {
         try {

@@ -9,12 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TestPlanCommandTest {
 
+	private static final String ENV_PATH = "target/.openbbt-testplan";
+
 	@BeforeAll
 	static void installPlugins() {
 		new CommandLine(new MainCommand()).execute(
 			"install",
 			"-f", "src/test/resources/openbbt.yaml",
-			"-D" + OpenBBTConfig.ENV_PATH + "=target/.openbbt"
+			"-D" + OpenBBTConfig.ENV_PATH + "=" + ENV_PATH
 		);
 	}
 
@@ -23,7 +25,7 @@ class TestPlanCommandTest {
 		int exitCode = new CommandLine(new MainCommand()).execute(
 			"plan", "--help",
 			"-f","src/test/resources/openbbt.yaml",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt"
+			"-D"+OpenBBTConfig.ENV_PATH+"="+ENV_PATH
 		);
 		assertEquals(0, exitCode);
 	}
@@ -33,7 +35,7 @@ class TestPlanCommandTest {
 		int exitCode = new CommandLine(new MainCommand()).execute(
 			"plan",
 			"-f","src/test/resources/openbbt.yaml",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
+			"-D"+OpenBBTConfig.ENV_PATH+"="+ENV_PATH,
 			"--suite", "suiteA",
 			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT,
 			"-D"+OpenBBTConfig.RESOURCE_PATH+"=src/test/resources/test-features"
@@ -47,7 +49,7 @@ class TestPlanCommandTest {
 		int exitCode = new CommandLine(new MainCommand()).execute(
 			"plan", "--detail",
 			"-f","src/test/resources/openbbt.yaml",
-			"-D"+OpenBBTConfig.ENV_PATH+"=target/.openbbt",
+			"-D"+OpenBBTConfig.ENV_PATH+"="+ENV_PATH,
 			"--suite", "suiteA",
 			"-D"+OpenBBTConfig.PERSISTENCE_MODE+"="+OpenBBTConfig.PERSISTENCE_MODE_TRANSIENT,
 			"-D"+OpenBBTConfig.RESOURCE_PATH+"=src/test/resources/test-features"

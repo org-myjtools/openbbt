@@ -37,11 +37,6 @@
         </dependency>
         <dependency>
             <groupId>org.myjtools.openbbt</groupId>
-            <artifactId>openbbt-tui</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.myjtools.openbbt</groupId>
             <artifactId>openbbt-lsp</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -49,6 +44,11 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.5.16</version>
+        </dependency>
+        <dependency>
+            <groupId>org.myjtools.openbbt</groupId>
+            <artifactId>openbbt-jsonrpc</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

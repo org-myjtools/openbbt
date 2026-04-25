@@ -24,6 +24,12 @@
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 		<java.version>21</java.version>
+		<!-- Sonar reads the aggregate JaCoCo report (IT tests covering all modules)
+		     plus each module's own per-module report -->
+		<sonar.coverage.jacoco.xmlReportPaths>
+			${maven.multiModuleProjectDirectory}/openbbt-it/target/site/jacoco-aggregate/jacoco.xml,
+			${project.basedir}/target/site/jacoco/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 
 	<licenses>
@@ -36,12 +42,11 @@
 	<modules>
 		<module>openbbt-core</module>
 		<module>openbbt-persistence</module>
-		<module>openbbt-plugin-starter</module>
 		<module>openbbt-test-support</module>
+		<module>openbbt-jsonrpc</module>
 		<module>openbbt-cli</module>
 		<module>openbbt-it</module>
 		<module>openbbt-docgen-maven-plugin</module>
-		<module>openbbt-tui</module>
 		<module>openbbt-lsp</module>
 	</modules>
 
@@ -87,9 +92,11 @@
 		<profile>
 			<id>plugins</id>
 			<modules>
+				<module>openbbt-plugin-starter</module>
 				<module>plugins/gherkin-openbbt-plugin</module>
 				<module>plugins/markdown-plan-openbbt-plugin</module>
 				<module>plugins/rest-openbbt-plugin</module>
+				<module>plugins/db-openbbt-plugin</module>
 			</modules>
 		</profile>
 	</profiles>

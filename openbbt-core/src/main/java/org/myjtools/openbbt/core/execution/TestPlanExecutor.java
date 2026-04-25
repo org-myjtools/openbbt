@@ -3,6 +3,10 @@ package org.myjtools.openbbt.core.execution;
 import org.myjtools.openbbt.core.OpenBBTConfig;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.OpenBBTRuntime;
+import org.myjtools.openbbt.core.events.ExecutionFinished;
+import org.myjtools.openbbt.core.events.ExecutionNodeFinished;
+import org.myjtools.openbbt.core.events.ExecutionNodeStarted;
+import org.myjtools.openbbt.core.events.ExecutionStarted;
 import org.myjtools.openbbt.core.persistence.AttachmentRepository;
 import org.myjtools.openbbt.core.persistence.TestExecutionRepository;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
@@ -13,6 +17,8 @@ import org.myjtools.openbbt.core.util.Log;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +28,27 @@ import java.util.function.Consumer;
 
 public class TestPlanExecutor {
 
-	private record Result (ExecutionResult result, String message, Throwable error) {}
+	private record Result(ExecutionResult result, String message, Throwable error) {}
+
+	private record NodeResult(ExecutionResult result, int passedCount, int errorCount, int failedCount) {
+		static final NodeResult PASSED_LEAF = new NodeResult(ExecutionResult.PASSED, 0, 0, 0);
+		static NodeResult ofTestCase(ExecutionResult result) {
+			return new NodeResult(
+				result,
+				result == ExecutionResult.PASSED ? 1 : 0,
+				(result == ExecutionResult.ERROR || result == ExecutionResult.UNDEFINED) ? 1 : 0,
+				result == ExecutionResult.FAILED ? 1 : 0
+			);
+		}
+		NodeResult merge(NodeResult other) {
+			return new NodeResult(
+				TestPlanExecutor.merge(result, other.result),
+				passedCount + other.passedCount,
+				errorCount + other.errorCount,
+				failedCount + other.failedCount
+			);
+		}
+	}
 
 
 	private static final Log log = Log.of();
@@ -33,7 +59,6 @@ public class TestPlanExecutor {
 	private final AttachmentRepository attachmentRepository;
 	private final String parallelTag;
 	private final ExecutorService parallelExecutor = Executors.newCachedThreadPool();
-	private final ExecutorService mainExecutor = Executors.newSingleThreadExecutor();
 
 	public TestPlanExecutor(OpenBBTRuntime runtime) {
 		this.runtime = runtime;
@@ -59,31 +84,60 @@ public class TestPlanExecutor {
 		if (planRoot.hasIssues()) {
 			throw new OpenBBTException("Test plan has issues, cannot be executed");
 		}
-		TestExecution execution = testExecutionRepository.newExecution(planID, runtime.clock().now());
+		String profileName = runtime.profile().name().isBlank() ? null : runtime.profile().name();
+		TestExecution execution = testExecutionRepository.newExecution(planID, runtime.clock().now(), profileName);
 		if (onExecutionCreated != null) {
 			onExecutionCreated.accept(execution.executionID());
 		}
 		UUID rootExecutionNodeID = createExecutionNodes(execution.executionID(), planRoot.nodeID());
 		execution.executionRootNodeID(rootExecutionNodeID);
+		runtime.eventBus().publish(
+			new ExecutionStarted(runtime.clock().now(), execution.executionID(), planID, profileName)
+		);
 
-		executeTestPlanNode(execution.executionID(), planRoot.nodeID(), null);
+		NodeResult rootResult = executeTestPlanNode(execution.executionID(), planRoot.nodeID(), null);
+		testExecutionRepository.updateExecutionTestCounts(
+			execution.executionID(), rootResult.passedCount(), rootResult.errorCount(), rootResult.failedCount()
+		);
+		runtime.eventBus().publish(
+			new ExecutionFinished(runtime.clock().now(), execution.executionID(), planID, profileName, rootResult.result)
+		);
 		return execution;
 	}
 
 
-	private ExecutionResult executeTestPlanNode(UUID executionID, UUID testPlanNodeID, BackendExecutor backendExecutor) {
+	private NodeResult executeTestPlanNode(UUID executionID, UUID testPlanNodeID, BackendExecutor backendExecutor) {
 		UUID executionNodeID = testExecutionRepository.getExecutionNodeByPlanNode(executionID, testPlanNodeID)
 		.orElseThrow(
 			() -> new OpenBBTException("Execution node for test plan node with ID {} not found", testPlanNodeID)
 		);
-		testExecutionRepository.updateExecutionNodeStart(executionNodeID, runtime.clock().now());
-		ExecutionResult result = doExecuteTestPlanNode(executionID, executionNodeID, testPlanNodeID, backendExecutor);
-		testExecutionRepository.updateExecutionNodeFinish(executionNodeID, result, runtime.clock().now());
-		return result;
+		Instant start = runtime.clock().now();
+		testExecutionRepository.updateExecutionNodeStart(executionNodeID, start);
+		runtime.eventBus().publish(
+			new ExecutionNodeStarted(start, executionID, executionNodeID, testPlanNodeID)
+		);
+		try {
+			NodeResult nodeResult = doExecuteTestPlanNode(executionID, executionNodeID, testPlanNodeID, backendExecutor);
+			Instant finish = runtime.clock().now();
+			testExecutionRepository.updateExecutionNodeFinish(executionNodeID, nodeResult.result(), finish);
+			runtime.eventBus().publish(
+				new ExecutionNodeFinished(finish, executionID, executionNodeID, testPlanNodeID, nodeResult.result())
+			);
+			return nodeResult;
+		} catch (Exception e) {
+			log.error("Unexpected error executing plan node {}: {}", testPlanNodeID, e.getMessage());
+			log.error(e);
+			Instant finish = runtime.clock().now();
+			testExecutionRepository.updateExecutionNodeFinish(executionNodeID, ExecutionResult.ERROR, finish);
+			runtime.eventBus().publish(
+				new ExecutionNodeFinished(finish, executionID, executionNodeID, testPlanNodeID, ExecutionResult.ERROR)
+			);
+			return new NodeResult(ExecutionResult.ERROR, 0, 0, 0);
+		}
 	}
 
 
-	private ExecutionResult doExecuteTestPlanNode(
+	private NodeResult doExecuteTestPlanNode(
 		UUID executionID,
 		UUID executionNodeID,
 		UUID testPlanNodeID,
@@ -94,7 +148,7 @@ public class TestPlanExecutor {
 		);
 
 		if (node.nodeType() == NodeType.VIRTUAL_STEP) {
-			return ExecutionResult.PASSED;
+			return NodeResult.PASSED_LEAF;
 		}
 
 		ExecutionResult ownResult = ExecutionResult.PASSED;
@@ -105,20 +159,33 @@ public class TestPlanExecutor {
 			backendExecutor.setUp(executionID, executionNodeID, node.properties());
 		}
 
-		ExecutionResult childrenResult = executeChildren(executionID, testPlanNodeID, backendExecutor);
+		NodeResult childrenResult = executeChildren(executionID, testPlanNodeID, backendExecutor);
 
 		if (node.nodeType() == NodeType.TEST_CASE) {
 			backendExecutor.tearDown();
 		}
 
-		return merge(ownResult, childrenResult);
+		ExecutionResult mergedResult = merge(ownResult, childrenResult.result());
+
+		if (node.nodeType() == NodeType.TEST_CASE) {
+			return NodeResult.ofTestCase(mergedResult);
+		}
+
+		NodeResult nodeResult = new NodeResult(mergedResult, childrenResult.passedCount(), childrenResult.errorCount(), childrenResult.failedCount());
+		NodeType nodeType = node.nodeType();
+		if (nodeType == NodeType.TEST_PLAN || nodeType == NodeType.TEST_SUITE || nodeType == NodeType.TEST_FEATURE) {
+			testExecutionRepository.updateExecutionNodeTestCounts(
+				executionNodeID, nodeResult.passedCount(), nodeResult.errorCount(), nodeResult.failedCount()
+			);
+		}
+		return nodeResult;
 	}
 
 
-	private ExecutionResult executeChildren(UUID executionID, UUID testPlanNodeID, BackendExecutor backendExecutor) {
+	private NodeResult executeChildren(UUID executionID, UUID testPlanNodeID, BackendExecutor backendExecutor) {
 		List<UUID> children = testPlanRepository.getNodeChildren(testPlanNodeID).toList();
 		if (children.isEmpty()) {
-			return ExecutionResult.PASSED;
+			return NodeResult.PASSED_LEAF;
 		}
 		if (backendExecutor == null && children.size() > 1) {
 			return executeChildrenParallel(executionID, children);
@@ -127,35 +194,33 @@ public class TestPlanExecutor {
 	}
 
 
-	private ExecutorService determineExecutor(TestPlanNode node) {
-		return node.hasTag(parallelTag) ? parallelExecutor : mainExecutor;
-	}
-
-
-	private ExecutionResult executeChildrenParallel(UUID executionID, List<UUID> children) {
-		List<CompletableFuture<ExecutionResult>> futures = children.stream()
-			.map(childNodeID -> {
-				TestPlanNode childNode = testPlanRepository.getNodeData(childNodeID).orElseThrow(
-					() -> new OpenBBTException("Test plan node with ID {} not found", childNodeID)
-				);
-				return CompletableFuture.supplyAsync(
-					() -> executeTestPlanNode(executionID, childNodeID, null),
-					determineExecutor(childNode)
-				);
-			})
-			.toList();
-		ExecutionResult finalResult = ExecutionResult.PASSED;
-		for (CompletableFuture<ExecutionResult> future : futures) {
-			finalResult = merge(finalResult, future.join());
-		}
-		return finalResult;
-	}
-
-
-	private ExecutionResult executeChildrenSequential(UUID executionID, List<UUID> children, BackendExecutor backendExecutor) {
-		ExecutionResult finalResult = ExecutionResult.PASSED;
+	private NodeResult executeChildrenParallel(UUID executionID, List<UUID> children) {
+		List<CompletableFuture<NodeResult>> parallelFutures = new ArrayList<>();
+		NodeResult result = NodeResult.PASSED_LEAF;
 		for (UUID childNodeID : children) {
-			finalResult = merge(finalResult, executeTestPlanNode(executionID, childNodeID, backendExecutor));
+			TestPlanNode childNode = testPlanRepository.getNodeData(childNodeID).orElseThrow(
+				() -> new OpenBBTException("Test plan node with ID {} not found", childNodeID)
+			);
+			if (childNode.hasTag(parallelTag)) {
+				parallelFutures.add(CompletableFuture.supplyAsync(
+					() -> executeTestPlanNode(executionID, childNodeID, null),
+					parallelExecutor
+				));
+			} else {
+				result = result.merge(executeTestPlanNode(executionID, childNodeID, null));
+			}
+		}
+		for (CompletableFuture<NodeResult> future : parallelFutures) {
+			result = result.merge(future.join());
+		}
+		return result;
+	}
+
+
+	private NodeResult executeChildrenSequential(UUID executionID, List<UUID> children, BackendExecutor backendExecutor) {
+		NodeResult finalResult = NodeResult.PASSED_LEAF;
+		for (UUID childNodeID : children) {
+			finalResult = finalResult.merge(executeTestPlanNode(executionID, childNodeID, backendExecutor));
 		}
 		return finalResult;
 	}
@@ -175,9 +240,17 @@ public class TestPlanExecutor {
 	}
 
 
-	private Result executeTestCaseStep(BackendExecutor backendExecutor, TestPlanNode node, UUID executionNodeID) {
+	private Result executeTestCaseStep(
+		BackendExecutor backendExecutor,
+		TestPlanNode node,
+		UUID executionNodeID
+	) {
 		try {
-			var stepResult = backendExecutor.submitStepExecution(node, executionNodeID).get();
+			long timeoutSec = Long.parseLong(node.properties().getOrDefault(OpenBBTConfig.STEP_EXECUTION_TIMEOUT, "-1"));
+			if (timeoutSec == -1L) {
+				timeoutSec = runtime.configuration().getLong(OpenBBTConfig.STEP_EXECUTION_TIMEOUT).orElse(-1L);
+			}
+			var stepResult = backendExecutor.submitStepExecution(node, executionNodeID, timeoutSec).get();
 			if (stepResult.left() == ExecutionResult.PASSED) {
 				return new Result(ExecutionResult.PASSED,null,null);
 			} else if (stepResult.left() == ExecutionResult.FAILED) {

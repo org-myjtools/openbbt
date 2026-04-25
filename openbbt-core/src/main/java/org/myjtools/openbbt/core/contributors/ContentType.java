@@ -3,7 +3,7 @@ package org.myjtools.openbbt.core.contributors;
 import org.myjtools.jexten.ExtensionPoint;
 import org.myjtools.openbbt.core.Assertion;
 
-@ExtensionPoint
+@ExtensionPoint(version = "1.0")
 public interface ContentType extends Contributor {
 
 	enum ComparisonMode {

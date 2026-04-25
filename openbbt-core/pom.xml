@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>org.myjtools</groupId>
 			<artifactId>imconfig</artifactId>
-			<version>1.6.0</version>
+			<version>1.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.f4b6a3</groupId>

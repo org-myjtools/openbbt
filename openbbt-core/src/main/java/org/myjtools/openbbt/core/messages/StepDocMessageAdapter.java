@@ -61,8 +61,6 @@ public abstract class StepDocMessageAdapter implements MessageProvider {
 		return resource;
 	}
 
-	protected Map<String, String> languageResources() {
-		return Map.of();
-	}
+	protected abstract Map<String, String> languageResources();
 
 }

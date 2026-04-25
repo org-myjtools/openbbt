@@ -6,6 +6,8 @@ import org.myjtools.openbbt.core.OpenBBTRuntime;
 import org.myjtools.openbbt.core.backend.StepProviderBackend;
 import org.myjtools.openbbt.core.contributors.SuiteAssembler;
 import org.myjtools.openbbt.core.contributors.TestPlanValidator;
+import org.myjtools.openbbt.core.events.TestPlanCreated;
+import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.util.Hash;
 import org.myjtools.openbbt.core.util.Log;
@@ -34,6 +36,11 @@ public class PlanBuilder {
 	 * @throws OpenBBTException if the test plan could not be assembled or registered
 	 */
 	public TestPlan buildTestPlan(OpenBBTContext context) {
+		return buildTestPlan(context, List.of());
+	}
+
+
+	public TestPlan buildTestPlan(OpenBBTContext context, List<String> selectedSuites) {
 
 
 		TestPlanRepository testPlanRepository = runtime.getRepository(TestPlanRepository.class);
@@ -42,7 +49,7 @@ public class PlanBuilder {
 		UUID projectID = testPlanRepository.persistProject(context.testProject());
 
 		String resourceSetHash = runtime.resourceSet().hash();
-		String configurationHash = Hash.of(runtime.configuration().toString());
+		String configurationHash = Hash.of(runtime.configuration().toString() + context.testSuites().toString());
 
 		TestPlan testPlan = testPlanRepository.getPlan(context.testProject(), resourceSetHash, configurationHash).orElse(null);
 		if (testPlan == null) {
@@ -50,16 +57,28 @@ public class PlanBuilder {
 			var rootNodeID = assembleTestPlanNodes(context).orElseThrow(
 				() -> new OpenBBTException("Failed to assemble test plan for project: {}", context.testProject().name())
 			);
+			int testCaseCount = testPlanRepository.countNodes(
+				TestPlanNodeCriteria.and(
+					TestPlanNodeCriteria.descendantOf(rootNodeID),
+					TestPlanNodeCriteria.withNodeType(NodeType.TEST_CASE)
+				)
+			);
+			String suites = selectedSuites.isEmpty()
+				? null
+				: String.join(",", selectedSuites);
 			testPlan = new TestPlan(
 				null,
 				projectID,
 				runtime.clock().now(),
 				resourceSetHash,
 				configurationHash,
-				rootNodeID
+				rootNodeID,
+				testCaseCount,
+				suites
 			);
 			testPlan = testPlanRepository.persistPlan(testPlan);
 			testPlanRepository.assignPlanToNodes(testPlan.planID(), rootNodeID);
+			testPlanRepository.assignTestCaseCountsToNodes(testPlan.planID());
 			var backend = new StepProviderBackend(runtime);
 			log.debug("Validating test plan");
 			for (var validator : runtime.getExtensions(TestPlanValidator.class).toList()) {
@@ -80,6 +99,9 @@ public class PlanBuilder {
 				log.info("Test plan validated successfully with no issues");
 			}
 			log.debug("Registered new test plan: {}", testPlan.planID());
+			runtime.eventBus().publish(
+				new TestPlanCreated(runtime.clock().now(),testPlan.projectID(),testPlan.planID(),rootNode.hasIssues())
+			);
 		} else {
 			log.debug("Reusing existing test plan: {}", testPlan.planID());
 		}

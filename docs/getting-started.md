@@ -111,6 +111,7 @@ testProject:
 plugins:
   - gherkin                     # Short name (resolves to org.myjtools.openbbt.plugins:gherkin-openbbt-plugin)
   - org.example:my-plugin       # Or full group:artifact coordinate
+  - org.example:my-plugin:1.2.0 with com.h2database:h2-2.2.224  # With a runtime dependency
 
 configuration:
   core.resourcePath: path/to/features           # Where test resources live (relative to CWD)
@@ -166,12 +167,30 @@ openbbt install
 openbbt install --clean
 ```
 
+### Runtime dependencies
+
+Some plugins require additional JARs at runtime that are not bundled with the plugin itself — for example, a JDBC driver chosen by the user. You can declare these inline in `openbbt.yaml` using the `with` keyword:
+
+```yaml
+plugins:
+  - org.example:my-plugin:1.2.0 with com.h2database:h2-2.2.224
+```
+
+The artifact identifier after `with` must be `groupId:artifactId-version` (e.g. `com.h2database:h2-2.2.224`). Multiple runtime dependencies can be declared separated by commas:
+
+```yaml
+plugins:
+  - org.example:my-plugin:1.2.0 with com.h2database:h2-2.2.224,org.postgresql:postgresql-42.7.3
+```
+
+Runtime dependencies are downloaded from the same Maven repository as the plugin itself and stored under `.openbbt/plugins/artifacts/`. They are loaded into the plugin's module layer when the plugin is activated.
+
 ### What gets installed
 
 ```
 .openbbt/
 └── plugins/
-    ├── manifests/     # Plugin descriptors (YAML)
+    ├── manifests/     # Plugin descriptors (YAML), including *.runtime.yaml for runtime deps
     └── artifacts/     # Downloaded JARs, grouped by Maven coordinates
 ```
 

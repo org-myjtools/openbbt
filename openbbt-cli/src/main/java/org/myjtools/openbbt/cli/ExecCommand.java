@@ -136,13 +136,13 @@ public final class ExecCommand extends AbstractCommand {
                 }
             }
         }
-        return new OpenBBTRuntime(context.configuration());
+        return new OpenBBTRuntime(context.configuration()).withProfile(profile(parent.profile));
     }
 
     private TestPlan buildPlan(OpenBBTContext context, OpenBBTRuntime runtime) {
         // Step 2: mount plan
         try {
-            return runtime.buildTestPlan(context);
+            return runtime.buildTestPlan(context, getSelectedSuites());
         } catch (Exception e) {
             throw new OpenBBTException(e, "Failed to build test plan: {}", e.getMessage());
         }

@@ -105,7 +105,7 @@ Feature: Posts REST API
 
     # -------------------------------------------------------------
   @ID-10 @POST @GET
-  Scenario: Create a post and get it
+  Scenario: Create a post and get it after
     When I make a POST request to "posts" with body:
       """json
       {
@@ -117,3 +117,4 @@ Feature: Posts REST API
     Then I store the value of field 'id' from the response body into variable id
     Then I make a GET request to 'posts/${id}'
     Then the HTTP status code is 200
+    Then the response body contains:

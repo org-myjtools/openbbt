@@ -127,7 +127,8 @@ class TestPlanProvider {
         // ID is scoped to the current refresh serial so VSCode treats all items
         // as new after each refresh, giving a clean expansion state.
         const vsCodeId = `${this.refreshSerial}-${node.nodeId}`;
-        return new TestPlanItem(node.nodeId, vsCodeId, label, node.nodeType, collapsible, node.hasIssues, node.source);
+        const description = node.testCaseCount != null ? `${node.testCaseCount}` : undefined;
+        return new TestPlanItem(node.nodeId, vsCodeId, label, node.nodeType, collapsible, node.hasIssues, node.source, description);
     }
     getRoots() {
         if (this.rootItems !== undefined) {
@@ -141,14 +142,8 @@ class TestPlanProvider {
     }
     async fetchRoots() {
         try {
-            this.log('[tree] calling listPlans()');
-            const plans = await this.client.listPlans();
-            this.log(`[tree] listPlans() returned ${plans.length} plan(s)`);
-            if (plans.length === 0) {
-                this.rootItems = [];
-                return [];
-            }
-            const plan = plans[0];
+            this.log('[tree] calling buildPlan()');
+            const plan = await this.client.buildPlan();
             this.log(`[tree] fetching root node ${plan.planNodeRoot}`);
             const rootNode = await this.client.getNode(plan.planNodeRoot);
             this.log(`[tree] root node: ${rootNode.nodeType} "${rootNode.name}" childCount=${rootNode.childCount}`);

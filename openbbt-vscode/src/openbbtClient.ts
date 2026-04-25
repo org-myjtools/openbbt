@@ -5,12 +5,15 @@ export interface PlanInfo {
     projectId: string;
     createdAt: string;
     planNodeRoot: string;
+    testCaseCount: number;
 }
 
 export interface PlanListItem {
     planId: string;
     createdAt: string;
     hasIssues: boolean;
+    testCaseCount?: number;
+    testCases?: string;
 }
 
 export interface ExecutionListItem {
@@ -20,6 +23,10 @@ export interface ExecutionListItem {
     executionRootNodeId: string | null;
     executedAt: string;
     result?: string;
+    testPassedCount?: number;
+    testErrorCount?: number;
+    testFailedCount?: number;
+    profile?: string;
 }
 
 export interface ExecNodeInfo {
@@ -32,6 +39,9 @@ export interface ExecNodeInfo {
     durationMs: number | null;
     message: string | null;
     attachmentCount: number;
+    testPassedCount?: number;
+    testErrorCount?: number;
+    testFailedCount?: number;
 }
 
 export interface AttachmentMeta {
@@ -71,6 +81,7 @@ export interface NodeInfo {
     tags: string[];
     properties: Record<string, string>;
     childCount: number;
+    testCaseCount: number | null;
     document: NodeDocument | null;
     dataTable: string[][] | null;
 }
@@ -149,6 +160,10 @@ export class OpenBBTClient {
         return this.call('browse/plans', {}) as Promise<PlanInfo[]>;
     }
 
+    async buildPlan(): Promise<PlanInfo> {
+        return this.call('browse/plan', {}) as Promise<PlanInfo>;
+    }
+
     async getNode(nodeId: string): Promise<NodeInfo> {
         return this.call('browse/node', { nodeId }) as Promise<NodeInfo>;
     }
@@ -157,12 +172,12 @@ export class OpenBBTClient {
         return this.call('browse/children', { nodeId }) as Promise<NodeInfo[]>;
     }
 
-    async getPlan(planId: string): Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string }> {
-        return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string }>;
+    async getPlan(planId: string): Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string; suites?: string }> {
+        return this.call('plans/get', { planId }) as Promise<{ planId: string; createdAt: string; planNodeRoot: string; organization?: string; project?: string; description?: string; suites?: string }>;
     }
 
-    async listPlansByProject(organization: string, project: string, offset = 0, max = 0): Promise<PlanListItem[]> {
-        return this.call('plans/list', { organization, project, offset, max }) as Promise<PlanListItem[]>;
+    async listPlansByProject(organization: string, project: string, offset = 0, max = 0, withExecutions = false): Promise<PlanListItem[]> {
+        return this.call('plans/list', { organization, project, offset, max, withExecutions }) as Promise<PlanListItem[]>;
     }
 
     async listExecutionsByPlan(planId: string, offset = 0, max = 0): Promise<ExecutionListItem[]> {
@@ -173,8 +188,15 @@ export class OpenBBTClient {
         await this.call('plans/deleteUnexecuted', {});
     }
 
-    async exec(detach = false): Promise<ExecResult> {
-        return this.call('exec', { detach }) as Promise<ExecResult>;
+    async exec(detach = false, suites?: string[], profile?: string): Promise<ExecResult> {
+        const params: Record<string, unknown> = { detach };
+        if (suites && suites.length > 0) { params.suites = suites; }
+        if (profile) { params.profile = profile; }
+        return this.call('exec', params) as Promise<ExecResult>;
+    }
+
+    async rerun(executionId: string, detach = false): Promise<ExecResult> {
+        return this.call('exec', { detach, rerun: executionId }) as Promise<ExecResult>;
     }
 
     async getExecutionNode(executionId: string, planNodeId: string): Promise<ExecNodeInfo | null> {

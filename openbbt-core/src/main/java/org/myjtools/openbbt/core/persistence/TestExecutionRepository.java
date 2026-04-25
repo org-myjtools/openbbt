@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface TestExecutionRepository extends Repository {
 
-	TestExecution newExecution(UUID planID, Instant executedAt);
+	TestExecution newExecution(UUID planID, Instant executedAt, String profile);
 
 	UUID newExecutionNode(UUID executionID, UUID testPlanNodeID);
 
@@ -26,6 +26,10 @@ public interface TestExecutionRepository extends Repository {
 	void updateExecutionNodeStart(UUID executionNodeID, Instant startedAt);
 
 	void updateExecutionNodeFinish(UUID executionNodeID, ExecutionResult result, Instant finishedAt);
+
+	void updateExecutionNodeTestCounts(UUID executionNodeID, int passed, int error, int failed);
+
+	void updateExecutionTestCounts(UUID executionID, int passed, int error, int failed);
 
 	void updateExecutionNodeMessage(UUID executionNodeID, String message);
 
@@ -45,6 +49,8 @@ public interface TestExecutionRepository extends Repository {
 	 * @param max          maximum records to return; 0 or negative means no limit
 	 */
 	List<TestExecution> listExecutions(UUID planID, UUID planNodeRoot, int offset, int max);
+
+	Optional<TestExecution> getExecution(UUID executionId);
 
 	/**
 	 * Retrieve the result of a single execution node.

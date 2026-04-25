@@ -36,8 +36,12 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 	private static final Field<LocalDateTime> FIELD_FINISHED_AT = DSL.field("finished_at", LocalDateTime.class);
 	private static final Field<Integer> FIELD_RESULT = DSL.field("result", Integer.class);
 	private static final Field<String> FIELD_MESSAGE = DSL.field("message", String.class);
+	private static final Field<Integer> FIELD_TEST_PASSED_COUNT = DSL.field("test_passed_count", Integer.class);
+	private static final Field<Integer> FIELD_TEST_ERROR_COUNT = DSL.field("test_error_count", Integer.class);
+	private static final Field<Integer> FIELD_TEST_FAILED_COUNT = DSL.field("test_failed_count", Integer.class);
 
 	private static final Field<UUID> FIELD_ATTACHMENT_ID = DSL.field("attachment_id", UUID.class);
+	private static final Field<String> FIELD_PROFILE = DSL.field("profile", String.class);
 
 	private final DSLContext dsl;
 	private final Connection directConnection;
@@ -66,17 +70,19 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 
 
 	@Override
-	public TestExecution newExecution(UUID planID, Instant executedAt) {
+	public TestExecution newExecution(UUID planID, Instant executedAt, String profile) {
 		UUID id = UUIDGenerator.generateUUID();
 		dsl.insertInto(TABLE_EXECUTION)
 		   .set(FIELD_EXECUTION_ID, id)
 		   .set(FIELD_PLAN_ID, planID)
 		   .set(FIELD_EXECUTED_AT, LocalDateTime.ofInstant(executedAt, ZoneOffset.UTC))
+		   .set(FIELD_PROFILE, profile)
 		   .execute();
 		TestExecution execution = new TestExecution();
 		execution.executionID(id);
 		execution.planID(planID);
 		execution.executedAt(executedAt);
+		execution.profile(profile);
 		return execution;
 	}
 
@@ -123,11 +129,53 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 
 
 	@Override
+	public void updateExecutionNodeTestCounts(UUID executionNodeID, int passed, int error, int failed) {
+		dsl.update(TABLE_EXECUTION_NODE)
+		   .set(FIELD_TEST_PASSED_COUNT, passed)
+		   .set(FIELD_TEST_ERROR_COUNT, error)
+		   .set(FIELD_TEST_FAILED_COUNT, failed)
+		   .where(FIELD_EXECUTION_NODE_ID.eq(executionNodeID))
+		   .execute();
+	}
+
+
+	@Override
+	public void updateExecutionTestCounts(UUID executionID, int passed, int error, int failed) {
+		dsl.update(TABLE_EXECUTION)
+		   .set(FIELD_TEST_PASSED_COUNT, passed)
+		   .set(FIELD_TEST_ERROR_COUNT, error)
+		   .set(FIELD_TEST_FAILED_COUNT, failed)
+		   .where(FIELD_EXECUTION_ID.eq(executionID))
+		   .execute();
+	}
+
+
+	@Override
 	public void updateExecutionNodeMessage(UUID executionNodeID, String message) {
 		dsl.update(TABLE_EXECUTION_NODE)
 		   .set(FIELD_MESSAGE, message)
 		   .where(FIELD_EXECUTION_NODE_ID.eq(executionNodeID))
 		   .execute();
+	}
+
+
+	@Override
+	public Optional<TestExecution> getExecution(UUID executionId) {
+		return dsl.select(FIELD_EXECUTION_ID, FIELD_PLAN_ID, FIELD_EXECUTED_AT, FIELD_PROFILE,
+				FIELD_TEST_PASSED_COUNT, FIELD_TEST_ERROR_COUNT, FIELD_TEST_FAILED_COUNT)
+			.from(TABLE_EXECUTION)
+			.where(FIELD_EXECUTION_ID.eq(executionId))
+			.fetchOptional(rec -> {
+				TestExecution ex = new TestExecution();
+				ex.executionID(rec.value1());
+				ex.planID(rec.value2());
+				ex.executedAt(rec.value3().toInstant(ZoneOffset.UTC));
+				ex.profile(rec.value4());
+				ex.testPassedCount(rec.value5());
+				ex.testErrorCount(rec.value6());
+				ex.testFailedCount(rec.value7());
+				return ex;
+			});
 	}
 
 
@@ -140,8 +188,13 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 		var fEnExecId  = DSL.field("execution_node.execution_id",       UUID.class);
 		var fEnNodeId  = DSL.field("execution_node.execution_node_id",  UUID.class);
 
+		var fPassedCount = DSL.field("execution.test_passed_count", Integer.class);
+		var fErrorCount  = DSL.field("execution.test_error_count",  Integer.class);
+		var fFailedCount = DSL.field("execution.test_failed_count", Integer.class);
+		var fProfile     = DSL.field("execution.profile",           String.class);
+
 		var query = dsl
-			.select(fExecId, FIELD_PLAN_ID, FIELD_EXECUTED_AT, fEnNodeId)
+			.select(fExecId, FIELD_PLAN_ID, FIELD_EXECUTED_AT, fEnNodeId, fPassedCount, fErrorCount, fFailedCount, fProfile)
 			.from(TABLE_EXECUTION)
 			.leftJoin(TABLE_EXECUTION_NODE)
 				.on(fEnExecId.eq(fExecId)
@@ -156,6 +209,10 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 			ex.planID(rec.value2());
 			ex.executedAt(rec.value3().toInstant(ZoneOffset.UTC));
 			ex.executionRootNodeID(rec.value4());
+			ex.testPassedCount(rec.value5());
+			ex.testErrorCount(rec.value6());
+			ex.testFailedCount(rec.value7());
+			ex.profile(rec.value8());
 			return ex;
 		});
 	}
@@ -164,7 +221,8 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 	public Optional<TestExecutionNode> getExecutionNode(UUID executionID, UUID planNodeID) {
 		return dsl.select(
 				FIELD_EXECUTION_NODE_ID, FIELD_PLAN_NODE_ID,
-				FIELD_STARTED_AT, FIELD_FINISHED_AT, FIELD_RESULT, FIELD_MESSAGE)
+				FIELD_STARTED_AT, FIELD_FINISHED_AT, FIELD_RESULT, FIELD_MESSAGE,
+				FIELD_TEST_PASSED_COUNT, FIELD_TEST_ERROR_COUNT, FIELD_TEST_FAILED_COUNT)
 			.from(TABLE_EXECUTION_NODE)
 			.where(FIELD_EXECUTION_ID.eq(executionID))
 			.and(FIELD_PLAN_NODE_ID.eq(planNodeID))
@@ -177,6 +235,9 @@ public class JooqExecutionRepository implements TestExecutionRepository, AutoClo
 				node.endTime(rec.value4() != null ? rec.value4().toInstant(java.time.ZoneOffset.UTC) : null);
 				node.result(rec.value5() != null ? ExecutionResult.of(rec.value5()) : null);
 				node.message(rec.value6());
+				node.testPassedCount(rec.value7());
+				node.testErrorCount(rec.value8());
+				node.testFailedCount(rec.value9());
 				return node;
 			});
 	}

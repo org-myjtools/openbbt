@@ -26,9 +26,10 @@ Open an issue using the **Feature Request** template. Describe the use case and 
 3. Add or update tests as needed.
 4. Run the full test suite to ensure nothing is broken:
    ```
-   ./mvnw clean verify
-   ./mvnw clean verify -P plugins
+    ./mvnw clean verify
+    ./mvnw clean verify -P plugins
    ```
+   The Maven wrapper enables reactor parallelism by default. If you need to debug a flaky build in serial mode, use `./mvnw -T 1 clean verify`.
 5. Open a Pull Request targeting the `develop` branch.
 
 ## Code style

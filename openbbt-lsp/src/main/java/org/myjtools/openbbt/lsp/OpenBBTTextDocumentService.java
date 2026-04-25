@@ -210,14 +210,14 @@ public class OpenBBTTextDocumentService implements TextDocumentService {
 
     private List<CompletionItem> stepCompletions(String prefix, Locale locale, Range replaceRange) {
         if (backend == null) return List.of();
-        return backend.allStepsForLocale(locale).stream()
-            .filter(s -> s.toLowerCase().contains(prefix.toLowerCase()))
-            .map(s -> {
-                var item = new CompletionItem(s);
+        return backend.allStepsWithLabelForLocale(locale).stream()
+            .filter(e -> e.getValue().toLowerCase().contains(prefix.toLowerCase()))
+            .map(e -> {
+                String step = e.getValue();
+                var item = new CompletionItem("[" + e.getKey() + "] " + step);
                 item.setKind(CompletionItemKind.Function);
-                String snippet = toSnippet(s);
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
-                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, snippet)));
+                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, toSnippet(step))));
                 return item;
             })
             .toList();

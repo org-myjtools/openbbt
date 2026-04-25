@@ -27,6 +27,7 @@ public class TestPlanNode {
 	private ValidationStatus validationStatus;
 	private String validationMessage;
 	private boolean hasIssues;
+	private Integer testCaseCount;
 
 
 	public TestPlanNode(NodeType type) {

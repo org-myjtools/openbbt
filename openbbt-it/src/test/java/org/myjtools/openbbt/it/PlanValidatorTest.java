@@ -93,7 +93,7 @@ class PlanValidatorTest {
 
 	private PlanResult buildPlan(String suiteName, Path tempDir) {
 		Config config = Config.ofMap(Map.of(
-			OpenBBTConfig.ENV_PATH,          "target/.openbbt",
+			OpenBBTConfig.ENV_PATH,          tempDir.resolve("env").toString(),
 			OpenBBTConfig.PERSISTENCE_MODE,  OpenBBTConfig.PERSISTENCE_MODE_FILE,
 			OpenBBTConfig.PERSISTENCE_FILE,  tempDir.resolve("plan.db").toString()
 		));
@@ -105,7 +105,7 @@ class PlanValidatorTest {
 	private OpenBBTContext createContext(String suiteName, Config config) {
 		TestSuite suite = new TestSuite(suiteName, "", null);
 		TestProject project = new TestProject("Test Project", "", "Test Org", List.of(suite));
-		return new OpenBBTContext(project, config, List.of(suiteName), "", List.of());
+		return new OpenBBTContext(project, config, List.of(suiteName), List.of());
 	}
 
 	private TestPlanNode findNodeOfType(TestPlanRepository repo, TestPlan plan, NodeType type) {

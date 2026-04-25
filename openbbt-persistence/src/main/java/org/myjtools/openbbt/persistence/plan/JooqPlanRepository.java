@@ -4,16 +4,15 @@ import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
-import java.sql.Connection;
-import java.sql.SQLException;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.persistence.TestPlanNodeCriteria;
 import org.myjtools.openbbt.core.persistence.TestPlanRepository;
 import org.myjtools.openbbt.core.testplan.*;
-import org.myjtools.openbbt.core.testplan.ValidationStatus;
 import org.myjtools.openbbt.core.util.UUIDGenerator;
 import org.myjtools.openbbt.persistence.DataSourceProvider;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -61,6 +60,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	private static final Field<String> FIELD_RESOURCE_SET_HASH = DSL.field("resource_set_hash", String.class);
 	private static final Field<String> FIELD_CONFIGURATION_HASH = DSL.field("configuration_hash", String.class);
 	private static final Field<UUID> FIELD_PLAN_NODE_ROOT = DSL.field("plan_node_root", UUID.class);
+	private static final Field<Integer> FIELD_TEST_CASE_COUNT = DSL.field("test_case_count", Integer.class);
+	private static final Field<String> FIELD_SUITES = DSL.field("suites", String.class);
 
 	private final DSLContext dsl;
 	private final Connection directConnection;
@@ -99,7 +100,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 				FIELD_TYPE, FIELD_NAME, FIELD_IDENTIFIER, FIELD_LANGUAGE, FIELD_SOURCE,
 				FIELD_KEYWORD, FIELD_DESCRIPTION, FIELD_DISPLAY, FIELD_DATA_TABLE,
 				FIELD_DOCUMENT, FIELD_DOCUMENT_MIME_TYPE,
-				FIELD_VALIDATION_STATUS, FIELD_VALIDATION_MESSAGE, FIELD_HAS_ISSUES
+				FIELD_VALIDATION_STATUS, FIELD_VALIDATION_MESSAGE, FIELD_HAS_ISSUES,
+				FIELD_TEST_CASE_COUNT
 			)
 			.from(TABLE_PLAN_NODE)
 			.where(FIELD_NODE_ID.eq(id))
@@ -367,6 +369,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		   .set(FIELD_DATA_TABLE, node.dataTable() != null ? node.dataTable().toString() : null)
 		   .set(FIELD_DOCUMENT, node.document() != null ? node.document().content() : null)
 		   .set(FIELD_DOCUMENT_MIME_TYPE, node.document() != null ? node.document().mimeType() : null)
+		   .set(FIELD_TEST_CASE_COUNT, (Integer) null)
 		   .execute();
 	}
 
@@ -384,6 +387,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		   .set(FIELD_DATA_TABLE, node.dataTable() != null ? node.dataTable().toString() : null)
 		   .set(FIELD_DOCUMENT, node.document() != null ? node.document().content() : null)
 		   .set(FIELD_DOCUMENT_MIME_TYPE, node.document() != null ? node.document().mimeType() : null)
+		   .set(FIELD_TEST_CASE_COUNT, node.testCaseCount())
 		   .where(FIELD_NODE_ID.eq(node.nodeID()))
 		   .execute();
 	}
@@ -704,6 +708,7 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 		node.validationMessage(rec.get(FIELD_VALIDATION_MESSAGE));
 		Boolean hasIssues = rec.get(FIELD_HAS_ISSUES);
 		node.hasIssues(Boolean.TRUE.equals(hasIssues));
+		node.testCaseCount(rec.get(FIELD_TEST_CASE_COUNT));
 		fillTagsAndProperties(node);
 		return node;
 	}
@@ -891,8 +896,70 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			.set(FIELD_RESOURCE_SET_HASH, testPlan.resourceSetHash())
 			.set(FIELD_CONFIGURATION_HASH, testPlan.configurationHash())
 			.set(FIELD_PLAN_NODE_ROOT, testPlan.planNodeRoot())
+			.set(FIELD_TEST_CASE_COUNT, testPlan.testCaseCount())
+			.set(FIELD_SUITES, testPlan.suites())
 			.execute();
-		return new TestPlan(id, testPlan.projectID(), testPlan.createdAt(), testPlan.resourceSetHash(), testPlan.configurationHash(), testPlan.planNodeRoot());
+		return new TestPlan(
+			id,
+			testPlan.projectID(),
+			testPlan.createdAt(),
+			testPlan.resourceSetHash(),
+			testPlan.configurationHash(),
+			testPlan.planNodeRoot(),
+			testPlan.testCaseCount(),
+			testPlan.suites()
+		);
+	}
+
+
+	@Override
+	public void assignTestCaseCountsToNodes(UUID planId) {
+		record NodeRow(UUID nodeId, UUID parentId, int type) {}
+
+		List<NodeRow> rows = dsl.select(FIELD_NODE_ID, FIELD_PARENT_NODE, FIELD_TYPE)
+			.from(TABLE_PLAN_NODE)
+			.where(FIELD_PLAN_ID.eq(planId))
+			.fetch(r -> new NodeRow(r.get(FIELD_NODE_ID), r.get(FIELD_PARENT_NODE), r.get(FIELD_TYPE)));
+
+		Map<UUID, List<UUID>> childrenMap = new HashMap<>();
+		Map<UUID, Integer> typeMap = new HashMap<>();
+		for (var row : rows) {
+			typeMap.put(row.nodeId(), row.type());
+			childrenMap.computeIfAbsent(row.nodeId(), k -> new ArrayList<>());
+			if (row.parentId() != null) {
+				childrenMap.computeIfAbsent(row.parentId(), k -> new ArrayList<>()).add(row.nodeId());
+			}
+		}
+
+		Map<UUID, Integer> countMap = new HashMap<>();
+		for (var entry : typeMap.entrySet()) {
+			if (entry.getValue() != NodeType.TEST_CASE.value) {
+				countMap.put(entry.getKey(), countDescendantTestCases(entry.getKey(), childrenMap, typeMap));
+			}
+		}
+
+		if (!countMap.isEmpty()) {
+			var batch = dsl.batch(
+				dsl.update(TABLE_PLAN_NODE)
+				   .set(FIELD_TEST_CASE_COUNT, DSL.param("count", Integer.class))
+				   .where(FIELD_NODE_ID.eq(DSL.param("id", UUID.class)))
+			);
+			countMap.forEach((id, count) -> batch.bind(count, id));
+			batch.execute();
+		}
+	}
+
+	private int countDescendantTestCases(UUID nodeId, Map<UUID, List<UUID>> childrenMap, Map<UUID, Integer> typeMap) {
+		int count = 0;
+		for (UUID child : childrenMap.getOrDefault(nodeId, List.of())) {
+			Integer childType = typeMap.get(child);
+			if (childType != null && childType == NodeType.TEST_CASE.value) {
+				count++;
+			} else {
+				count += countDescendantTestCases(child, childrenMap, typeMap);
+			}
+		}
+		return count;
 	}
 
 
@@ -900,7 +967,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	public List<TestPlan> listPlans() {
 		return dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
-				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
 			)
 			.from(TABLE_PLAN)
 			.orderBy(FIELD_CREATED_AT.desc())
@@ -912,12 +980,38 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	public List<TestPlan> listPlans(String organization, String project, int offset, int max) {
 		var query = dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
-				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
 			)
 			.from(TABLE_PLAN)
 			.join(TABLE_PROJECT).using(FIELD_PROJECT_ID)
 			.where(FIELD_ORGANIZATION_NAME.eq(organization))
 			.and(FIELD_PROJECT_NAME.eq(project))
+			.orderBy(FIELD_CREATED_AT.desc())
+			.offset(offset);
+		return (max > 0 ? query.limit(max) : query).fetch().map(this::mapPlan);
+	}
+
+	@Override
+	public List<TestPlan> listPlans(String organization, String project, int offset, int max, boolean withExecutions) {
+		if (!withExecutions) {
+			return listPlans(organization, project, offset, max);
+		}
+		var existsExecution = DSL.exists(
+			DSL.selectOne()
+				.from(DSL.table("execution"))
+				.where(DSL.field("plan_id", UUID.class).eq(DSL.field("plan.plan_id", UUID.class)))
+		);
+		var query = dsl.select(
+				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
+			)
+			.from(TABLE_PLAN)
+			.join(TABLE_PROJECT).using(FIELD_PROJECT_ID)
+			.where(FIELD_ORGANIZATION_NAME.eq(organization))
+			.and(FIELD_PROJECT_NAME.eq(project))
+			.and(existsExecution)
 			.orderBy(FIELD_CREATED_AT.desc())
 			.offset(offset);
 		return (max > 0 ? query.limit(max) : query).fetch().map(this::mapPlan);
@@ -933,7 +1027,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			.map(r -> r.get(FIELD_PROJECT_ID))
 			.flatMap(projectID -> dsl.select(
 					FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
-					FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+					FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
+					FIELD_TEST_CASE_COUNT, FIELD_SUITES
 				)
 				.from(TABLE_PLAN)
 				.where(FIELD_PROJECT_ID.eq(projectID))
@@ -963,7 +1058,8 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 	public Optional<TestPlan> getPlan(UUID planID) {
 		return dsl.select(
 				FIELD_PLAN_ID, FIELD_PROJECT_ID, FIELD_CREATED_AT,
-				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT
+				FIELD_RESOURCE_SET_HASH, FIELD_CONFIGURATION_HASH, FIELD_PLAN_NODE_ROOT,
+				FIELD_TEST_CASE_COUNT, FIELD_SUITES
 			)
 			.from(TABLE_PLAN)
 			.where(FIELD_PLAN_ID.eq(planID))
@@ -971,14 +1067,17 @@ public class JooqPlanRepository implements TestPlanRepository, AutoCloseable {
 			.map(this::mapPlan);
 	}
 
-	private TestPlan mapPlan(Record6<UUID, UUID, LocalDateTime, String, String, UUID> rec) {
+	private TestPlan mapPlan(org.jooq.Record rec) {
+		Integer testCaseCount = rec.get(FIELD_TEST_CASE_COUNT);
 		return new TestPlan(
 			rec.get(FIELD_PLAN_ID),
 			rec.get(FIELD_PROJECT_ID),
 			rec.get(FIELD_CREATED_AT).toInstant(ZoneOffset.UTC),
 			rec.get(FIELD_RESOURCE_SET_HASH),
 			rec.get(FIELD_CONFIGURATION_HASH),
-			rec.get(FIELD_PLAN_NODE_ROOT)
+			rec.get(FIELD_PLAN_NODE_ROOT),
+			testCaseCount != null ? testCaseCount : 0,
+			rec.get(FIELD_SUITES)
 		);
 	}
 

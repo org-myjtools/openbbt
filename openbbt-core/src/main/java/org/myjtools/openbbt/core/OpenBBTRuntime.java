@@ -5,6 +5,8 @@ import org.myjtools.jexten.ExtensionManager;
 import org.myjtools.jexten.InjectionProvider;
 import org.myjtools.jexten.ModuleLayerProvider;
 import org.myjtools.openbbt.core.contributors.*;
+import org.myjtools.openbbt.core.events.EventBus;
+import org.myjtools.openbbt.core.execution.Profile;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.Messages;
 import org.myjtools.openbbt.core.persistence.AttachmentRepository;
@@ -40,7 +42,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 	private final Lazy<TestPlanRepository> planNodeRepository = Lazy.of(this::openRepository);
 	private final Lazy<TestExecutionRepository> executionRepository = Lazy.of(this::openExecutionRepository);
 	private final Lazy<AttachmentRepository> attachmentRepository = Lazy.of(this::openAttachmentRepository);
-
+	private final Lazy<DataTypes> dataTypes = Lazy.of(this::collectDataTypes);
+	private final Profile profile;
+	private final EventBus eventBus;
 
 	public OpenBBTRuntime(Config configuration) {
 		this(configuration, Instant::now);
@@ -48,16 +52,18 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 
 	public OpenBBTRuntime(Config configuration, Clock clock) {
+		this.profile = Profile.NONE;
 		this.readOnly = false;
 		this.clock = clock;
 		this.pluginManager = new OpenBBTPluginManager(configuration);
 		this.extensionManager = ExtensionManager
 			.create(ModuleLayerProvider.compose(ModuleLayerProvider.boot(),pluginManager.moduleLayerProvider()))
 			.withInjectionProvider(this);
-		this.config = extensionManager.getExtensions(ConfigProvider.class)
+		Config rawConfig = extensionManager.getExtensions(ConfigProvider.class)
 			.map(ConfigProvider::config)
 			.reduce(Config.empty(), Config::append)
 			.append(configuration);
+		this.config = profile.applyProfile(rawConfig);
 		this.repositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
 			.orElse(null);
 		this.resourceFinder = new ResourceFinder(config.get(OpenBBTConfig.RESOURCE_PATH, Path::of).orElseThrow(
@@ -73,6 +79,29 @@ public class OpenBBTRuntime implements InjectionProvider {
 		}
 		this.contentTypes = ContentTypes.of(extensionManager.getExtensions(ContentType.class).toList());
 		this.planBuilder = new PlanBuilder(this);
+		this.eventBus = new EventBus();
+		getExtensions(EventObserver.class).forEach(eventBus::registerObserver);
+	}
+
+
+	private OpenBBTRuntime(OpenBBTRuntime copy, Profile profile) {
+		this.clock = copy.clock;
+		this.extensionManager = copy.extensionManager;
+		this.pluginManager = copy.pluginManager;
+		this.config = profile.applyProfile(copy.config);
+		this.repositoryFactory = copy.repositoryFactory;
+		this.resourceFinder = copy.resourceFinder;
+		this.resourceSet = copy.resourceSet;
+		this.planBuilder = copy.planBuilder;
+		this.contentTypes = copy.contentTypes;
+		this.readOnly = copy.readOnly;
+		this.profile = profile;
+		this.eventBus = copy.eventBus;
+	}
+
+
+	public OpenBBTRuntime withProfile(Profile profile) {
+		return new OpenBBTRuntime(this,profile);
 	}
 
 
@@ -89,22 +118,26 @@ public class OpenBBTRuntime implements InjectionProvider {
 	 * Private constructor for repository-only runtime. The 'ignored' parameter is just a dummy to differentiate the signature.
 	 */
 	private OpenBBTRuntime(Config configuration, boolean ignored) {
+		this.profile = Profile.NONE;
 		this.readOnly = true;
 		this.clock = Instant::now;
 		this.pluginManager = null;
 		this.extensionManager = ExtensionManager
 			.create(ModuleLayerProvider.boot())
 			.withInjectionProvider(this);
-		this.config = extensionManager.getExtensions(ConfigProvider.class)
+		var rawConfig = extensionManager.getExtensions(ConfigProvider.class)
 			.map(ConfigProvider::config)
 			.reduce(Config.empty(), Config::append)
 			.append(configuration);
+		this.config = profile.applyProfile(rawConfig);
 		this.repositoryFactory = extensionManager.getExtension(RepositoryFactory.class)
 			.orElse(null);
 		this.resourceFinder = null;
 		this.resourceSet = null;
 		this.planBuilder = null;
 		this.contentTypes = null;
+		this.eventBus = new EventBus();
+		getExtensions(EventObserver.class).forEach(eventBus::registerObserver);
 	}
 
 
@@ -121,6 +154,7 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 	@Override
 	public Stream<Object> provideInstancesFor(Class<?> type, String name) {
+
 		if (type == Config.class) {
 			if (name == null || name.isEmpty()) {
 				return Stream.of(config);
@@ -146,6 +180,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 		if (type == AttachmentRepository.class) {
 			return Stream.of(attachmentRepository.get());
 		}
+		if (type == DataTypes.class) {
+			return Stream.of(dataTypes.get());
+		}
 		if (type == Messages.class) {
 			return Stream.of(Messages.of(
 					getExtensions(MessageProvider.class).filter(it -> it.providerFor(name)).toList()
@@ -162,6 +199,9 @@ public class OpenBBTRuntime implements InjectionProvider {
 		}
 		if (type == ContentTypes.class) {
 			return streamOf(contentTypes);
+		}
+		if (type == EventBus.class) {
+			return streamOf(eventBus);
 		}
 		return Stream.empty();
 	}
@@ -243,6 +283,11 @@ public class OpenBBTRuntime implements InjectionProvider {
 	}
 
 
+	private DataTypes collectDataTypes() {
+		var dataTypeList = getExtensions(DataTypeProvider.class).flatMap(DataTypeProvider::dataTypes).toList();
+		return DataTypes.of(dataTypeList);
+	}
+
 	public ResourceSet resourceSet() {
 		return resourceSet;
 	}
@@ -252,5 +297,17 @@ public class OpenBBTRuntime implements InjectionProvider {
 		return planBuilder.buildTestPlan(context);
 	}
 
+	public TestPlan buildTestPlan(OpenBBTContext context, List<String> selectedSuites) {
+		return planBuilder.buildTestPlan(context, selectedSuites);
+	}
+
+
+	public Profile profile() {
+		return profile;
+	}
+
+	public EventBus eventBus() {
+		return eventBus;
+	}
 
 }

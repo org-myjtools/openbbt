@@ -73,12 +73,7 @@ public class OpenBBTFile {
 	}
 
 
-	public OpenBBTContext createContext(
-			Config inputParameters,
-			List<String> testSuites,
-			String profile,
-			Config substitutions
-	) {
+	public OpenBBTContext createContext(Config inputParameters,	List<String> testSuites) {
 		var contextTestSuites = new ArrayList<String>();
 		TestProject contextProject;
 		if (testSuites.isEmpty()) {
@@ -115,25 +110,16 @@ public class OpenBBTFile {
 				contextTestSuites.add(testSuite.map(TestSuite::name).orElseThrow());
 			}
 		}
-		Map<String,Object> profiledConfiguration = this.configuration != null ? this.configuration : new HashMap<>();
-		if (!profile.isBlank()) {
-			Map<String, Map<String, String>> profiles = this.profiles != null ? this.profiles : Map.of();
-			if (!profiles.containsKey(profile)) {
-				throw new OpenBBTException("Profile '" + profile + "' not found in project file");
-			}
-			profiledConfiguration = applyProfile(this.configuration, profiles.get(profile));
-		}
-		profiledConfiguration = applyProfile(profiledConfiguration, substitutions.asMap());
-		List<String> plugins = List.of();
+		Map<String,Object> contextConfiguration = this.configuration != null ? this.configuration : new HashMap<>();
+		List<String> contextPlugins = List.of();
 		if (this.plugins != null) {
-			plugins = this.plugins.stream().map(this::normalizePluginName).toList();
+			contextPlugins = this.plugins.stream().map(this::normalizePluginName).toList();
 		}
 		return new OpenBBTContext(
 			contextProject,
-			Config.ofMap(flattenMap(profiledConfiguration, "")).append(inputParameters),
+			Config.ofMap(flattenMap(contextConfiguration, "")).append(inputParameters),
 			contextTestSuites,
-			profile,
-			plugins
+			contextPlugins
 		);
 	}
 
@@ -161,25 +147,7 @@ public class OpenBBTFile {
 	}
 
 
-	private Map<String, Object> applyProfile(Map<String, Object> configuration, Map<String,String> profile) {
-		if (profile == null || profile.isEmpty()) {
-			return configuration;
-		}
-		Map<String,Object> result = new HashMap<>();
-		for (Map.Entry<String, Object> entry : configuration.entrySet()) {
-			if (entry.getValue() instanceof String value) {
-				for (Map.Entry<String, String> profileEntry : profile.entrySet()) {
-					value = value.replace("{{" + profileEntry.getKey() + "}}", profileEntry.getValue());
-				}
-				result.put(entry.getKey(), value);
-			} else if (entry.getValue() instanceof Map<?,?> map) {
-				result.put(entry.getKey(), applyProfile((Map<String, Object>) map, profile));
-			} else {
-				result.put(entry.getKey(), entry.getValue());
-			}
-		}
-		return result;
-	}
+
 
 
 }

@@ -250,6 +250,23 @@ public interface TestPlanRepository extends Repository {
 	 */
 	List<TestPlan> listPlans(String organization, String project, int offset, int max);
 
+	/**
+	 * List test plans for a given organization and project, optionally filtering to only those
+	 * that have at least one execution.
+	 */
+	default List<TestPlan> listPlans(String organization, String project, int offset, int max, boolean withExecutions) {
+		return listPlans(organization, project, offset, max);
+	}
+
+	/**
+	 * For every non-TEST_CASE node belonging to the given plan, compute the number of
+	 * descendant TEST_CASE nodes and persist it as {@code testCaseCount}.
+	 * TEST_CASE nodes (and their descendants) are left with {@code null}.
+	 */
+	default void assignTestCaseCountsToNodes(UUID planId) {
+		// no-op default; concrete repositories may override
+	}
+
 	Optional<TestPlan> getPlan(TestProject testProject, String resourceSetHash, String configurationHash);
 
 	Optional<TestPlan> getPlan(UUID planID);

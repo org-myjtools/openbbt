@@ -30,7 +30,7 @@ public final class PlanCommand extends AbstractCommand {
 		OpenBBTContext context = getContext();
 		OpenBBTRuntime runtime = new OpenBBTRuntime(context.configuration());
 		try {
-			TestPlan testPlan = runtime.buildTestPlan(context);
+			TestPlan testPlan = runtime.buildTestPlan(context, getSelectedSuites());
 			log.info("{}", testPlan.planID());
 			if (detail) {
 				TestPlanRepositoryWriter writer = new TestPlanRepositoryWriter(

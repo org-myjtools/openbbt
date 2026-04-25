@@ -49,12 +49,6 @@
             <version>3.27.3</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.myjtools.openbbt</groupId>
-            <artifactId>openbbt-core</artifactId>
-            <version>1.0.0-alpha1</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
     <build>

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.messages.MessageProvider;
 import org.myjtools.openbbt.core.messages.StepDocMessageAdapter;
 import java.util.Locale;
+import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TestStepDocMessageAdapter {
@@ -15,6 +16,10 @@ class TestStepDocMessageAdapter {
 			@Override
 			public boolean providerFor(String category) {
 				return true;
+			}
+			@Override
+			protected Map<String, String> languageResources() {
+				return Map.of();
 			}
 		};
 		assertThat(provider.messages(Locale.ENGLISH).orElseThrow().get("rest.request.GET")).hasToString("I make a GET request to {endpoint:text}");

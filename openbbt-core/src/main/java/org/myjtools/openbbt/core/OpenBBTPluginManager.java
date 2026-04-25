@@ -34,7 +34,16 @@ public class OpenBBTPluginManager {
 		return pluginManager;
 	}
 
-	public boolean installPlugin(String pluginName) {
+	public boolean installPlugin(String pluginNameExpression) {
+		String pluginName;
+		String runtimePluginConfig;
+		if (pluginNameExpression.contains(" with ")) {
+			pluginName = pluginNameExpression.split(" with ")[0].trim();
+			runtimePluginConfig = pluginNameExpression.split(" with ")[1].trim();
+		} else {
+			pluginName = pluginNameExpression.trim();
+			runtimePluginConfig = null;
+		}
 		if (!pluginName.contains(":")) {
 			pluginName = "org.myjtools.openbbt.plugins:" + pluginName;
 		}
@@ -51,10 +60,30 @@ public class OpenBBTPluginManager {
 		try {
 			pluginManager.installPluginFromArtifactStore(pluginID, version);
 			log.info("Plugin {} installed successfully.", pluginName);
+			if (runtimePluginConfig != null) {
+				for (String runtimeConfigEntry : runtimePluginConfig.split(",")) {
+					installPluginRuntimeConfig(pluginID, runtimeConfigEntry);
+				}
+
+			}
 			return true;
 		} catch (Exception e) {
 			log.error(e,"Failed to resolve plugin {}", pluginName);
 			return false;
+		}
+	}
+
+
+	private void installPluginRuntimeConfig(PluginID pluginID, String runtimeConfig) {
+		log.info("Applying runtime config for plugin {}: {}", pluginID, runtimeConfig);
+		try {
+			String[] parts = runtimeConfig.split(":");
+			String groupId = parts[0];
+			String artifactId = parts[1];
+			pluginManager.addRuntimeDependency(pluginID, groupId, artifactId);
+			log.info("Runtime config applied successfully for plugin {}: {}", pluginID, runtimeConfig);
+		} catch (Exception e) {
+			log.error(e, "Failed to apply runtime config for plugin {}: {}", pluginID, runtimeConfig);
 		}
 	}
 

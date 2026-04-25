@@ -21,6 +21,9 @@ public class TestExecutionNode {
 	private Instant endTime;
 	private ExecutionResult result;
 	private String message;
+	private Integer testPassedCount;
+	private Integer testErrorCount;
+	private Integer testFailedCount;
 
 
 	public long duration() {

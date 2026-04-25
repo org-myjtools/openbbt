@@ -1,0 +1,30 @@
+'db.define.alias':
+  expression: 'uso el origen de datos {alias:text}'
+  example: |
+    Dado que uso el origen de datos "main"
+  scenarios:
+    - title: Seleccionar un origen de datos antes de operar
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces el número de filas de la tabla users es igual a 3:
+  
+
+
+'db.assert.count':
+  expression: 'el número de filas de la tabla {table:word} {{integer-assertion}}'
+  assertion-hints:
+    - 'es igual a 0'
+    - 'es igual a 1'
+    - 'es mayor que 0'
+    - 'no es igual a 0'
+  example: |
+    Entonces el número de filas de la tabla users es igual a 3
+  scenarios:
+    - title: Verificar que la tabla está vacía tras un borrado
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces el número de filas de la tabla users es igual a 0
+    - title: Verificar que existe al menos una fila
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces el número de filas de la tabla users es mayor que 0

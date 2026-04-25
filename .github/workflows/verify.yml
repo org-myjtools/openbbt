@@ -23,7 +23,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build and Test with Coverage
+      - name: Install core modules
+        run: mvn -B install -DskipTests
+
+      - name: Install plugins
+        run: mvn -B install -DskipTests -Pplugins
+
+      - name: Test with Coverage
         run: mvn -B verify
 
       - name: SonarCloud Scan

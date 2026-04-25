@@ -78,6 +78,13 @@ public class StepProviderBackend {
 			.toList();
 	}
 
+	public List<Map.Entry<String, String>> allStepsWithLabelForLocale(Locale locale) {
+		return services.stream()
+			.flatMap(s -> s.stepStringsForLocale(locale).stream()
+				.map(step -> Map.entry(s.providerLabel(), step)))
+			.toList();
+	}
+
 	public List<String> hintsForStep(String invalidStep, Locale locale, int limit) {
 		return hinter.getHintsForInvalidStep(invalidStep, locale, limit);
 	}

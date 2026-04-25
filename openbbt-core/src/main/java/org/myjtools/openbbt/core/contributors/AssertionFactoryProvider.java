@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 /**
  * @author Luis Iñesta Gelabert - luiinge@gmail.com
  */
-@ExtensionPoint
+@ExtensionPoint(version = "1.0")
 public interface AssertionFactoryProvider {
 
 	Stream<AssertionFactory<?>> assertionFactories();

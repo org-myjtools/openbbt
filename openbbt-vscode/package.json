@@ -35,7 +35,7 @@
       },
       {
         "command": "openbbt.testPlan.refresh",
-        "title": "OpenBBT: Refresh Test Plan",
+        "title": "OpenBBT: Refresh",
         "icon": "$(refresh)"
       },
       {
@@ -43,13 +43,13 @@
         "title": "OpenBBT: Open Source Location"
       },
       {
-        "command": "openbbt.restartLsp",
-        "title": "OpenBBT: Restart LSP Connection",
-        "icon": "$(debug-restart)"
-      },
-      {
         "command": "openbbt.executions.run",
         "title": "OpenBBT: Run",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "openbbt.executions.rerun",
+        "title": "OpenBBT: Re-run",
         "icon": "$(run-all)"
       },
       {
@@ -71,6 +71,11 @@
         "command": "openbbt.contributors.refresh",
         "title": "OpenBBT: Refresh Contributors",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "openbbt.showLogs",
+        "title": "OpenBBT: Show Logs",
+        "icon": "$(output)"
       }
     ],
     "viewsContainers": {
@@ -119,11 +124,6 @@
           "group": "navigation"
         },
         {
-          "command": "openbbt.restartLsp",
-          "when": "view == openbbt.testPlan",
-          "group": "navigation"
-        },
-        {
           "command": "openbbt.contributors.refresh",
           "when": "view == openbbt.contributors",
           "group": "navigation"
@@ -131,19 +131,19 @@
       ],
       "view/item/context": [
         {
-          "command": "openbbt.executions.run",
-          "when": "view == openbbt.executions && viewItem == plan",
+          "command": "openbbt.executions.rerun",
+          "when": "view == openbbt.executions && viewItem == execution",
           "group": "inline@1"
         },
         {
           "command": "openbbt.executions.deleteExecution",
           "when": "view == openbbt.executions && viewItem == execution",
-          "group": "inline"
+          "group": "inline@2"
         },
         {
           "command": "openbbt.executions.deletePlan",
           "when": "view == openbbt.executions && viewItem == plan",
-          "group": "inline@2"
+          "group": "inline"
         }
       ]
     },

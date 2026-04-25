@@ -17,5 +17,9 @@ public class TestExecution {
 	private UUID planID;
 	private UUID executionRootNodeID;
 	private Instant executedAt;
+	private Integer testPassedCount;
+	private Integer testErrorCount;
+	private Integer testFailedCount;
+	private String profile;
 
 }

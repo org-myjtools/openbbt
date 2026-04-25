@@ -1,0 +1,18 @@
+'db.define.alias':
+  role: given
+  description: |
+    Selects a configured datasource alias for subsequent database operations.
+  parameters:
+    - name: alias
+      type: text
+      description: The name of the datasource as defined in the configuration
+
+
+'db.assert.count':
+  role: then
+  description: |
+    Asserts that the number of rows in the specified table satisfies the given condition.
+  parameters:
+    - name: table
+      type: word
+      description: The name of the database table
