@@ -121,6 +121,7 @@ public abstract sealed class AbstractCommand implements Callable<Integer> permit
 				return 0;
 			}
 			execute();
+			out().flush();
 			return 0;
 		} catch (Exception e) {
 			err().println(e.getMessage());
