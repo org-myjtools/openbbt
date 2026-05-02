@@ -87,7 +87,7 @@ public class CoreDataTypes implements DataTypeProvider {
 		"file",
 		"\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
 		Path.class,
-		Path::of,
+		x -> Path.of(x.substring(1, x.length() - 1)),
 		"local path to file/dir"
 	);
 

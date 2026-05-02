@@ -88,7 +88,7 @@ public class StepProviderMethod {
 			Pair<String, DataType> arg = this.expectedArguments.get(i);
 			Object value = arguments.get(arg.left());
 			Class<?> type = value.getClass();
-			if (type != method.getParameterTypes()[i]) {
+			if (!method.getParameterTypes()[i].isAssignableFrom(type)) {
 				throw new OpenBBTException(
 					"Argument '{}' has type {}, but expected type is {}",
 					arg.left(),
