@@ -2,10 +2,8 @@ package org.myjtools.openbbt.plugins.db.jooq;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.SQLDialect;
-import org.jooq.Select;
+import org.jooq.*;
+import org.jooq.Record;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
@@ -13,8 +11,11 @@ import org.jooq.impl.DataSourceConnectionProvider;
 import org.myjtools.openbbt.core.OpenBBTException;
 import org.myjtools.openbbt.core.testplan.DataTable;
 import org.myjtools.openbbt.plugins.db.ConnectionParameters;
+import org.myjtools.openbbt.plugins.db.DataSet;
 import org.myjtools.openbbt.plugins.db.DbEngine;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +25,11 @@ public class JooqDbEngine implements DbEngine, AutoCloseable {
 	private final Map<String, DSLContext> dslContexts = new HashMap<>();
 	private final Map<String, HikariDataSource> dataSources = new HashMap<>();
 	private final String nullValue;
+	private final int maxAssertRows;
 
-	public JooqDbEngine(Map<String, ConnectionParameters> connections, String nullValue) {
+	public JooqDbEngine(Map<String, ConnectionParameters> connections, String nullValue, int maxAssertRows) {
 		this.nullValue = nullValue;
+		this.maxAssertRows = maxAssertRows;
 		for (Map.Entry<String, ConnectionParameters> entry : connections.entrySet()) {
 			String alias = entry.getKey();
 			ConnectionParameters params = entry.getValue();
@@ -106,5 +109,89 @@ public class JooqDbEngine implements DbEngine, AutoCloseable {
 	public Integer executeCountQueryFromTable(String alias, String table) {
 		return dslContext(alias).selectCount().from(DSL.table(DSL.name(table))).fetchOne(0, Integer.class);
 	}
+
+	@Override
+	public String printTable(String alias, String table) {
+		var result = dslContext(alias).select().from(DSL.table(DSL.name(table))).maxRows(maxAssertRows).fetch();
+		return result.format();
+	}
+
+
+	@Override
+	public void assertTableContains(String alias, String table, DataSet dataSet) {
+		for (List<String> expectedRow : dataSet.rows()) {
+			boolean found = rowExists(alias, table, dataSet.columns(), expectedRow);
+			if (!found) {
+				throw new AssertionError(
+					"Expected row not found in table "+table+": "+rowDescription(dataSet.columns(), expectedRow)
+				);
+			}
+		}
+	}
+
+
+	@Override
+	public void assertTableIs(String alias, String table, DataSet dataSet) {
+		int actualCount = executeCountQueryFromTable(alias, table);
+		if (actualCount != dataSet.rows().size()) {
+			throw new AssertionError(
+				"Table " + table + " has " + actualCount + " rows but expected " + dataSet.rows().size()
+			);
+		}
+		for (List<String> expectedRow : dataSet.rows()) {
+			boolean found = rowExists(alias, table, dataSet.columns(), expectedRow);
+			if (!found) {
+				throw new AssertionError(
+					"Expected row not found in table " + table + ": " + rowDescription(dataSet.columns(), expectedRow)
+				);
+			}
+		}
+	}
+
+
+	@Override
+	public DataSet readTable(String table, DataTable dataTable) {
+		return new DataTableRecordLoader(maxAssertRows).load(table, dataTable);
+	}
+
+
+	@Override
+	public DataSet readCsv(String table, Path csvFile) {
+		return new CsvRecordLoader(nullValue, maxAssertRows).load(table, csvFile);
+	}
+
+
+	@Override
+	public List<DataSet> readXls(Path file) {
+		try {
+			return new ExcelRecordLoader(nullValue).readExcel(file, maxAssertRows);
+		} catch (IOException e) {
+			throw new OpenBBTException(e, "Failed to read Excel file {}", file);
+		}
+	}
+
+
+	private boolean rowExists(String alias, String table, List<String> columns, List<String> values) {
+		List<Condition> conditions = new java.util.ArrayList<>();
+		for (int i = 0; i < columns.size(); i++) {
+			Field<Object> field = DSL.field(DSL.name(columns.get(i)));
+			conditions.add(nullValue.equals(values.get(i)) ? field.isNull() : field.eq(values.get(i)));
+		}
+		return dslContext(alias)
+			.selectOne()
+			.from(DSL.table(DSL.name(table)))
+			.where(conditions)
+			.fetchOne() != null;
+	}
+
+
+	private String rowDescription(List<String> columns, List<String> values) {
+		Map<String, String> map = new HashMap<>();
+		for (int i = 0; i < columns.size(); i++) {
+			map.put(columns.get(i), values.get(i));
+		}
+		return map.toString();
+	}
+
 
 }

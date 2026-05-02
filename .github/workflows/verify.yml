@@ -32,6 +32,9 @@ jobs:
       - name: Test with Coverage
         run: mvn -B verify
 
+      - name: Verify plugins
+        run: ./mvnw -B verify -Pplugins
+
       - name: SonarCloud Scan
         if: github.actor != 'dependabot[bot]'
         env:

@@ -16,3 +16,80 @@
     - name: table
       type: word
       description: The name of the database table
+    - name: integer-assertion
+      type: assertion
+      description: A condition that the row count must satisfy (e.g. '= 3', '> 0')
+
+
+'db.assert.table.contains':
+  role: then
+  description: |
+    Asserts that the contents of a database table contains the expected data provided in a tabular format.
+  parameters:
+    - name: table
+      type: word
+      description: The name of the database table
+    - name: expected-data
+      type: table
+      description: |
+        A table of expected rows, where each row is a map of column names to expected values.
+        First row is treated as header defining column names. Values can be literals or special placeholders
+        (e.g. <null>).
+
+
+'db.assert.table.is':
+  role: then
+  description: |
+    Asserts that the contents of a database table match exactly the expected data provided in a tabular format.
+    Both the number of rows and each individual row must match.
+  parameters:
+    - name: table
+      type: word
+      description: The name of the database table
+    - name: expected-data
+      type: table
+      description: |
+        A table of expected rows, where each row is a map of column names to expected values.
+        First row is treated as header defining column names. Values can be literals or special placeholders
+        (e.g. <null>).
+
+
+'db.assert.table.contains.csv':
+  role: then
+  description: |
+    Asserts that the contents of a database table contains all rows from a CSV file.
+    The first row of the CSV is treated as the header defining column names.
+  parameters:
+    - name: table
+      type: word
+      description: The name of the database table
+    - name: file
+      type: file
+      description: Path to the CSV file with the expected rows
+
+
+'db.assert.table.is.csv':
+  role: then
+  description: |
+    Asserts that the contents of a database table match exactly the rows from a CSV file.
+    Both the number of rows and each individual row must match.
+    The first row of the CSV is treated as the header defining column names.
+  parameters:
+    - name: table
+      type: word
+      description: The name of the database table
+    - name: file
+      type: file
+      description: Path to the CSV file with the expected rows
+
+
+'db.assert.contains.xls':
+  role: then
+  description: |
+    Asserts that the database contains the rows from an Excel file.
+    Each sheet in the Excel file is treated as a table, using the sheet name as the table name.
+    The first row of each sheet is treated as the header defining column names.
+  parameters:
+    - name: file
+      type: file
+      description: Path to the Excel file with the expected data (one sheet per table)

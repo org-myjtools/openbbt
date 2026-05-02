@@ -39,14 +39,19 @@ public class ResourceFinder {
 
 	private InputStream newReader(Path path) {
 		Path absolutePath = path.toAbsolutePath();
-	   try {
+	    try {
 		   return Files.newInputStream(absolutePath);
-	   } catch (IOException e) {
+	    } catch (IOException e) {
 		   throw new OpenBBTException(e,"Cannot read file {}",absolutePath);
-	   }
+	    }
 	}
 
+
 	public Path resolve(String file) {
+		return startingPath.resolve(file);
+	}
+
+	public Path resolve(Path file) {
 		return startingPath.resolve(file);
 	}
 

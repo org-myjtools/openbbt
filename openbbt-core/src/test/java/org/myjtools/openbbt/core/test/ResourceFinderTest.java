@@ -3,6 +3,7 @@ package org.myjtools.openbbt.core.test;
 import org.junit.jupiter.api.Test;
 import org.myjtools.openbbt.core.Resource;
 import org.myjtools.openbbt.core.ResourceFinder;
+import java.io.IOException;
 import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -121,6 +122,36 @@ class ResourceFinderTest {
 			.containsExactly(
 				Path.of("src/test/resources/files/file_c.yml")
 			);
+	}
+
+	@Test
+	void testResolveString() {
+		var resourceFinder = new ResourceFinder(Path.of("src/test/resources/files"));
+		assertThat(resourceFinder.resolve("file_a.txt"))
+			.isEqualTo(Path.of("src/test/resources/files/file_a.txt"));
+	}
+
+	@Test
+	void testResolvePath() {
+		var resourceFinder = new ResourceFinder(Path.of("src/test/resources/files"));
+		assertThat(resourceFinder.resolve(Path.of("file_a.txt")))
+			.isEqualTo(Path.of("src/test/resources/files/file_a.txt"));
+	}
+
+	@Test
+	void testReadAsString() {
+		var resourceFinder = new ResourceFinder(Path.of("src/test/resources/files"));
+		assertThat(resourceFinder.readAsString("file_a.txt")).isEqualTo("ffgdsfsdfagaffgasfd");
+	}
+
+	@Test
+	void testResourceInputStream() throws IOException {
+		var resourceFinder = new ResourceFinder(Path.of("src/test/resources/files"));
+		var resource = resourceFinder.findResources("file_a.txt").resources().get(0);
+		try (var input = resource.open()) {
+			assertThat(input).isNotNull();
+			assertThat(new String(input.readAllBytes())).isEqualTo("ffgdsfsdfagaffgasfd");
+		}
 	}
 
 }

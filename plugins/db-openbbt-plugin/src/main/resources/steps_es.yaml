@@ -28,3 +28,78 @@
       gherkin: |
         Dado que uso el origen de datos "main"
         Entonces el número de filas de la tabla users es mayor que 0
+
+
+'db.assert.table.contains':
+  expression: 'la tabla {table:word} contiene las filas:'
+  example: |
+    Entonces la tabla users contiene las filas:
+      | id | nombre |
+      | 1  | Alice  |
+  scenarios:
+    - title: Verificar el contenido exacto de la tabla
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces la tabla users contiene las filas:
+          | id | nombre |
+          | 1  | Alice  |
+    - title: Verificar contenido con valores nulos
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces la tabla users contiene las filas:
+          | id | nombre |
+          | 2  | <null> |
+
+
+'db.assert.table.is':
+  expression: 'la tabla {table:word} es exactamente:'
+  example: |
+    Entonces la tabla users es exactamente:
+      | id | nombre |
+      | 1  | Alice  |
+  scenarios:
+    - title: Verificar que la tabla contiene exactamente estas filas
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces la tabla users es exactamente:
+          | id | nombre |
+          | 1  | Alice  |
+    - title: Verificar que la tabla tiene exactamente una fila con valor nulo
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces la tabla users es exactamente:
+          | id | nombre |
+          | 2  | <null> |
+
+
+'db.assert.table.contains.csv':
+  expression: 'la tabla {table:word} contiene el fichero CSV {file:file}'
+  example: |
+    Entonces la tabla users contiene el fichero CSV "expected/users.csv"
+  scenarios:
+    - title: Verificar que la tabla contiene las filas de un fichero CSV
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces la tabla users contiene el fichero CSV "expected/users.csv"
+
+
+'db.assert.table.is.csv':
+  expression: 'la tabla {table:word} es exactamente el fichero CSV {file:file}'
+  example: |
+    Entonces la tabla users es exactamente el fichero CSV "expected/users.csv"
+  scenarios:
+    - title: Verificar que la tabla coincide exactamente con un fichero CSV
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces la tabla users es exactamente el fichero CSV "expected/users.csv"
+
+
+'db.assert.contains.xls':
+  expression: 'la base de datos contiene las filas del fichero Excel {file:file}'
+  example: |
+    Entonces la base de datos contiene las filas del fichero Excel "expected/data.xlsx"
+  scenarios:
+    - title: Verificar que varias tablas contienen las filas de un fichero Excel
+      gherkin: |
+        Dado que uso el origen de datos "main"
+        Entonces la base de datos contiene las filas del fichero Excel "expected/data.xlsx"

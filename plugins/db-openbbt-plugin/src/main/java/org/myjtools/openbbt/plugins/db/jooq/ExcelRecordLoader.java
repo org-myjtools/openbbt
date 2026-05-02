@@ -8,6 +8,7 @@ import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.myjtools.openbbt.core.OpenBBTException;
+import org.myjtools.openbbt.plugins.db.DataSet;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +26,11 @@ public class ExcelRecordLoader {
 
 	public ExcelRecordLoader(DSLContext ctx, String nullValue) {
 		this.ctx = ctx;
+		this.nullValue = nullValue;
+	}
+
+	public ExcelRecordLoader(String nullValue) {
+		this.ctx = null;
 		this.nullValue = nullValue;
 	}
 
@@ -113,6 +119,49 @@ public class ExcelRecordLoader {
 				}
 			});
 		}
+	}
+
+	public List<DataSet> readExcel(Path file, int maxRows) throws IOException {
+		List<DataSet> result = new ArrayList<>();
+		try (Workbook workbook = new XSSFWorkbook(new FileInputStream(file.toFile()))) {
+			for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+				Sheet sheet = workbook.getSheetAt(i);
+				result.add(readSheet(sheet, sheet.getSheetName(), maxRows));
+			}
+		}
+		return result;
+	}
+
+	private DataSet readSheet(Sheet sheet, String tableName, int maxRows) {
+		Iterator<Row> rowIterator = sheet.iterator();
+		if (!rowIterator.hasNext()) {
+			return new DataSet(tableName, List.of(), List.of());
+		}
+		Row headerRow = rowIterator.next();
+		List<String> headers = new ArrayList<>();
+		for (Cell cell : headerRow) {
+			headers.add(cell.getStringCellValue());
+		}
+		List<List<String>> rows = new ArrayList<>();
+		int count = 0;
+		while (rowIterator.hasNext()) {
+			count++;
+			if (count > maxRows) {
+				throw new OpenBBTException(
+					"Excel sheet {} has more than {} rows, which exceeds the configured limit for assertions",
+					tableName, maxRows
+				);
+			}
+			Row row = rowIterator.next();
+			List<String> rowValues = new ArrayList<>();
+			for (int j = 0; j < headers.size(); j++) {
+				Cell cell = row.getCell(j, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+				Object value = getCellValue(cell);
+				rowValues.add(value == null ? nullValue : value.toString());
+			}
+			rows.add(rowValues);
+		}
+		return new DataSet(tableName, headers, rows);
 	}
 
 	private Object getCellValue(Cell cell) {
