@@ -33,6 +33,7 @@ abstract class AbstractDbStepsTest {
 			stmt.execute("INSERT INTO users VALUES (2, 'Bob')");
 			stmt.execute("INSERT INTO users VALUES (3, 'Carol')");
 		}
+		XlsTestFixtures.create(getClass());
 	}
 
 	private JUnitOpenBBTPlan withDbConfig(JUnitOpenBBTPlan plan) {
@@ -66,6 +67,126 @@ abstract class AbstractDbStepsTest {
 	@Test
 	@FeatureDir("dsl-count-fails")
 	void dsl_count_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("table-contains-passes")
+	void table_contains_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("table-contains-fails")
+	void table_contains_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("table-is-passes")
+	void table_is_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("table-is-fails")
+	void table_is_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("dsl-table-contains-passes")
+	void dsl_table_contains_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-table-contains-fails")
+	void dsl_table_contains_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("dsl-table-is-passes")
+	void dsl_table_is_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-table-is-fails")
+	void dsl_table_is_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("csv-table-contains-passes")
+	void csv_table_contains_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("csv-table-contains-fails")
+	void csv_table_contains_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("csv-table-is-passes")
+	void csv_table_is_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("csv-table-is-fails")
+	void csv_table_is_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("dsl-csv-table-contains-passes")
+	void dsl_csv_table_contains_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-csv-table-contains-fails")
+	void dsl_csv_table_contains_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("dsl-csv-table-is-passes")
+	void dsl_csv_table_is_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-csv-table-is-fails")
+	void dsl_csv_table_is_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("xls-contains-passes")
+	void xls_contains_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("xls-contains-fails")
+	void xls_contains_fails(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllFailed();
+	}
+
+	@Test
+	@FeatureDir("dsl-xls-contains-passes")
+	void dsl_xls_contains_passes(JUnitOpenBBTPlan plan) {
+		withDbConfig(plan).execute().assertAllPassed();
+	}
+
+	@Test
+	@FeatureDir("dsl-xls-contains-fails")
+	void dsl_xls_contains_fails(JUnitOpenBBTPlan plan) {
 		withDbConfig(plan).execute().assertAllFailed();
 	}
 

@@ -4,6 +4,19 @@
 
 ---
 
+## `db.maxAssertRows`
+
+Maximum number of rows from the expected data table that will be evaluated
+when asserting table contents. Defaults to 100.
+
+**Type** integer
+
+**Default value** `100`
+
+
+
+---
+
 ## `db.nullValue`
 
 The string value that will be interpreted as SQL NULL when loading data from tables,

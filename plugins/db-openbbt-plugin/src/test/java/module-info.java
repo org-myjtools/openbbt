@@ -12,6 +12,8 @@ module org.myjtools.openbbt.plugins.db.test {
     requires org.hsqldb;
     requires org.xerial.sqlitejdbc;
     requires duckdb.jdbc;
+    requires org.apache.poi.poi;
+    requires org.apache.poi.ooxml;
 
     opens org.myjtools.plugins.db.test to org.junit.platform.commons;
 

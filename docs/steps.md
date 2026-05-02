@@ -86,6 +86,7 @@ Asserts that the number of rows in the specified table satisfies the given condi
 | Name | Type | Description |
 |------|------|-------------|
 | `table` | word | The name of the database table |
+| `integer-assertion` | assertion | A condition that the row count must satisfy (e.g. '= 3', '> 0') |
 
 ### `dsl`
 
@@ -184,5 +185,454 @@ Entonces el número de filas de la tabla users es igual a 0
 ```gherkin
 Dado que uso el origen de datos "main"
 Entonces el número de filas de la tabla users es mayor que 0
+```
+
+---
+
+## `db.assert.table.contains`
+
+**Role:** `then`
+
+Asserts that the contents of a database table contains the expected data provided in a tabular format.
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `table` | word | The name of the database table |
+| `expected-data` | table | A table of expected rows, where each row is a map of column names to expected values.
+First row is treated as header defining column names. Values can be literals or special placeholders
+(e.g. <null>).
+ |
+
+### `dsl`
+
+**Expression:** `db table {table:word} has:`
+
+**Example:**
+
+```gherkin
+* db table users has:
+  | id | name  |
+  | 1  | Alice |
+```
+
+**Scenarios:**
+
+*Assert exact table contents*
+
+```gherkin
+* use db "main"
+* db table users has:
+  | id | name  |
+  | 1  | Alice |
+```
+
+*Assert contents with null values*
+
+```gherkin
+* use db "main"
+* db table users has:
+  | id | name   |
+  | 2  | <null> |
+```
+
+### `en`
+
+**Expression:** `the table {table:word} contains the rows:`
+
+**Example:**
+
+```gherkin
+Then the table users contains the rows:
+  | id | name  |
+  | 1  | Alice |
+```
+
+**Scenarios:**
+
+*Assert exact table contents*
+
+```gherkin
+Given I use datasource "main"
+Then the table users contains the rows:
+  | id | name  |
+  | 1  | Alice |
+```
+
+*Assert contents with null values*
+
+```gherkin
+Given I use datasource "main"
+Then the table users contains the rows:
+  | id | name   |
+  | 2  | <null> |
+```
+
+### `es`
+
+**Expression:** `la tabla {table:word} contiene las filas:`
+
+**Example:**
+
+```gherkin
+Entonces la tabla users contiene las filas:
+  | id | nombre |
+  | 1  | Alice  |
+```
+
+**Scenarios:**
+
+*Verificar el contenido exacto de la tabla*
+
+```gherkin
+Dado que uso el origen de datos "main"
+Entonces la tabla users contiene las filas:
+  | id | nombre |
+  | 1  | Alice  |
+```
+
+*Verificar contenido con valores nulos*
+
+```gherkin
+Dado que uso el origen de datos "main"
+Entonces la tabla users contiene las filas:
+  | id | nombre |
+  | 2  | <null> |
+```
+
+---
+
+## `db.assert.table.is`
+
+**Role:** `then`
+
+Asserts that the contents of a database table match exactly the expected data provided in a tabular format.
+Both the number of rows and each individual row must match.
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `table` | word | The name of the database table |
+| `expected-data` | table | A table of expected rows, where each row is a map of column names to expected values.
+First row is treated as header defining column names. Values can be literals or special placeholders
+(e.g. <null>).
+ |
+
+### `dsl`
+
+**Expression:** `db table {table:word} is:`
+
+**Example:**
+
+```gherkin
+* db table users is:
+  | id | name  |
+  | 1  | Alice |
+```
+
+**Scenarios:**
+
+*Assert table has exactly these rows*
+
+```gherkin
+* use db "main"
+* db table users is:
+  | id | name  |
+  | 1  | Alice |
+```
+
+*Assert table is exactly one row with a null value*
+
+```gherkin
+* use db "main"
+* db table users is:
+  | id | name   |
+  | 2  | <null> |
+```
+
+### `en`
+
+**Expression:** `the table {table:word} is exactly:`
+
+**Example:**
+
+```gherkin
+Then the table users is exactly:
+  | id | name  |
+  | 1  | Alice |
+```
+
+**Scenarios:**
+
+*Assert table has exactly these rows*
+
+```gherkin
+Given I use datasource "main"
+Then the table users is exactly:
+  | id | name  |
+  | 1  | Alice |
+```
+
+*Assert table is exactly one row with a null value*
+
+```gherkin
+Given I use datasource "main"
+Then the table users is exactly:
+  | id | name   |
+  | 2  | <null> |
+```
+
+### `es`
+
+**Expression:** `la tabla {table:word} es exactamente:`
+
+**Example:**
+
+```gherkin
+Entonces la tabla users es exactamente:
+  | id | nombre |
+  | 1  | Alice  |
+```
+
+**Scenarios:**
+
+*Verificar que la tabla contiene exactamente estas filas*
+
+```gherkin
+Dado que uso el origen de datos "main"
+Entonces la tabla users es exactamente:
+  | id | nombre |
+  | 1  | Alice  |
+```
+
+*Verificar que la tabla tiene exactamente una fila con valor nulo*
+
+```gherkin
+Dado que uso el origen de datos "main"
+Entonces la tabla users es exactamente:
+  | id | nombre |
+  | 2  | <null> |
+```
+
+---
+
+## `db.assert.table.contains.csv`
+
+**Role:** `then`
+
+Asserts that the contents of a database table contains all rows from a CSV file.
+The first row of the CSV is treated as the header defining column names.
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `table` | word | The name of the database table |
+| `file` | file | Path to the CSV file with the expected rows |
+
+### `dsl`
+
+**Expression:** `db table {table:word} has CSV {file:file}`
+
+**Example:**
+
+```gherkin
+* db table users has CSV "expected/users.csv"
+```
+
+**Scenarios:**
+
+*Assert table contains rows from a CSV file*
+
+```gherkin
+* use db "main"
+* db table users has CSV "expected/users.csv"
+```
+
+### `en`
+
+**Expression:** `the table {table:word} contains the CSV file {file:file}`
+
+**Example:**
+
+```gherkin
+Then the table users contains the CSV file "expected/users.csv"
+```
+
+**Scenarios:**
+
+*Assert table contains rows from a CSV file*
+
+```gherkin
+Given I use datasource "main"
+Then the table users contains the CSV file "expected/users.csv"
+```
+
+### `es`
+
+**Expression:** `la tabla {table:word} contiene el fichero CSV {file:file}`
+
+**Example:**
+
+```gherkin
+Entonces la tabla users contiene el fichero CSV "expected/users.csv"
+```
+
+**Scenarios:**
+
+*Verificar que la tabla contiene las filas de un fichero CSV*
+
+```gherkin
+Dado que uso el origen de datos "main"
+Entonces la tabla users contiene el fichero CSV "expected/users.csv"
+```
+
+---
+
+## `db.assert.table.is.csv`
+
+**Role:** `then`
+
+Asserts that the contents of a database table match exactly the rows from a CSV file.
+Both the number of rows and each individual row must match.
+The first row of the CSV is treated as the header defining column names.
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `table` | word | The name of the database table |
+| `file` | file | Path to the CSV file with the expected rows |
+
+### `dsl`
+
+**Expression:** `db table {table:word} is CSV {file:file}`
+
+**Example:**
+
+```gherkin
+* db table users is CSV "expected/users.csv"
+```
+
+**Scenarios:**
+
+*Assert table matches exactly the rows in a CSV file*
+
+```gherkin
+* use db "main"
+* db table users is CSV "expected/users.csv"
+```
+
+### `en`
+
+**Expression:** `the table {table:word} is exactly the CSV file {file:file}`
+
+**Example:**
+
+```gherkin
+Then the table users is exactly the CSV file "expected/users.csv"
+```
+
+**Scenarios:**
+
+*Assert table matches exactly the rows in a CSV file*
+
+```gherkin
+Given I use datasource "main"
+Then the table users is exactly the CSV file "expected/users.csv"
+```
+
+### `es`
+
+**Expression:** `la tabla {table:word} es exactamente el fichero CSV {file:file}`
+
+**Example:**
+
+```gherkin
+Entonces la tabla users es exactamente el fichero CSV "expected/users.csv"
+```
+
+**Scenarios:**
+
+*Verificar que la tabla coincide exactamente con un fichero CSV*
+
+```gherkin
+Dado que uso el origen de datos "main"
+Entonces la tabla users es exactamente el fichero CSV "expected/users.csv"
+```
+
+---
+
+## `db.assert.contains.xls`
+
+**Role:** `then`
+
+Asserts that the database contains the rows from an Excel file.
+Each sheet in the Excel file is treated as a table, using the sheet name as the table name.
+The first row of each sheet is treated as the header defining column names.
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `file` | file | Path to the Excel file with the expected data (one sheet per table) |
+
+### `dsl`
+
+**Expression:** `db has XLS {file:file}`
+
+**Example:**
+
+```gherkin
+* db has XLS "expected/data.xlsx"
+```
+
+**Scenarios:**
+
+*Assert multiple tables contain the rows from an Excel file*
+
+```gherkin
+* use db "main"
+* db has XLS "expected/data.xlsx"
+```
+
+### `en`
+
+**Expression:** `the database contains the rows from Excel file {file:file}`
+
+**Example:**
+
+```gherkin
+Then the database contains the rows from Excel file "expected/data.xlsx"
+```
+
+**Scenarios:**
+
+*Assert multiple tables contain the rows from an Excel file*
+
+```gherkin
+Given I use datasource "main"
+Then the database contains the rows from Excel file "expected/data.xlsx"
+```
+
+### `es`
+
+**Expression:** `la base de datos contiene las filas del fichero Excel {file:file}`
+
+**Example:**
+
+```gherkin
+Entonces la base de datos contiene las filas del fichero Excel "expected/data.xlsx"
+```
+
+**Scenarios:**
+
+*Verificar que varias tablas contienen las filas de un fichero Excel*
+
+```gherkin
+Dado que uso el origen de datos "main"
+Entonces la base de datos contiene las filas del fichero Excel "expected/data.xlsx"
 ```
 

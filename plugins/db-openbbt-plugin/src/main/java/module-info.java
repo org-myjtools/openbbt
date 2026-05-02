@@ -12,6 +12,7 @@ module org.myjtools.openbbt.plugins.db {
 	requires com.zaxxer.hikari;
 	requires org.apache.poi.ooxml;
 	requires org.apache.poi.poi;
+	requires org.apache.commons.csv;
 
 	provides org.myjtools.openbbt.core.contributors.StepProvider with DbStepProvider;
 	provides org.myjtools.openbbt.core.contributors.ConfigProvider with DbConfigProvider;
