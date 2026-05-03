@@ -38,6 +38,11 @@ public class JsonRpcServer {
     }
 
     @FunctionalInterface
+    public interface StepIndexProvider {
+        String getIndex();
+    }
+
+    @FunctionalInterface
     public interface ExecHandler {
         /**
          * Execute the current plan synchronously.
@@ -64,6 +69,7 @@ public class JsonRpcServer {
     private final ExecHandler execHandler;
     private final PlanHandler planHandler;
     private final ContributorsProvider contributorsProvider;
+    private final StepIndexProvider stepIndexProvider;
     private TestPlanRepository repository;
     private TestExecutionRepository executionRepository;
     private AttachmentRepository attachmentRepository;
@@ -82,12 +88,17 @@ public class JsonRpcServer {
     }
 
     public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler, PlanHandler planHandler, ContributorsProvider contributorsProvider) {
+        this(in, out, factory, execHandler, planHandler, contributorsProvider, null);
+    }
+
+    public JsonRpcServer(InputStream in, OutputStream out, RepositoryFactory factory, ExecHandler execHandler, PlanHandler planHandler, ContributorsProvider contributorsProvider, StepIndexProvider stepIndexProvider) {
         this.in = in;
         this.out = out;
         this.factory = factory;
         this.execHandler = execHandler;
         this.planHandler = planHandler;
         this.contributorsProvider = contributorsProvider;
+        this.stepIndexProvider = stepIndexProvider;
     }
 
     public void run() {
@@ -175,6 +186,7 @@ public class JsonRpcServer {
                 case "executions/attachment"  -> handleGetAttachment(params);
                 case "executions/delete" -> { handleDeleteExecution(params); yield JsonNull.INSTANCE; }
                 case "contributors/list" -> handleContributors();
+                case "steps/index"       -> handleStepsIndex();
                 case "exec"                   -> handleExec(params);
                 case "refresh"         -> { handleRefresh(); yield JsonNull.INSTANCE; }
                 case "shutdown"        -> { running = false; yield JsonNull.INSTANCE; }
@@ -468,6 +480,12 @@ public class JsonRpcServer {
             result.add(obj);
         });
         return result;
+    }
+
+    private JsonElement handleStepsIndex() {
+        if (stepIndexProvider == null)
+            throw new IllegalStateException("Step index provider not configured");
+        return JsonParser.parseString(stepIndexProvider.getIndex());
     }
 
     private void handleDeleteExecution(JsonObject params) {

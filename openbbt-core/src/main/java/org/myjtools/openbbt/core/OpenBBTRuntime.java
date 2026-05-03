@@ -229,6 +229,19 @@ public class OpenBBTRuntime implements InjectionProvider {
 		);
 	}
 
+	public String getStepIndex() {
+		var parts = getExtensions(AIIndexProvider.class)
+			.map(AIIndexProvider::stepIndexJson)
+			.filter(s -> s != null && !s.isBlank())
+			.map(String::strip)
+			.filter(s -> s.startsWith("[") && s.endsWith("]"))
+			.map(s -> s.substring(1, s.length() - 1).strip())
+			.filter(s -> !s.isEmpty())
+			.toList();
+		if (parts.isEmpty()) return "[]";
+		return "[\n" + String.join(",\n", parts) + "\n]";
+	}
+
 	public Map<String, List<String>> getContributors() {
 		return getContributedTypes().stream()
 			.flatMap(type -> getExtensions(type).map(ext -> Map.entry(type.getSimpleName(), ext.getClass().getSimpleName())))

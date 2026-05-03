@@ -1160,4 +1160,32 @@ class JsonRpcServerTest {
         var result = responses.get(0).getAsJsonObject("result");
         assertThat(result.get("executionId").getAsString()).isEqualTo(newExecId.toString());
     }
+
+    @Test
+    void stepsIndexWithoutProviderReturnsError() {
+        List<JsonObject> responses = run(
+            () -> new StubPlanRepo() {},
+            req(1, "steps/index", "{}"),
+            req(99, "shutdown", "{}")
+        );
+        assertThat(responses.get(0).has("error")).isTrue();
+    }
+
+    @Test
+    void stepsIndexReturnsJsonArray() {
+        String json = "[{\"id\":\"my.step\",\"description\":\"A step\"}]";
+
+        byte[][] frames = {frame(req(1, "steps/index", "{}")), frame(req(99, "shutdown", "{}"))};
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new JsonRpcServer(
+            new ByteArrayInputStream(concat(frames)), out,
+            () -> new StubPlanRepo() {},
+            null, null, null, () -> json
+        ).run();
+
+        List<JsonObject> responses = parseResponses(out.toByteArray());
+        var result = responses.get(0).getAsJsonArray("result");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAsJsonObject().get("id").getAsString()).isEqualTo("my.step");
+    }
 }
