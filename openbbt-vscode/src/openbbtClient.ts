@@ -156,6 +156,11 @@ export class OpenBBTClient {
         return this.call('contributors/list', {}) as Promise<ContributorInfo[]>;
     }
 
+    async getStepsIndex(): Promise<string> {
+        const result = await this.call('steps/index', {});
+        return JSON.stringify(result);
+    }
+
     async listPlans(): Promise<PlanInfo[]> {
         return this.call('browse/plans', {}) as Promise<PlanInfo[]>;
     }

@@ -76,6 +76,10 @@
         "command": "openbbt.showLogs",
         "title": "OpenBBT: Show Logs",
         "icon": "$(output)"
+      },
+      {
+        "command": "openbbt.ai.toggle",
+        "title": "OpenBBT: Toggle AI Completions"
       }
     ],
     "viewsContainers": {
@@ -171,6 +175,27 @@
           "type": "string",
           "default": "openbbt",
           "description": "Path to the openbbt CLI executable. Defaults to 'openbbt' (must be on PATH)."
+        },
+        "openbbt.ai.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable AI-powered inline step completions in .feature files. Requires openbbt.ai.apiKey."
+        },
+        "openbbt.ai.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key for AI step completions."
+        },
+        "openbbt.ai.model": {
+          "type": "string",
+          "default": "claude-haiku-4-5-20251001",
+          "enum": ["claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-7"],
+          "description": "Claude model to use for AI step completions."
+        },
+        "openbbt.ai.triggerDelay": {
+          "type": "number",
+          "default": 500,
+          "description": "Delay in milliseconds before triggering AI completion after typing stops."
         }
       }
     }
