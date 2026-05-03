@@ -5,7 +5,7 @@
   "version": "1.0.0-alpha1",
   "publisher": "myjtools.org",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.90.0"
   },
   "categories": ["Testing"],
   "activationEvents": [
@@ -179,23 +179,12 @@
         "openbbt.ai.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable AI-powered inline step completions in .feature files. Requires openbbt.ai.apiKey."
-        },
-        "openbbt.ai.apiKey": {
-          "type": "string",
-          "default": "",
-          "description": "Anthropic API key for AI step completions."
+          "description": "Enable AI-powered inline step completions in .feature files. Requires a language model provider (e.g. GitHub Copilot)."
         },
         "openbbt.ai.model": {
           "type": "string",
-          "default": "claude-haiku-4-5-20251001",
-          "enum": ["claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-7"],
-          "description": "Claude model to use for AI step completions."
-        },
-        "openbbt.ai.triggerDelay": {
-          "type": "number",
-          "default": 500,
-          "description": "Delay in milliseconds before triggering AI completion after typing stops."
+          "default": "",
+          "description": "Language model family to use (e.g. 'gpt-4o', 'claude-sonnet-4-5'). Leave empty to use the first available model."
         }
       }
     }
@@ -210,7 +199,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.90.0",
     "typescript": "^5.3.0"
   }
 }

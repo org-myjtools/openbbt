@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { OpenBBTClient } from './openbbtClient';
 
-// Step-line prefixes across supported locales (lowercase for matching)
 const STEP_PREFIXES = [
     'given ', 'when ', 'then ', 'and ', 'but ', '* ',
     'dado que ', 'dado ', 'cuando ', 'entonces ', 'y ', 'pero ',
@@ -35,8 +34,6 @@ export class AiCompletionProvider implements vscode.InlineCompletionItemProvider
     ): Promise<vscode.InlineCompletionList | undefined> {
         const config = vscode.workspace.getConfiguration('openbbt.ai');
         if (!config.get<boolean>('enabled', false)) { return; }
-        const apiKey = config.get<string>('apiKey', '');
-        if (!apiKey) { return; }
 
         if (!isOnStepLine(document.lineAt(position.line).text)) { return; }
 
@@ -49,17 +46,18 @@ export class AiCompletionProvider implements vscode.InlineCompletionItemProvider
             try {
                 stepsIndex = await client.getStepsIndex();
             } catch {
-                // serve not running or steps/index not available — proceed without index
+                // serve not available — proceed without index
             }
         }
 
         if (token.isCancellationRequested) { return; }
 
-        const model = config.get<string>('model', 'claude-haiku-4-5-20251001');
+        const modelFamily = config.get<string>('model', '');
+
         this.statusBar.text = '$(loading~spin) OpenBBT AI';
         this.statusBar.show();
         try {
-            const completion = await this.callClaude(apiKey, model, locale, stepsIndex, prefix, token);
+            const completion = await this.callModel(modelFamily, locale, stepsIndex, prefix, token);
             if (!completion || token.isCancellationRequested) { return; }
 
             const endOfLine = document.lineAt(position.line).range.end;
@@ -74,51 +72,40 @@ export class AiCompletionProvider implements vscode.InlineCompletionItemProvider
         }
     }
 
-    private async callClaude(
-        apiKey: string,
-        model: string,
+    private async callModel(
+        modelFamily: string,
         locale: string,
         stepsIndex: string,
         prefix: string,
         token: vscode.CancellationToken
     ): Promise<string | undefined> {
-        const systemText =
+        const selector: vscode.LanguageModelChatSelector = modelFamily ? { family: modelFamily } : {};
+        const models = await vscode.lm.selectChatModels(selector);
+        if (models.length === 0) { return undefined; }
+
+        const prompt =
             `You are an assistant for writing BDD tests in Gherkin.\n` +
             `Active language: ${locale}\n` +
             `Available steps in this project:\n<steps>\n${stepsIndex}\n</steps>\n` +
             `Suggest the text that completes the current step from the cursor position onward.\n` +
             `Return ONLY the completion text. No explanations, no quotes.\n` +
-            `If no step fits, return an empty string.`;
+            `If no step fits, return an empty string.\n\n` +
+            `File content up to cursor:\n${prefix}`;
 
-        const body = JSON.stringify({
-            model,
-            max_tokens: 120,
-            system: [{ type: 'text', text: systemText, cache_control: { type: 'ephemeral' } }],
-            messages: [{ role: 'user', content: prefix }],
-        });
-
-        const controller = new AbortController();
-        const cancel = token.onCancellationRequested(() => controller.abort());
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: {
-                    'x-api-key': apiKey,
-                    'anthropic-version': '2023-06-01',
-                    'anthropic-beta': 'prompt-caching-2024-07-31',
-                    'content-type': 'application/json',
-                },
-                body,
-                signal: controller.signal,
-            });
-            if (!response.ok) { return undefined; }
-            const data = await response.json() as { content?: { type: string; text: string }[] };
-            const text = data.content?.[0]?.text?.trim();
-            return text || undefined;
+            const response = await models[0].sendRequest(
+                [vscode.LanguageModelChatMessage.User(prompt)],
+                {},
+                token
+            );
+            let text = '';
+            for await (const chunk of response.text) {
+                if (token.isCancellationRequested) { return undefined; }
+                text += chunk;
+            }
+            return text.trim() || undefined;
         } catch {
             return undefined;
-        } finally {
-            cancel.dispose();
         }
     }
 }
