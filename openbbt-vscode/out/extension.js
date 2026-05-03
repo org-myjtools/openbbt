@@ -46,6 +46,7 @@ const executionProvider_1 = require("./executionProvider");
 const executionDetailPanel_1 = require("./executionDetailPanel");
 const testPlanProvider_1 = require("./testPlanProvider");
 const contributorsProvider_1 = require("./contributorsProvider");
+const aiCompletionProvider_1 = require("./aiCompletionProvider");
 const node_1 = require("vscode-languageclient/node");
 let client;
 let serveClient;
@@ -512,6 +513,14 @@ function activate(context) {
             const full = new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length));
             return [vscode.TextEdit.replace(full, formatted)];
         }
+    }));
+    const aiStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    context.subscriptions.push(aiStatusBar);
+    context.subscriptions.push(vscode.languages.registerInlineCompletionItemProvider({ scheme: 'file', language: 'feature' }, new aiCompletionProvider_1.AiCompletionProvider(() => serveClient, aiStatusBar)), vscode.commands.registerCommand('openbbt.ai.toggle', () => {
+        const cfg = vscode.workspace.getConfiguration('openbbt.ai');
+        const current = cfg.get('enabled', false);
+        cfg.update('enabled', !current, vscode.ConfigurationTarget.Global);
+        vscode.window.showInformationMessage(`OpenBBT AI completions ${!current ? 'enabled' : 'disabled'}.`);
     }));
 }
 function deactivate() {
