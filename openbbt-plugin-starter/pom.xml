@@ -73,6 +73,14 @@
                             <title>${openbbt.docgen.configTitle}</title>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>generate-step-index</id>
+                        <goals><goal>generate-step-index</goal></goals>
+                        <configuration>
+                            <inputFile>${openbbt.docgen.stepDocFile}</inputFile>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
