@@ -33,8 +33,21 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ContributorsProvider = exports.ContributorImplItem = exports.ContributorTypeItem = void 0;
+exports.ContributorsProvider = exports.ContributorImplItem = exports.ContributorTypeItem = exports.PluginItem = void 0;
 const vscode = __importStar(require("vscode"));
+class PluginItem extends vscode.TreeItem {
+    plugin;
+    contributors;
+    constructor(plugin, contributors) {
+        super(plugin, vscode.TreeItemCollapsibleState.Expanded);
+        this.plugin = plugin;
+        this.contributors = contributors;
+        this.iconPath = new vscode.ThemeIcon('package');
+        this.description = `${contributors.length} contributor type(s)`;
+        this.contextValue = 'contributorPlugin';
+    }
+}
+exports.PluginItem = PluginItem;
 class ContributorTypeItem extends vscode.TreeItem {
     type;
     implementations;
@@ -62,7 +75,7 @@ class ContributorsProvider {
     _onDidChangeTreeData = new vscode.EventEmitter();
     onDidChangeTreeData = this._onDidChangeTreeData.event;
     client;
-    contributors = [];
+    plugins = [];
     setClient(client) {
         this.client = client;
         client.onConnected = () => this.refresh();
@@ -72,10 +85,10 @@ class ContributorsProvider {
             return;
         }
         try {
-            this.contributors = await this.client.getContributors();
+            this.plugins = await this.client.getContributors();
         }
         catch {
-            this.contributors = [];
+            this.plugins = [];
         }
         this._onDidChangeTreeData.fire();
     }
@@ -84,7 +97,10 @@ class ContributorsProvider {
     }
     getChildren(element) {
         if (!element) {
-            return this.contributors.map(c => new ContributorTypeItem(c.type, c.implementations));
+            return this.plugins.map(p => new PluginItem(p.plugin, p.contributors));
+        }
+        if (element instanceof PluginItem) {
+            return element.contributors.map(c => new ContributorTypeItem(c.type, c.implementations));
         }
         if (element instanceof ContributorTypeItem) {
             return element.implementations.map(impl => new ContributorImplItem(impl));

@@ -19,6 +19,7 @@ import org.myjtools.openbbt.core.util.Lazy;
 import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -225,7 +226,8 @@ public class OpenBBTRuntime implements InjectionProvider {
 			DataTypeProvider.class,
 			ReportBuilder.class,
 			StepProvider.class,
-			SuiteAssembler.class
+			SuiteAssembler.class,
+			AIIndexProvider.class
 		);
 	}
 
@@ -242,14 +244,20 @@ public class OpenBBTRuntime implements InjectionProvider {
 		return "[\n" + String.join(",\n", parts) + "\n]";
 	}
 
-	public Map<String, List<String>> getContributors() {
-		return getContributedTypes().stream()
-			.flatMap(type -> getExtensions(type).map(ext -> Map.entry(type.getSimpleName(), ext.getClass().getSimpleName())))
-			.collect(Collectors.toMap(
-				Map.Entry::getKey,
-				entry -> List.of(entry.getValue()),
-				(a, b) -> Stream.concat(a.stream(), b.stream()).toList()
-			));
+	public Map<String, Map<String,List<String>>> getContributors() {
+		Map<String, Map<String,List<String>>> contributors = new LinkedHashMap<>();
+		for (Class<?> type : getContributedTypes()) {
+			Map<String, List<String>> typeContributors = getExtensions(type)
+				.collect(Collectors.groupingBy(
+					ext -> ext.getClass().getModule().getName(),
+					LinkedHashMap::new,
+					Collectors.mapping(ext -> ext.getClass().getName(), Collectors.toList())
+				));
+			if (!typeContributors.isEmpty()) {
+				contributors.put(type.getSimpleName(), typeContributors);
+			}
+		}
+		return contributors;
 	}
 
 

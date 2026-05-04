@@ -1,5 +1,6 @@
 package org.myjtools.openbbt.jsonrpc.serve.test;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
@@ -860,7 +861,9 @@ class JsonRpcServerTest {
 
     @Test
     void contributorsListReturnsContributors() {
-        Map<String, List<String>> contributors = Map.of("StepProvider", List.of("impl.A", "impl.B"));
+        Map<String, Map<String, List<String>>> contributors = Map.of(
+            "my-plugin", Map.of("StepProvider", List.of("impl.A", "impl.B"))
+        );
 
         List<JsonObject> responses = runWith(
             () -> new StubPlanRepo() {},
@@ -872,9 +875,13 @@ class JsonRpcServerTest {
 
         var arr = responses.get(0).getAsJsonArray("result");
         assertThat(arr).hasSize(1);
-        assertThat(arr.get(0).getAsJsonObject().get("type").getAsString()).isEqualTo("StepProvider");
-        assertThat(arr.get(0).getAsJsonObject().getAsJsonArray("implementations"))
-            .extracting(v -> v.getAsString())
+        var pluginObj = arr.get(0).getAsJsonObject();
+        assertThat(pluginObj.get("plugin").getAsString()).isEqualTo("my-plugin");
+        var contribs = pluginObj.getAsJsonArray("contributors");
+        assertThat(contribs).hasSize(1);
+        assertThat(contribs.get(0).getAsJsonObject().get("type").getAsString()).isEqualTo("StepProvider");
+        assertThat(contribs.get(0).getAsJsonObject().getAsJsonArray("implementations"))
+            .extracting(JsonElement::getAsString)
             .containsExactly("impl.A", "impl.B");
     }
 

@@ -34,7 +34,7 @@ public class JsonRpcServer {
 
     @FunctionalInterface
     public interface ContributorsProvider {
-        java.util.Map<String, java.util.List<String>> getContributors();
+        java.util.Map<String, java.util.Map<String, java.util.List<String>>> getContributors();
     }
 
     @FunctionalInterface
@@ -471,13 +471,20 @@ public class JsonRpcServer {
         if (contributorsProvider == null)
             throw new IllegalStateException("Contributors provider not configured");
         JsonArray result = new JsonArray();
-        contributorsProvider.getContributors().forEach((type, implementations) -> {
-            JsonObject obj = new JsonObject();
-            obj.addProperty("type", type);
-            JsonArray impls = new JsonArray();
-            implementations.forEach(impls::add);
-            obj.add("implementations", impls);
-            result.add(obj);
+        contributorsProvider.getContributors().forEach((plugin, typeMap) -> {
+            JsonObject pluginObj = new JsonObject();
+            pluginObj.addProperty("plugin", plugin);
+            JsonArray contributors = new JsonArray();
+            typeMap.forEach((type, implementations) -> {
+                JsonObject typeObj = new JsonObject();
+                typeObj.addProperty("type", type);
+                JsonArray impls = new JsonArray();
+                implementations.forEach(impls::add);
+                typeObj.add("implementations", impls);
+                contributors.add(typeObj);
+            });
+            pluginObj.add("contributors", contributors);
+            result.add(pluginObj);
         });
         return result;
     }
