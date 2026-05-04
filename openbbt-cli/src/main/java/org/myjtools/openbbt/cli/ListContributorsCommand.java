@@ -28,20 +28,27 @@ public final class ListContributorsCommand extends AbstractCommand {
 
         if (json) {
             JsonArray result = new JsonArray();
-            contributors.forEach((type, byModule) -> {
+            contributors.forEach((module, byType) -> {
                 JsonObject obj = new JsonObject();
-                obj.addProperty("type", type);
-                JsonArray impls = new JsonArray();
-                byModule.values().forEach(list -> list.forEach(impls::add));
-                obj.add("implementations", impls);
+                obj.addProperty("plugin", module);
+                JsonArray types = new JsonArray();
+                byType.forEach((type, impls) -> {
+                    JsonObject typeObj = new JsonObject();
+                    typeObj.addProperty("type", type);
+                    JsonArray implsArr = new JsonArray();
+                    impls.forEach(implsArr::add);
+                    typeObj.add("implementations", implsArr);
+                    types.add(typeObj);
+                });
+                obj.add("contributors", types);
                 result.add(obj);
             });
             System.out.println(result);
         } else {
-            contributors.forEach((type, byModule) -> {
-                System.out.println(type);
-                byModule.forEach((module, impls) ->
-                    impls.forEach(impl -> System.out.println("  " + impl + " [" + module + "]"))
+            contributors.forEach((module, byType) -> {
+                System.out.println(module);
+                byType.forEach((type, impls) ->
+                    impls.forEach(impl -> System.out.println("  [" + type + "] " + impl))
                 );
             });
         }

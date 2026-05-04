@@ -80,11 +80,14 @@ class TestOpenBBTRuntime {
 			StepProvider.class
 		);
 		var contributors = runtime.getContributors();
-		assertThat(contributors).containsKeys("DataTypeProvider", "MessageProvider", "StepProvider");
 
-		List<String> dataTypeImpls = contributors.get("DataTypeProvider").values().stream().flatMap(List::stream).toList();
-		List<String> messageImpls = contributors.get("MessageProvider").values().stream().flatMap(List::stream).toList();
-		List<String> stepImpls = contributors.get("StepProvider").values().stream().flatMap(List::stream).toList();
+		// outer key = module name, inner key = type simple name
+		var allTypes = contributors.values().stream().flatMap(m -> m.keySet().stream()).toList();
+		assertThat(allTypes).contains("DataTypeProvider", "MessageProvider", "StepProvider");
+
+		var dataTypeImpls = contributors.values().stream().flatMap(m -> m.getOrDefault("DataTypeProvider", List.of()).stream()).toList();
+		var messageImpls  = contributors.values().stream().flatMap(m -> m.getOrDefault("MessageProvider",  List.of()).stream()).toList();
+		var stepImpls     = contributors.values().stream().flatMap(m -> m.getOrDefault("StepProvider",     List.of()).stream()).toList();
 
 		assertThat(dataTypeImpls).anyMatch(s -> s.endsWith("CoreDataTypes"));
 		assertThat(messageImpls)
