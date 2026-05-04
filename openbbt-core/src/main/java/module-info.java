@@ -58,7 +58,6 @@ module org.myjtools.openbbt.core {
 	opens org.myjtools.openbbt.core.steps to org.myjtools.jexten;
 
 	uses org.myjtools.openbbt.core.contributors.AIIndexProvider;
-	uses org.myjtools.openbbt.core.contributors.PluginDescriptor;
 	uses ContentType;
 	uses AssertionFactoryProvider;
 	uses DataTypeProvider;

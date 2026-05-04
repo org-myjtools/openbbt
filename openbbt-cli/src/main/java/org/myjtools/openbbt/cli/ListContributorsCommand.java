@@ -24,23 +24,25 @@ public final class ListContributorsCommand extends AbstractCommand {
     @Override
     protected void execute() {
         OpenBBTRuntime runtime = new OpenBBTRuntime(getContext().configuration());
-        Map<String, List<String>> contributors = runtime.getContributors();
+        Map<String, Map<String, List<String>>> contributors = runtime.getContributors();
 
         if (json) {
             JsonArray result = new JsonArray();
-            contributors.forEach((type, implementations) -> {
+            contributors.forEach((type, byModule) -> {
                 JsonObject obj = new JsonObject();
                 obj.addProperty("type", type);
                 JsonArray impls = new JsonArray();
-                implementations.forEach(impls::add);
+                byModule.values().forEach(list -> list.forEach(impls::add));
                 obj.add("implementations", impls);
                 result.add(obj);
             });
             System.out.println(result);
         } else {
-            contributors.forEach((type, implementations) -> {
+            contributors.forEach((type, byModule) -> {
                 System.out.println(type);
-                implementations.forEach(impl -> System.out.println("  " + impl));
+                byModule.forEach((module, impls) ->
+                    impls.forEach(impl -> System.out.println("  " + impl + " [" + module + "]"))
+                );
             });
         }
     }
