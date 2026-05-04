@@ -6,7 +6,7 @@ export class PluginItem extends vscode.TreeItem {
         public readonly plugin: string,
         public readonly contributors: ContributorTypeInfo[]
     ) {
-        super(plugin, vscode.TreeItemCollapsibleState.Expanded);
+        super(plugin, vscode.TreeItemCollapsibleState.Collapsed);
         this.iconPath = new vscode.ThemeIcon('package');
         this.description = `${contributors.length} contributor type(s)`;
         this.contextValue = 'contributorPlugin';
@@ -19,7 +19,7 @@ export class ContributorTypeItem extends vscode.TreeItem {
         public readonly implementations: string[]
     ) {
         super(type, implementations.length > 0
-            ? vscode.TreeItemCollapsibleState.Expanded
+            ? vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None);
         this.iconPath = new vscode.ThemeIcon('extensions');
         this.description = `${implementations.length}`;

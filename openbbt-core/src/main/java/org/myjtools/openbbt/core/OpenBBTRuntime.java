@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class OpenBBTRuntime implements InjectionProvider {
@@ -245,13 +244,14 @@ public class OpenBBTRuntime implements InjectionProvider {
 		return "[\n" + String.join(",\n", parts) + "\n]";
 	}
 
+
 	public Map<String, Map<String,List<String>>> getContributors() {
 		Map<String, Map<String,List<String>>> result = new LinkedHashMap<>();
 		for (Class<?> type : getContributedTypes()) {
 			getExtensions(type).forEach(ext -> result
 				.computeIfAbsent(ext.getClass().getModule().getName(), k -> new LinkedHashMap<>())
 				.computeIfAbsent(type.getSimpleName(), k -> new ArrayList<>())
-				.add(ext.getClass().getName())
+				.add(ext.getClass().getSimpleName())
 			);
 		}
 		return result;

@@ -39,7 +39,7 @@ class PluginItem extends vscode.TreeItem {
     plugin;
     contributors;
     constructor(plugin, contributors) {
-        super(plugin, vscode.TreeItemCollapsibleState.Expanded);
+        super(plugin, vscode.TreeItemCollapsibleState.Collapsed);
         this.plugin = plugin;
         this.contributors = contributors;
         this.iconPath = new vscode.ThemeIcon('package');
@@ -53,7 +53,7 @@ class ContributorTypeItem extends vscode.TreeItem {
     implementations;
     constructor(type, implementations) {
         super(type, implementations.length > 0
-            ? vscode.TreeItemCollapsibleState.Expanded
+            ? vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None);
         this.type = type;
         this.implementations = implementations;
