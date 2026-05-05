@@ -72,10 +72,14 @@ class ContributorImplItem extends vscode.TreeItem {
 }
 exports.ContributorImplItem = ContributorImplItem;
 class ContributorsProvider {
+    log;
     _onDidChangeTreeData = new vscode.EventEmitter();
     onDidChangeTreeData = this._onDidChangeTreeData.event;
     client;
     plugins = [];
+    constructor(log = () => { }) {
+        this.log = log;
+    }
     setClient(client) {
         this.client = client;
         client.onConnected = () => this.refresh();
@@ -87,7 +91,8 @@ class ContributorsProvider {
         try {
             this.plugins = await this.client.getContributors();
         }
-        catch {
+        catch (err) {
+            this.log(`[contributors] failed to load: ${err}`);
             this.plugins = [];
         }
         this._onDidChangeTreeData.fire();

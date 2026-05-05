@@ -233,7 +233,7 @@ function activate(context) {
     vscode.workspace.textDocuments.forEach(updateDiagnostics);
     const testPlanProvider = new testPlanProvider_1.TestPlanProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
-    const contributorsProvider = new contributorsProvider_1.ContributorsProvider();
+    const contributorsProvider = new contributorsProvider_1.ContributorsProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.contributors', contributorsProvider);
     // Auto-populate the tree on startup using existing plan data (no plan re-run).
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
