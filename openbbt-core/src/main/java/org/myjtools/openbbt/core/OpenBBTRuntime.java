@@ -20,9 +20,10 @@ import org.myjtools.openbbt.core.util.Log;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 public class OpenBBTRuntime implements InjectionProvider {
@@ -246,14 +247,15 @@ public class OpenBBTRuntime implements InjectionProvider {
 
 
 	public Map<String, Map<String,List<String>>> getContributors() {
-		Map<String, Map<String,List<String>>> result = new LinkedHashMap<>();
+		Map<String, Map<String,List<String>>> result = new TreeMap<>();
 		for (Class<?> type : getContributedTypes()) {
 			getExtensions(type).forEach(ext -> result
-				.computeIfAbsent(ext.getClass().getModule().getName(), k -> new LinkedHashMap<>())
+				.computeIfAbsent(ext.getClass().getModule().getName(), k -> new TreeMap<>())
 				.computeIfAbsent(type.getSimpleName(), k -> new ArrayList<>())
 				.add(ext.getClass().getSimpleName())
 			);
 		}
+		result.values().forEach(types -> types.values().forEach(Collections::sort));
 		return result;
 	}
 
