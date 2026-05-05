@@ -249,7 +249,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const testPlanProvider = new TestPlanProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.testPlan', testPlanProvider);
 
-    const contributorsProvider = new ContributorsProvider();
+    const contributorsProvider = new ContributorsProvider(logOutput);
     vscode.window.registerTreeDataProvider('openbbt.contributors', contributorsProvider);
 
     // Auto-populate the tree on startup using existing plan data (no plan re-run).

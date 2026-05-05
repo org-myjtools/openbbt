@@ -45,6 +45,8 @@ export class ContributorsProvider implements vscode.TreeDataProvider<TreeItem> {
     private client: OpenBBTClient | undefined;
     private plugins: PluginContributors[] = [];
 
+    constructor(private readonly log: (msg: string) => void = () => {}) {}
+
     setClient(client: OpenBBTClient): void {
         this.client = client;
         client.onConnected = () => this.refresh();
@@ -54,7 +56,8 @@ export class ContributorsProvider implements vscode.TreeDataProvider<TreeItem> {
         if (!this.client) { return; }
         try {
             this.plugins = await this.client.getContributors();
-        } catch {
+        } catch (err) {
+            this.log(`[contributors] failed to load: ${err}`);
             this.plugins = [];
         }
         this._onDidChangeTreeData.fire();

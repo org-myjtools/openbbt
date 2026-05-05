@@ -249,11 +249,16 @@ public class OpenBBTRuntime implements InjectionProvider {
 	public Map<String, Map<String,List<String>>> getContributors() {
 		Map<String, Map<String,List<String>>> result = new TreeMap<>();
 		for (Class<?> type : getContributedTypes()) {
-			getExtensions(type).forEach(ext -> result
-				.computeIfAbsent(ext.getClass().getModule().getName(), k -> new TreeMap<>())
-				.computeIfAbsent(type.getSimpleName(), k -> new ArrayList<>())
-				.add(ext.getClass().getSimpleName())
-			);
+			try {
+				long count = getExtensions(type).peek(ext -> result
+					.computeIfAbsent(ext.getClass().getModule().getName(), k -> new TreeMap<>())
+					.computeIfAbsent(type.getSimpleName(), k -> new ArrayList<>())
+					.add(ext.getClass().getSimpleName())
+				).count();
+				log.info("Contributors of type {}: {}", type.getSimpleName(), count);
+			} catch (Exception e) {
+				log.error(e, "Failed to load contributors of type {}", type.getSimpleName());
+			}
 		}
 		result.values().forEach(types -> types.values().forEach(Collections::sort));
 		return result;
