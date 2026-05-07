@@ -72,4 +72,9 @@ public class CoreStepProvider implements StepProvider {
 		Assertion.assertThat(value, assertion);
 	}
 
+	@StepExpression(value = "enable.benchmark.mode", args = {"executions:integer","threads:integer"})
+	public void enableBenchmarkMode(Integer executions, Integer threads) {
+		ExecutionContext.current().enableBenchmarkMode(executions, threads);
+	}
+
 }

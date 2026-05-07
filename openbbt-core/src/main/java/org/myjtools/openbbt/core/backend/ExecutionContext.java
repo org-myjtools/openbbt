@@ -30,6 +30,9 @@ public class ExecutionContext {
 	private final OpenBBTRuntime runtime;
 	private final UUID executionID;
 	private UUID executionNodeID;
+	private Benchmark benchmark;
+
+
 
 	public ExecutionContext(OpenBBTRuntime runtime, UUID executionID, UUID executionNodeID) {
 		this.runtime = runtime;
@@ -63,6 +66,18 @@ public class ExecutionContext {
 		AttachmentRepository attachmentRepository = runtime.getRepository(AttachmentRepository.class);
 		UUID attachmentID = testExecutionRepository.newAttachment(executionNodeID);
 		attachmentRepository.storeAttachment(executionID, executionNodeID, attachmentID, bytes, contentType);
+	}
+
+	public void enableBenchmarkMode(Integer executions, Integer threads) {
+		this.benchmark = new Benchmark(executions,threads);
+	}
+
+	public void disableBenchmarkMode() {
+		this.benchmark = null;
+	}
+
+	public Benchmark benchmark() {
+		return benchmark;
 	}
 
 }

@@ -34,6 +34,10 @@ public class OpenBBTPluginManager {
 		return pluginManager;
 	}
 
+	public String moduleLayerTreeDescription() {
+		return pluginManager.moduleLayerTree().description();
+	}
+
 	public boolean installPlugin(String pluginNameExpression) {
 		String pluginName;
 		String runtimePluginConfig;
